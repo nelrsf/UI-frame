@@ -14,16 +14,20 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   });
 
-  it(`should have as title 'UI Frame'`, () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('UI Frame');
-  });
-
-  it('should render title', () => {
+  it('should mount app-shell as the root element', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, UI Frame');
+    expect(compiled.querySelector('app-shell')).not.toBeNull();
+  });
+
+  it('should not render Angular starter placeholder markup', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('.angular-logo')).toBeNull();
+    expect(compiled.querySelector('.pill-group')).toBeNull();
+    expect(compiled.querySelector('h1')).toBeNull();
   });
 });
+
