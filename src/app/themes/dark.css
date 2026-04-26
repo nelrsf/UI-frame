@@ -116,4 +116,16 @@
 
   --shell-bottom-panel-height: 220px;
   --shell-bottom-panel-min:    80px;
+
+  /* ----------------------------------------------------------
+     4.5 Responsive Breakpoints (desktop-first)
+     ---------------------------------------------------------- */
+
+  --breakpoint-shell-xs:     800px;   /* absolute minimum desktop target */
+  --breakpoint-shell-sm:     1024px;  /* small desktop / laptop */
+  --breakpoint-shell-md:     1280px;  /* standard desktop */
+  --breakpoint-shell-lg:     1440px;  /* wide desktop */
+
+  --shell-min-width:         800px;   /* minimum supported window width  */
+  --shell-min-height:        600px;   /* minimum supported window height */
 }
