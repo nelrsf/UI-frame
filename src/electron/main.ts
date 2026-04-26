@@ -1,6 +1,9 @@
 import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
+import { IPC_CHANNELS } from './ipc/channels';
+import { registerWindowHandlers } from './ipc/handlers/window.handlers';
+import { registerPreferencesHandlers } from './ipc/handlers/preferences.handlers';
 
 const isDev = process.env['ELECTRON_ENV'] === 'development';
 const ANGULAR_DEV_URL = 'http://localhost:4200';
@@ -8,17 +11,10 @@ const ANGULAR_DEV_URL = 'http://localhost:4200';
 let mainWindow: BrowserWindow | null = null;
 
 function registerIpcHandlers(): void {
-  ipcMain.on('window:minimize', () => mainWindow?.minimize());
-  ipcMain.on('window:maximize', () => {
-    if (mainWindow?.isMaximized()) {
-      mainWindow.unmaximize();
-    } else {
-      mainWindow?.maximize();
-    }
-  });
-  ipcMain.on('window:close', () => mainWindow?.close());
-  ipcMain.handle('window:isMaximized', () => mainWindow?.isMaximized() ?? false);
-  ipcMain.on('shell:openExternal', (_event, targetUrl: string) => {
+  registerWindowHandlers(() => mainWindow);
+  registerPreferencesHandlers();
+
+  ipcMain.on(IPC_CHANNELS.SHELL.OPEN_EXTERNAL, (_event, targetUrl: string) => {
     shell.openExternal(targetUrl);
   });
 }
