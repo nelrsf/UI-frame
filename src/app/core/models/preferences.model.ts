@@ -5,6 +5,8 @@ export const PREFERENCES_SCHEMA_VERSION = 1;
 export interface PreferencesEnvelope {
   schemaVersion: number;
   workspaceId: string;
+  /** ISO 8601 timestamp recording when this envelope was last saved. */
+  savedAt: string;
   data: Record<string, unknown>;
 }
 

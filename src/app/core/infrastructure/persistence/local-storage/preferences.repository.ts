@@ -18,6 +18,21 @@ export class PreferencesRepository {
   }
 
   /**
+   * Returns `true` when a valid persisted envelope exists for `workspaceId`.
+   * Does not allocate the full preference map; use `load` to retrieve data.
+   */
+  has(workspaceId: string): boolean {
+    try {
+      const raw = localStorage.getItem(this.storageKey(workspaceId));
+      if (raw === null) return false;
+      const parsed: unknown = JSON.parse(raw);
+      return this.isValidEnvelope(parsed, workspaceId);
+    } catch {
+      return false;
+    }
+  }
+
+  /**
    * Loads preferences for `workspaceId` from localStorage.
    * Returns an empty map when nothing is stored or the persisted data is
    * corrupt / from an incompatible schema version.
@@ -45,6 +60,7 @@ export class PreferencesRepository {
       const envelope: PreferencesEnvelope = {
         schemaVersion: PREFERENCES_SCHEMA_VERSION,
         workspaceId,
+        savedAt: new Date().toISOString(),
         data,
       };
       localStorage.setItem(this.storageKey(workspaceId), JSON.stringify(envelope));
@@ -70,9 +86,11 @@ export class PreferencesRepository {
     return (
       env['schemaVersion'] === PREFERENCES_SCHEMA_VERSION &&
       env['workspaceId'] === workspaceId &&
+      typeof env['savedAt'] === 'string' &&
       typeof env['data'] === 'object' &&
       env['data'] !== null &&
       !Array.isArray(env['data'])
     );
   }
 }
+

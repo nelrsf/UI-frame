@@ -27,6 +27,28 @@ describe('PreferencesRepository', () => {
     });
   });
 
+  describe('has', () => {
+    it('should return false when nothing is stored', () => {
+      expect(repo.has('empty-ws')).toBeFalse();
+    });
+
+    it('should return true after saving data', () => {
+      repo.save('present-ws', { key: 'value' });
+      expect(repo.has('present-ws')).toBeTrue();
+    });
+
+    it('should return false after clearing data', () => {
+      repo.save('gone-ws', { key: 'value' });
+      repo.clear('gone-ws');
+      expect(repo.has('gone-ws')).toBeFalse();
+    });
+
+    it('should return false for corrupt JSON', () => {
+      localStorage.setItem(repo.storageKey('corrupt-has-ws'), '{ not valid json }');
+      expect(repo.has('corrupt-has-ws')).toBeFalse();
+    });
+  });
+
   describe('load', () => {
     it('should return empty object when nothing is stored', () => {
       expect(repo.load('new-ws')).toEqual({});
@@ -46,6 +68,7 @@ describe('PreferencesRepository', () => {
       localStorage.setItem(repo.storageKey('mismatch-ws'), JSON.stringify({
         schemaVersion: PREFERENCES_SCHEMA_VERSION - 1,
         workspaceId: 'mismatch-ws',
+        savedAt: new Date().toISOString(),
         data: { key: 'value' },
       }));
       expect(repo.load('mismatch-ws')).toEqual({});
@@ -55,6 +78,7 @@ describe('PreferencesRepository', () => {
       localStorage.setItem(repo.storageKey('ws-a'), JSON.stringify({
         schemaVersion: PREFERENCES_SCHEMA_VERSION,
         workspaceId: 'ws-b',
+        savedAt: new Date().toISOString(),
         data: { key: 'value' },
       }));
       expect(repo.load('ws-a')).toEqual({});
@@ -64,9 +88,19 @@ describe('PreferencesRepository', () => {
       localStorage.setItem(repo.storageKey('array-ws'), JSON.stringify({
         schemaVersion: PREFERENCES_SCHEMA_VERSION,
         workspaceId: 'array-ws',
+        savedAt: new Date().toISOString(),
         data: [1, 2, 3],
       }));
       expect(repo.load('array-ws')).toEqual({});
+    });
+
+    it('should return empty object when savedAt field is missing', () => {
+      localStorage.setItem(repo.storageKey('no-ts-ws'), JSON.stringify({
+        schemaVersion: PREFERENCES_SCHEMA_VERSION,
+        workspaceId: 'no-ts-ws',
+        data: { key: 'value' },
+      }));
+      expect(repo.load('no-ts-ws')).toEqual({});
     });
   });
 
@@ -88,6 +122,15 @@ describe('PreferencesRepository', () => {
       expect(repo.load('ws-x')).toEqual({ color: 'red' });
       expect(repo.load('ws-y')).toEqual({ color: 'blue' });
     });
+
+    it('should include a savedAt ISO timestamp in the stored envelope', () => {
+      repo.save('ws-ts', { key: 'value' });
+      const raw = localStorage.getItem(repo.storageKey('ws-ts'));
+      expect(raw).not.toBeNull();
+      const envelope = JSON.parse(raw!);
+      expect(typeof envelope['savedAt']).toBe('string');
+      expect(envelope['savedAt']).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    });
   });
 
   describe('clear', () => {
@@ -105,3 +148,4 @@ describe('PreferencesRepository', () => {
     });
   });
 });
+
