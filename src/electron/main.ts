@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
-import { IPC_CHANNELS } from './ipc/channels';
+import { ALLOWED_EXTERNAL_PROTOCOLS, IPC_CHANNELS } from './ipc/channels';
 import { registerWindowHandlers } from './ipc/handlers/window.handlers';
 import { registerPreferencesHandlers } from './ipc/handlers/preferences.handlers';
 
@@ -14,8 +14,22 @@ function registerIpcHandlers(): void {
   registerWindowHandlers(() => mainWindow);
   registerPreferencesHandlers();
 
-  ipcMain.on(IPC_CHANNELS.SHELL.OPEN_EXTERNAL, (_event, targetUrl: string) => {
-    shell.openExternal(targetUrl);
+  // Handler-side validation: re-validate the URL even though the preload also
+  // validates, enforcing the "both sender and receiver" IPC security policy.
+  ipcMain.handle(IPC_CHANNELS.SHELL.OPEN_EXTERNAL, async (_event, targetUrl: unknown): Promise<boolean> => {
+    if (typeof targetUrl !== 'string') {
+      return false;
+    }
+    try {
+      const parsed = new URL(targetUrl);
+      if (ALLOWED_EXTERNAL_PROTOCOLS.includes(parsed.protocol)) {
+        await shell.openExternal(targetUrl);
+        return true;
+      }
+    } catch {
+      // invalid URL — deny silently
+    }
+    return false;
   });
 }
 
@@ -50,7 +64,19 @@ function createWindow(): void {
   }
 
   mainWindow.webContents.setWindowOpenHandler(({ url: targetUrl }) => {
-    shell.openExternal(targetUrl);
+    // Validate before delegating to the OS — deny all non-allowlisted protocols.
+    try {
+      const parsed = new URL(targetUrl);
+      if (ALLOWED_EXTERNAL_PROTOCOLS.includes(parsed.protocol)) {
+        // setWindowOpenHandler must return synchronously; fire-and-forget with
+        // explicit rejection handling to avoid unhandled-promise-rejection warnings.
+        shell.openExternal(targetUrl).catch(() => {
+          // OS failed to open the URL — swallow the error, window open is still denied.
+        });
+      }
+    } catch {
+      // invalid URL — deny silently
+    }
     return { action: 'deny' };
   });
 
