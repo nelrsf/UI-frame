@@ -67,15 +67,22 @@ export class EventBusService implements IEventBusService {
       // emit() above, so they neither silence each other nor reach RxJS's
       // reportUnhandledError path.
       //
+      // Implementation note: RxJS 7.x (verified with 7.8.x) exposes the user's
+      // callback via SafeSubscriber#destination (ConsumerObserver)#partialObserver#next.
+      // This internal path is stable across RxJS 7 minor versions.  If a future
+      // breaking change removes it, the runtime guard below falls back gracefully to
+      // subscriber.next(), which preserves functionality at the cost of synchronous
+      // error capture (errors are then deferred by RxJS's reportUnhandledError).
+      //
       // When the user pipes operators before subscribing, `partialObserver` is absent
       // (the subscriber is an OperatorSubscriber).  In that case we fall back to the
       // standard subscriber.next() call; error isolation for that branch is handled by
       // the Angular/Zone.js error boundary.
-      const consumerObserver = (subscriber as unknown as { destination: { partialObserver?: PartialObserver<AppEvent<TName>> } })
+      const consumerObserver = (subscriber as unknown as { destination?: { partialObserver?: PartialObserver<AppEvent<TName>> } })
         .destination;
-      const rawNext = consumerObserver?.partialObserver?.next?.bind(
-        consumerObserver.partialObserver
-      );
+      const rawNext = typeof consumerObserver?.partialObserver?.next === 'function'
+        ? consumerObserver.partialObserver.next.bind(consumerObserver.partialObserver)
+        : undefined;
 
       const listener: ChannelListener = rawNext
         ? (event) => rawNext(event as AppEvent<TName>)
@@ -92,7 +99,12 @@ export class EventBusService implements IEventBusService {
     });
   }
 
-  off(eventName: AppEventName, subscription: Subscription): void {
+  /**
+   * Unsubscribes a subscription previously returned by {@link on}.
+   * The `eventName` parameter is part of the service contract for clarity and
+   * future validation; cleanup is performed via `subscription.unsubscribe()`.
+   */
+  off(_eventName: AppEventName, subscription: Subscription): void {
     subscription.unsubscribe();
   }
 }
