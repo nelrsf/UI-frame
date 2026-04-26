@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
+import { IPC_CHANNELS } from './ipc/channels';
 
 type PlatformName = 'win32' | 'darwin' | 'linux';
 
@@ -29,10 +30,10 @@ const api: ElectronAPI = {
   platform: process.platform,
 
   window: {
-    minimize: () => ipcRenderer.send('window:minimize'),
-    maximize: () => ipcRenderer.send('window:maximize'),
-    close: () => ipcRenderer.send('window:close'),
-    isMaximized: () => ipcRenderer.invoke('window:isMaximized'),
+    minimize: () => ipcRenderer.send(IPC_CHANNELS.WINDOW.MINIMIZE),
+    maximize: () => ipcRenderer.send(IPC_CHANNELS.WINDOW.MAXIMIZE),
+    close: () => ipcRenderer.send(IPC_CHANNELS.WINDOW.CLOSE),
+    isMaximized: () => ipcRenderer.invoke(IPC_CHANNELS.WINDOW.IS_MAXIMIZED),
   },
 
   system: {
@@ -43,7 +44,7 @@ const api: ElectronAPI = {
       try {
         const parsed = new URL(url);
         if (ALLOWED_PROTOCOLS.includes(parsed.protocol)) {
-          ipcRenderer.send('shell:openExternal', url);
+          ipcRenderer.send(IPC_CHANNELS.SHELL.OPEN_EXTERNAL, url);
           return Promise.resolve(true);
         }
       } catch {
@@ -55,10 +56,10 @@ const api: ElectronAPI = {
 
   preferences: {
     get: <T>(key: string, defaultValue: T): Promise<T> =>
-      ipcRenderer.invoke('preferences:get', key, defaultValue),
+      ipcRenderer.invoke(IPC_CHANNELS.PREFERENCES.GET, key, defaultValue),
 
     set: <T>(key: string, value: T): Promise<void> =>
-      ipcRenderer.invoke('preferences:set', key, value),
+      ipcRenderer.invoke(IPC_CHANNELS.PREFERENCES.SET, key, value),
   },
 };
 
