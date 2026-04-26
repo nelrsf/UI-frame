@@ -25,7 +25,7 @@ export interface AppEventPayloads {
   'bottomPanel.resized.v1': { height: number };
   'tabs.active.changed.v1': { tabId: string };
   'tabs.reordered.v1': { tabIds: string[] };
-  'command.executed.v1': { commandId: string; success: boolean; timestamp: number };
+  'command.executed.v1': { commandId: string; success: boolean; timestamp: number; context?: string };
 }
 
 /**
