@@ -4,7 +4,8 @@
  * Assertions:
  *   1. The Electron main process starts without error.
  *   2. The BrowserWindow becomes visible within the timeout.
- *   3. No blocking console errors are emitted during renderer startup.
+ *   3. Shell v1 becomes visible within the timeout.
+ *   4. No blocking console errors are emitted during renderer startup.
  *
  * Usage:
  *   npm run test:smoke
@@ -36,12 +37,22 @@ const BLOCKING_ERROR_PATTERNS = [
   /SyntaxError:/i,
 ];
 
-/** Patterns that indicate the window became visible. */
+/** Patterns that indicate the BrowserWindow became visible. */
 const WINDOW_READY_PATTERNS = [
   /window.*ready/i,
-  /did-finish-load/i,
-  /shell.*visible/i,
   /app.*ready/i,
+];
+
+/**
+ * Patterns that confirm the Shell v1 surface became visible.
+ * The primary signal is the `[smoke] shell:visible` line written to stdout by
+ * the Electron main process on `did-finish-load`.  The broader `/shell.*visible/i`
+ * pattern acts as a fallback for any other shell-readiness log the renderer or
+ * main process may emit in the future.
+ */
+const SHELL_VISIBLE_PATTERNS = [
+  /\[smoke\] shell:visible/i,
+  /shell.*visible/i,
 ];
 
 let passed = 0;
@@ -64,6 +75,7 @@ async function runSmoke() {
   const mainEntry = resolve(ROOT, 'dist-electron', 'main.js');
 
   let windowVisible = false;
+  let shellVisible = false;
   let blockingError = null;
   let processExitedEarly = false;
 
@@ -85,11 +97,25 @@ async function runSmoke() {
     stdio: ['ignore', 'pipe', 'pipe'],
   });
 
-  child.stdout.on('data', (chunk) => {
-    const text = chunk.toString();
+  /**
+   * Process a line of output from the child process, updating visibility flags.
+   * Shell visibility implies window visibility (the window must be open for the
+   * renderer to have reached `did-finish-load`), so both flags are set when the
+   * shell-ready signal is detected.
+   */
+  function processOutput(text) {
     if (WINDOW_READY_PATTERNS.some((re) => re.test(text))) {
       windowVisible = true;
     }
+    if (SHELL_VISIBLE_PATTERNS.some((re) => re.test(text))) {
+      shellVisible = true;
+      // Shell visibility implies the BrowserWindow is also visible.
+      windowVisible = true;
+    }
+  }
+
+  child.stdout.on('data', (chunk) => {
+    processOutput(chunk.toString());
   });
 
   child.stderr.on('data', (chunk) => {
@@ -101,20 +127,21 @@ async function runSmoke() {
         break;
       }
     }
-    if (WINDOW_READY_PATTERNS.some((re) => re.test(text))) {
-      windowVisible = true;
-    }
+    processOutput(text);
   });
 
   child.on('exit', (code) => {
-    if (code !== null && code !== 0 && !windowVisible) {
+    // Only treat non-zero exit as premature if the shell signal was never received.
+    // A clean code-0 exit (e.g. in tests) is not flagged here; the shellVisible
+    // assertion below will still report failure if the signal was missed.
+    if (code !== null && code !== 0 && !shellVisible) {
       processExitedEarly = true;
     }
   });
 
-  // Poll until window is visible or timeout elapses.
+  // Poll until shell is visible or timeout elapses.
   const deadline = Date.now() + WINDOW_VISIBLE_TIMEOUT_MS;
-  while (!windowVisible && Date.now() < deadline && !processExitedEarly) {
+  while (!shellVisible && Date.now() < deadline && !processExitedEarly) {
     await sleep(500);
   }
 
@@ -130,6 +157,7 @@ async function runSmoke() {
 
   assert(!processExitedEarly, 'Main process did not exit prematurely');
   assert(windowVisible, `App window became visible within ${WINDOW_VISIBLE_TIMEOUT_MS / 1000}s`);
+  assert(shellVisible, `Shell v1 became visible within ${WINDOW_VISIBLE_TIMEOUT_MS / 1000}s`);
   assert(blockingError === null, `No blocking errors in startup output (got: ${blockingError ?? 'none'})`);
 
   // ── Summary ─────────────────────────────────────────────────

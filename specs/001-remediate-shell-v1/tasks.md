@@ -71,7 +71,7 @@ This sequence covers governance validity, AppShell mounting, Electron bridge cor
 ### Tests for User Story 1
 
 - [ ] T012 [P] [US1] Add root bootstrap regression tests in `src/app/app.component.spec.ts` and `src/app/shell/shell.component.spec.ts`
-- [ ] T013 [P] [US1] Add startup smoke validation for shell visibility in `scripts/electron-smoke.mjs` and `package.json`
+- [x] T013 [P] [US1] Add startup smoke validation for shell visibility in `scripts/electron-smoke.mjs` and `package.json`
 
 ### Implementation for User Story 1
 
