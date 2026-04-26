@@ -2,7 +2,9 @@
 
 **Feature Branch**: `001-remediate-shell-v1`  
 **Created**: 2026-04-26  
-**Status**: Draft  
+**Status**: Active  
+**Canonical Precedence**: `constitution > spec > plan > tasks`  
+**Constitution**: `.specify/memory/constitution.md`  
 **Input**: User description: "Integral remediation specification to align project with constitution, spec, plan, and tasks for Shell v1"
 
 ## Context

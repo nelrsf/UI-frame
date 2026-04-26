@@ -31,7 +31,7 @@ This sequence covers governance validity, AppShell mounting, Electron bridge cor
 
 **Purpose**: Freeze the governing artifact set, establish executable validation scripts, and prepare missing shell/state folders without widening scope.
 
-- [ ] T001 Verify cross-reference consistency in `.specify/memory/constitution.md`, `specs/001-remediate-shell-v1/spec.md`, `specs/001-remediate-shell-v1/plan.md`, and `.github/copilot-instructions.md`. Ensure all version dates match (2026-04-26), no stale cross-references remain, and precedence order `constitution > spec > plan > tasks` is documented in each artifact.
+- [x] T001 Verify cross-reference consistency in `.specify/memory/constitution.md`, `specs/001-remediate-shell-v1/spec.md`, `specs/001-remediate-shell-v1/plan.md`, and `.github/copilot-instructions.md`. Ensure all version dates match (2026-04-26), no stale cross-references remain, and precedence order `constitution > spec > plan > tasks` is documented in each artifact.
 - [ ] T002 Create missing shell and state scaffolding in `src/app/shell/`, `src/app/shell/components/`, `src/app/shell/models/`, `src/app/core/state/`, and `src/app/core/utils/`
 - [ ] T003 Configure reproducible validation commands in `package.json` (add scripts: `test:shell`, `test:smoke`, `test:coverage`), `README.md` (add invocation and expected output docs), and `scripts/electron-smoke.mjs` (add baseline assertions for app window opening and no startup errors in DevTools console).
 
