@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import { IPC_CHANNELS } from './ipc/channels';
+import { ALLOWED_EXTERNAL_PROTOCOLS, IPC_CHANNELS } from './ipc/channels';
 
 type PlatformName = 'win32' | 'darwin' | 'linux';
 
@@ -23,8 +23,6 @@ export interface ElectronAPI {
   };
 }
 
-const ALLOWED_PROTOCOLS = ['https:', 'http:'];
-
 const api: ElectronAPI = {
   // Kept for backwards compatibility; prefer system.getPlatform().
   platform: process.platform,
@@ -41,11 +39,12 @@ const api: ElectronAPI = {
       Promise.resolve(process.platform as PlatformName),
 
     openExternal: (url: string): Promise<boolean> => {
+      // Sender-side validation: deny non-allowlisted protocols before the IPC
+      // message reaches the main process (least-privilege, defence-in-depth).
       try {
         const parsed = new URL(url);
-        if (ALLOWED_PROTOCOLS.includes(parsed.protocol)) {
-          ipcRenderer.send(IPC_CHANNELS.SHELL.OPEN_EXTERNAL, url);
-          return Promise.resolve(true);
+        if (ALLOWED_EXTERNAL_PROTOCOLS.includes(parsed.protocol)) {
+          return ipcRenderer.invoke(IPC_CHANNELS.SHELL.OPEN_EXTERNAL, url);
         }
       } catch {
         // ignore invalid URLs

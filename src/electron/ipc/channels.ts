@@ -5,6 +5,16 @@
  * literals are never repeated across the codebase — all call sites import
  * from this module so that a rename is a single-point change.
  */
+
+/**
+ * URL protocols permitted by `shell:openExternal`.
+ *
+ * Validated at BOTH the sender (preload) and the handler (main) boundary per
+ * the least-privilege security policy.  All other protocols are silently
+ * denied.
+ */
+export const ALLOWED_EXTERNAL_PROTOCOLS: readonly string[] = ['https:', 'http:'];
+
 export const IPC_CHANNELS = {
   WINDOW: {
     MINIMIZE: 'window:minimize',
