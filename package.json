@@ -1,0 +1,71 @@
+{
+  "name": "ui-frame",
+  "version": "0.0.0",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "build:electron": "tsc -p tsconfig.electron.json",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test",
+    "electron:dev": "concurrently --kill-others \"ng serve\" \"wait-on http://localhost:4200 && cross-env ELECTRON_ENV=development electron .\"",
+    "electron:build": "npm run build && npm run build:electron && cross-env ELECTRON_ENV=production electron .",
+    "electron:dist": "npm run build && npm run build:electron && electron-builder"
+  },
+  "private": true,
+  "build": {
+    "appId": "com.uiframe.app",
+    "productName": "UI Frame",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/ui-frame/**/*",
+      "dist-electron/**/*",
+      "package.json"
+    ],
+    "linux": {
+      "target": "AppImage"
+    },
+    "mac": {
+      "target": "dmg"
+    },
+    "win": {
+      "target": "nsis"
+    }
+  },
+  "dependencies": {
+    "@angular/animations": "^17.3.0",
+    "@angular/common": "^17.3.0",
+    "@angular/compiler": "^17.3.0",
+    "@angular/core": "^17.3.0",
+    "@angular/forms": "^17.3.0",
+    "@angular/platform-browser": "^17.3.0",
+    "@angular/platform-browser-dynamic": "^17.3.0",
+    "@angular/router": "^17.3.0",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0",
+    "zone.js": "~0.14.3"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^17.3.17",
+    "@angular/cli": "^17.3.17",
+    "@angular/compiler-cli": "^17.3.0",
+    "@types/jasmine": "~5.1.0",
+    "@types/node": "^20.19.39",
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "electron": "^28.3.3",
+    "electron-builder": "^24.13.3",
+    "jasmine-core": "~5.1.0",
+    "karma": "~6.4.0",
+    "karma-chrome-launcher": "~3.2.0",
+    "karma-coverage": "~2.2.0",
+    "karma-jasmine": "~5.1.0",
+    "karma-jasmine-html-reporter": "~2.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "~5.4.2",
+    "wait-on": "^7.2.0"
+  }
+}
