@@ -13,6 +13,18 @@ Desktop application built with Angular + Electron (Shell v1).
 npm install
 ```
 
+## Scripts pipeline
+
+| Script | Command | Description |
+|---|---|---|
+| Angular dev server | `npm start` | Serves Angular at `http://localhost:4200` |
+| Electron + Angular dev | `npm run electron:dev` | Starts Angular dev server and opens Electron in dev mode |
+| Angular production build | `npm run build` | Compiles Angular into `dist/ui-frame/` |
+| Compile Electron entrypoints | `npm run build:electron` | Compiles Electron TypeScript into `dist-electron/` |
+| Smoke test (local window) | `npm run electron:smoke` | Full build + opens Electron window locally for verification |
+| Package distributable | `npm run electron:dist` | Creates platform packages in `release/` |
+| Unit tests | `npm test` | Runs Karma/Jasmine unit tests |
+
 ## Development
 
 ### Angular only (browser)
@@ -50,14 +62,6 @@ npm run build:electron
 
 Compiled output goes to `dist-electron/`.
 
-### Run production build in Electron (smoke test)
-
-```bash
-npm run electron:build
-```
-
-Builds Angular + compiles Electron and opens the app loading the local build.
-
 ### Package distributable
 
 ```bash
@@ -65,6 +69,14 @@ npm run electron:dist
 ```
 
 Creates platform packages in `release/`.
+
+## Smoke test
+
+Run this after significant changes or before releasing to verify the shell window opens without errors:
+
+```bash
+npm run electron:smoke
+```
 
 ## Unit tests
 
