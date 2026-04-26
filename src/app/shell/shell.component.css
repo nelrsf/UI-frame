@@ -1,0 +1,173 @@
+/* ============================================================
+   shell.component.css — Layout responsive del Shell v1
+   Estrategia: desktop-first con media queries de reducción.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   Host: contenedor raíz del shell, ocupa todo el viewport
+   ------------------------------------------------------------ */
+
+:host {
+  display: grid;
+  width: 100%;
+  height: 100vh;
+
+  /* Dimensiones mínimas para resolución desktop objetivo */
+  min-width: var(--shell-min-width);
+  min-height: var(--shell-min-height);
+
+  /* El host no hace scroll: cada región gestiona el suyo */
+  overflow: hidden;
+
+  /* Grid principal desktop */
+  grid-template-areas:
+    "topbar    topbar"
+    "sidebar   workspace"
+    "statusbar statusbar";
+  grid-template-columns: var(--shell-sidebar-width) 1fr;
+  grid-template-rows:
+    var(--shell-topbar-height)
+    1fr
+    var(--shell-statusbar-height);
+
+  background-color: var(--color-bg-base);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-base);
+}
+
+/* ------------------------------------------------------------
+   Región: TopBar
+   Altura fija. Sin overflow visible (contenido recortado).
+   ------------------------------------------------------------ */
+
+.shell-topbar {
+  grid-area: topbar;
+  height: var(--shell-topbar-height);
+  overflow: hidden;
+  z-index: 100;
+}
+
+/* ------------------------------------------------------------
+   Región: Sidebar (activity-bar + panel lateral)
+   Sin scroll horizontal; el panel lateral hace scroll vertical.
+   ------------------------------------------------------------ */
+
+.shell-sidebar {
+  grid-area: sidebar;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  min-width: var(--shell-sidebar-min-width);
+  max-width: var(--shell-sidebar-max-width);
+}
+
+/* Sub-región: Activity Bar — ancho fijo, sin scroll */
+.shell-activity-bar {
+  width: var(--shell-activity-bar-width);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+/* Sub-región: Panel lateral — scroll vertical habilitado */
+.shell-sidebar-panel {
+  flex: 1;
+  overflow-x: hidden;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+/* ------------------------------------------------------------
+   Región: Workspace (toolbar + tabbar + content + bottom panel)
+   Sin scroll en el contenedor; cada sub-región gestiona el suyo.
+   ------------------------------------------------------------ */
+
+.shell-workspace {
+  grid-area: workspace;
+  display: grid;
+  grid-template-areas:
+    "toolbar"
+    "tabbar"
+    "content"
+    "bottom-panel";
+  grid-template-rows:
+    var(--shell-toolbar-height)
+    var(--shell-tabbar-height)
+    1fr
+    0px; /* bottom panel colapsado por defecto */
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* Sub-región: Toolbar — altura fija, sin scroll */
+.shell-toolbar {
+  grid-area: toolbar;
+  height: var(--shell-toolbar-height);
+  overflow: hidden;
+}
+
+/* Sub-región: TabBar — scroll horizontal para muchas pestañas; sin scroll vertical */
+.shell-tabbar {
+  grid-area: tabbar;
+  height: var(--shell-tabbar-height);
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* Sub-región: Content Area — scroll completo (área principal de trabajo) */
+.shell-content-area {
+  grid-area: content;
+  overflow: auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Sub-región: Bottom Panel — scroll completo (terminal, logs, output) */
+.shell-bottom-panel {
+  grid-area: bottom-panel;
+  overflow: auto;
+  min-height: var(--shell-bottom-panel-min);
+}
+
+/* ------------------------------------------------------------
+   Región: StatusBar
+   Altura fija. Sin overflow visible (contenido recortado).
+   ------------------------------------------------------------ */
+
+.shell-statusbar {
+  grid-area: statusbar;
+  height: var(--shell-statusbar-height);
+  overflow: hidden;
+  z-index: 100;
+}
+
+/* ============================================================
+   Breakpoints responsive — desktop-first
+   Se aplican max-width para ajustar en resoluciones menores.
+   ============================================================ */
+
+/* Desktop estándar (≤ 1280px): reducir sidebar levemente */
+@media (max-width: 1280px) {
+  :host {
+    --shell-sidebar-width: 200px;
+  }
+}
+
+/* Desktop pequeño / laptop (≤ 1024px): sidebar al mínimo */
+@media (max-width: 1024px) {
+  :host {
+    --shell-sidebar-width: var(--shell-sidebar-min-width);
+  }
+}
+
+/* Mínimo desktop objetivo (≤ 800px): ocultar panel lateral,
+   mantener activity-bar para acceso a secciones */
+@media (max-width: 800px) {
+  :host {
+    grid-template-columns: var(--shell-activity-bar-width) 1fr;
+  }
+
+  .shell-sidebar-panel {
+    display: none;
+  }
+}
