@@ -18,7 +18,9 @@ Este spec cubre la v1 del shell de aplicación de escritorio profesional inspira
 - Criterios de aceptación verificables por componente.
 - Estructura técnica de archivos que debe producir la implementación.
 
-No cubre: lógica de negocio, contenido real de paneles, autenticación, IPC avanzado ni sistema de comandos completo (esos son incrementos posteriores).
+No cubre: lógica de negocio, contenido real de paneles, autenticación ni IPC avanzado (excepto contrato mínimo de preload para shell).
+
+Excepción v1: sí cubre un sistema mínimo centralizado de comandos (registro por `id` y ejecución desde menú, toolbar y atajos básicos), dejando command palette para incrementos posteriores.
 
 ---
 
@@ -56,6 +58,7 @@ No cubre: lógica de negocio, contenido real de paneles, autenticación, IPC ava
 - Aplica el layout principal mediante CSS Grid.
 - Lee el estado inicial de layout desde `LayoutStateService`.
 - Propaga cambios de visibilidad a cada región.
+- Soporta layout dinámico con zonas dockeables (principal, lateral secundaria y bottom panel) y restauración por workspace.
 - No contiene lógica de negocio ni contenido de dominio.
 
 **Inputs:** ninguno (es el componente raíz del shell).
@@ -215,17 +218,18 @@ interface ToolbarAction {
 
 **Comportamiento:**
 - Tabs horizontales sobre el área de contenido.
-- Una tab activa a la vez (por grupo de tabs).
-- Overflow: cuando los tabs no caben, scroll horizontal suave con flechas de navegación.
+- Una tab activa a la vez por grupo, con soporte de múltiples grupos reales desde v1.
+- Overflow: cuando los tabs no caben, scroll horizontal natural (rueda o trackpad).
 - Drag para reordenar tabs (dentro del mismo grupo).
 - Botón `+` al final para abrir nueva tab.
-- Cerrar tab: botón `×` visible al hover. Confirmar si tab tiene cambios sin guardar.
+- Cerrar tab: botón `×` visible al hover. Si está dirty, delega decisión al contenido vía hook `beforeClose()` (sync/async).
 - Estados visuales: activa, inactiva, con cambios sin guardar (indicador `·`), bloqueada.
 
 **Inputs:**
 ```typescript
 @Input() tabs: TabItem[];
 @Input() activeTabId: string;
+@Input() groupId: string;
 ```
 
 **Outputs:**
@@ -245,6 +249,11 @@ interface TabItem {
   dirty: boolean;      // cambios sin guardar
   closable: boolean;
   pinned: boolean;
+  groupId: string;
+}
+
+interface TabCloseGuard {
+  beforeClose: () => boolean | Promise<boolean>;
 }
 ```
 
@@ -253,7 +262,7 @@ interface TabItem {
 - [x] Cerrar la tab activa activa la tab adyacente.
 - [x] Drag and drop reordena los tabs correctamente.
 - [x] El indicador `·` aparece cuando `dirty = true`.
-- [x] Overflow activa navegación con flechas sin romper layout.
+- [x] Overflow permite scroll horizontal natural sin romper layout.
 
 ---
 
@@ -576,6 +585,11 @@ interface IEventBusService {
 }
 ```
 
+Garantías v1 del bus:
+- Orden natural de emisión por canal.
+- Aislamiento de errores entre listeners.
+- Trazabilidad básica en desarrollo (`timestamp`, `origin`, `eventName`).
+
 ### 6.2 `LayoutStateService`
 
 ```typescript
@@ -593,7 +607,10 @@ interface LayoutState {
   sidebarWidth: number;
   bottomPanelVisible: boolean;
   bottomPanelHeight: number;
+  rightPanelVisible: boolean;
+  rightPanelWidth: number;
   activeSidebarItemId: string | null;
+  activeTabGroupId: string | null;
 }
 ```
 
@@ -601,12 +618,18 @@ interface LayoutState {
 
 ```typescript
 interface IUserPreferencesService {
+  readonly workspaceId: string;
   get<T>(key: string, defaultValue: T): T;
   set<T>(key: string, value: T): void;
   reset(key?: string): void;
   preferences$: Observable<Record<string, unknown>>;
 }
 ```
+
+Persistencia v1:
+- Ámbito por workspace/proyecto y almacenamiento local.
+- Versionado básico de esquema y fallback a defaults.
+- Sin framework formal de migraciones ni rollback avanzado en v1.
 
 ### 6.4 `PlatformService`
 
@@ -618,6 +641,50 @@ interface IPlatformService {
   readonly isLinux: boolean;
 }
 ```
+
+### 6.5 `CommandRegistryService`
+
+```typescript
+interface CommandRegistration {
+  id: string;
+  label: string;
+  shortcut?: string;
+  context?: string;
+  execute: () => void | Promise<void>;
+}
+
+interface ICommandRegistryService {
+  register(command: CommandRegistration): void;
+  execute(id: string): Promise<void>;
+  list(): ReadonlyArray<CommandRegistration>;
+}
+```
+
+### 6.6 Contrato mínimo de Preload API
+
+```typescript
+interface PreloadApi {
+  window: {
+    minimize(): void;
+    maximize(): void;
+    close(): void;
+    isMaximized(): Promise<boolean>;
+  };
+  system: {
+    getPlatform(): Promise<'win32' | 'darwin' | 'linux'>;
+    openExternal(url: string): Promise<boolean>;
+  };
+  preferences: {
+    get<T>(key: string, defaultValue: T): Promise<T>;
+    set<T>(key: string, value: T): Promise<void>;
+  };
+}
+```
+
+Reglas:
+- API mínima y tipada con principio de mínimo privilegio.
+- `openExternal` solo permite dominios/protocolos autorizados.
+- Ningún acceso directo desde UI a APIs nativas de Electron.
 
 ---
 
@@ -659,9 +726,19 @@ interface IPlatformService {
 | CSS Grid para layout raíz | Control directo sobre regiones, sin dependencia de librerías |
 | `ChangeDetectionStrategy.OnPush` en todos los componentes shell | Rendimiento con múltiples paneles abiertos |
 | RxJS `fromEvent` para resize/drag | Composición declarativa, facilita cleanup y throttle |
+| NgRx como estado global oficial desde v1 | Escalabilidad para layout/workspace/tabs/paneles/sesión/preferencias |
 | No usar librerías de UI externas en el shell | Evitar deuda de dependencias en componentes críticos; libertad de personalización |
 | Services inyectados en `root` para core services | Singleton garantizado; accesible desde cualquier módulo |
 | CSS custom properties para tema | Permite theming sin recompilación y sin JS |
+
+Presupuesto de performance v1:
+- Toggle de paneles: < 100 ms.
+- Cambio de tab: < 120 ms.
+- Resize: > 30 FPS mínimo (60 ideal).
+- Shell visible al iniciar: < 2 s en entorno estándar.
+
+Nota de testing cross-platform v1:
+- No se exige automatización CI en macOS/Windows en esta versión; se deja checklist técnico y abstracciones preparadas.
 
 ---
 
@@ -671,12 +748,13 @@ interface IPlatformService {
 - [ ] `TopBarComponent` mueve la ventana al arrastrar y adapta controles por plataforma.
 - [ ] `SidebarComponent` colapsa/expande y redimensiona, persistiendo estado.
 - [ ] `ToolbarComponent` muestra breadcrumb y acciones de layout conectadas al estado.
-- [ ] `TabBarComponent` abre, cierra, reordena y reactiva tabs correctamente.
+- [ ] `TabBarComponent` abre, cierra, reordena y reactiva tabs correctamente en múltiples grupos.
 - [ ] `ContentAreaComponent` muestra empty state y cambia vistas sin parpadeo.
-- [ ] `BottomPanelComponent` aparece/desaparece con animación y es redimensionable.
+- [ ] `BottomPanelComponent` aparece/desaparece con animación, es redimensionable y forma parte de docking dinámico.
 - [ ] `StatusBarComponent` muestra ítems en zonas correctas con colores semánticos.
 - [ ] Todos los tokens de tema oscuro aplicados globalmente vía CSS variables.
 - [ ] `EventBusService` y `LayoutStateService` operativos y conectados al shell.
-- [ ] `UserPreferencesService` persiste y restaura sidebar width, bottom panel height y sección activa.
+- [ ] `UserPreferencesService` persiste por workspace y restaura dimensiones, secciones y layout de grupos.
+- [ ] `CommandRegistryService` conecta registro/ejecución mínima desde menú, toolbar y atajos básicos.
 - [ ] Sin errores de compilación ni errores en consola al iniciar.
-- [ ] Navegación por teclado funcional en todos los elementos interactivos del shell.
+- [ ] Navegación por teclado base, foco visible y labels esenciales activos en shell v1.

@@ -70,7 +70,7 @@ Infraestructura implementa puertos definidos por Aplicación/Dominio.
 ### 5.2 Sistema de Paneles
 - Drag and drop entre zonas de acople.
 - Redimensionamiento fluido con límites mínimos/máximos.
-- Persistencia de layout por usuario.
+- Persistencia de layout por workspace/proyecto en almacenamiento local.
 - Restauración del estado al reiniciar la app.
 
 ### 5.3 Sistema de Pestañas
@@ -90,11 +90,14 @@ Infraestructura implementa puertos definidos por Aplicación/Dominio.
 ### 7.1 Event Bus
 - Canal central para eventos de aplicación desacoplados.
 - Eventos versionados y nombrados por dominio.
+- Orden natural de emisión y entrega determinística dentro del proceso.
 - Sin dependencia circular entre módulos emisores y consumidores.
+- Aislamiento de errores entre listeners para evitar cascadas de fallo.
 - Trazabilidad de eventos críticos para depuración.
 
 ### 7.2 Estado Centralizado (cuando sea necesario)
 - Usar estado global solo para información transversal (sesión, layout, preferencias, contexto activo).
+- NgRx se establece como arquitectura oficial de estado global desde v1.
 - Mantener estado local para comportamiento estrictamente de componente.
 - Definir fronteras claras para evitar sobrecarga de estado global.
 
@@ -105,9 +108,9 @@ Infraestructura implementa puertos definidos por Aplicación/Dominio.
 - Reutilizable por menú, toolbar, atajos y paleta de comandos futura.
 
 ## 8. Configuración y Persistencia
-- Preferencias del usuario persistentes (tema, layout, paneles, atajos, sidebar).
-- Versionado de esquema de configuración para migraciones futuras.
-- Guardado incremental para minimizar pérdida de estado.
+- Preferencias por workspace/proyecto persistentes en local (tema, layout, paneles, atajos, sidebar).
+- Versionado básico de esquema con defaults seguros ante fallos.
+- Guardado incremental para minimizar pérdida de estado, sin rollback formal en v1.
 - Recuperación segura ante configuración corrupta (fallback a defaults).
 
 ## 9. Rendimiento y Escalabilidad
@@ -116,16 +119,17 @@ Infraestructura implementa puertos definidos por Aplicación/Dominio.
 - Virtualización en listas/paneles de alto volumen.
 - Minimizar repaints/reflows en operaciones de drag, dock y resize.
 - IPC entre procesos optimizado, tipado y con payload mínimo.
-- Presupuesto de rendimiento para interacción: la UI debe responder de forma fluida bajo carga normal de uso profesional.
+- Presupuesto v1: toggle de paneles < 100 ms, cambio de tab < 120 ms, resize > 30 FPS (60 ideal), shell visible < 2 s en entorno estándar.
 
 ## 10. Extensibilidad y Plugins
 - Definir un contrato de extensiones con lifecycle controlado.
-- Exponer puntos de extensión: comandos, paneles, vistas, contribuciones de menú y toolbar.
+- Exponer en v1 contrato mínimo interno con puntos de extensión para comandos, paneles, vistas y status bar; menú/toolbar como integración progresiva.
 - Aislar plugins por capacidades para reducir riesgo sistémico.
 - Versionar API interna de extensiones para compatibilidad progresiva.
 
 ## 11. Seguridad y Confiabilidad
 - Principio de mínimo privilegio en integración Electron.
+- API de preload mínima, tipada y con permisos explícitos por capacidad.
 - IPC validado en origen y destino.
 - No exponer APIs del sistema operativo sin capa de autorización.
 - Manejo de errores centralizado con logging estructurado.
@@ -143,11 +147,11 @@ El objetivo inicial se considera cumplido cuando exista un esqueleto de UI profe
 - Shell de Electron funcional en al menos un entorno de desarrollo.
 - App Angular integrada en ventana principal.
 - Layout base con menú superior, toolbar, sidebar configurable y área central.
-- Sistema inicial de pestañas múltiples.
-- Primer sistema funcional de paneles dockables/redimensionables.
+- Sistema de pestañas múltiples con soporte multi-grupo.
+- Sistema funcional de paneles dockables/redimensionables con acople inferior y lateral secundaria.
 - Event Bus operativo con al menos eventos de navegación y layout.
 - Inyección de dependencias activa para servicios principales.
-- Persistencia básica de configuración de usuario.
+- Persistencia básica de configuración por workspace/proyecto.
 - Registro central de comandos conectado a menú y toolbar.
 - Tema oscuro predeterminado aplicado por variables globales.
 

@@ -12,7 +12,7 @@ Objetivo: dejar lista la base de runtime y build para Electron + Angular.
 Entregables:
 - Estructura base de proyecto con entrypoints Electron (`main.ts`, `preload.ts`) y bootstrap Angular.
 - Configuracion de entornos (dev/prod) para levantar Angular dentro de ventana Electron.
-- Contrato de IPC inicial (canal de plataforma y eventos de ventana) tipado.
+- Contrato minimo de preload API tipado y seguro (ventana, plataforma, preferencias locales, openExternal permitido).
 - Definicion de variables globales de tema y dimensiones del shell.
 
 Criterios de salida:
@@ -29,7 +29,9 @@ Entregables:
 - `LayoutStateService` para estado global de layout.
 - `UserPreferencesService` para persistencia local con version de esquema.
 - `PlatformService` para reglas de titlebar por SO.
+- `CommandRegistryService` minimo para registro/ejecucion por `id`.
 - Modelos core (`AppEvent`, `LayoutState`, `LayoutSnapshot`).
+- Store global con NgRx desde inicio para layout, workspace, tabs, paneles, sesion y preferencias.
 
 Criterios de salida:
 - Eventos de layout trazables en desarrollo.
@@ -57,7 +59,9 @@ Objetivo: entregar experiencia operativa del shell.
 Entregables:
 - Resize de sidebar y bottom panel con RxJS `fromEvent` + `throttleTime`.
 - Toggle de sidebar y bottom panel conectado a toolbar/atajos.
-- Flujo de tabs: seleccionar, cerrar, reordenar, overflow.
+- Flujo de tabs: seleccionar, cerrar, reordenar, overflow horizontal natural y soporte multi-grupo.
+- Cierre de tabs dirty delegando a hook `beforeClose()` sync/async de la vista alojada.
+- Docking avanzado por etapas en v1 (movimiento entre zonas, lateral secundaria, persistencia de layout).
 - Empty state en content area.
 
 Criterios de salida:
@@ -110,18 +114,18 @@ Criterios de salida:
 - `workspace`: tabs abiertas, tab activa, metadata de dirty/pinned.
 - `uiContext`: breadcrumbs, acciones disponibles, status items.
 - `session`: plataforma, ventana maximizada, readiness del shell.
-- `preferences`: snapshot persistible por usuario.
+- `preferences`: snapshot persistible por workspace/proyecto.
 
 ### Enfoque tecnico recomendado
-- Store liviano basado en RxJS + `BehaviorSubject` por dominio en `core/state`.
-- Selectores derivados memoizados para evitar renders innecesarios.
-- Politica de inmutabilidad por convencion (actualizaciones por reducer functions simples).
-- Sin incorporar libreria pesada de estado en v1 (evita sobrecosto); dejar punto de migracion a NgRx si crece complejidad.
+- NgRx como arquitectura oficial desde v1 para estado transversal (`layout`, `workspace`, `uiContext`, `session`, `preferences`).
+- Feature stores por dominio con acciones/eventos tipados y reducers puros.
+- Selectores memoizados para evitar renders innecesarios.
+- Effects solo para IO (persistencia local, preload/IPC, side effects de comandos).
 
 ### Persistencia
 - Persistir solo claves necesarias (`sidebarWidth`, `bottomPanelHeight`, `activeSidebarItemId`, visibilidad paneles, ultimo layout valido).
-- Versionar esquema de preferencias (`preferencesSchemaVersion`).
-- Fallback automatico a defaults ante corrupcion.
+- Versionar esquema de preferencias de forma basica (`preferencesSchemaVersion`).
+- Fallback automatico a defaults ante corrupcion; sin rollback/migracion formal avanzada en v1.
 
 ## 4) Estrategia de eventos internos
 
@@ -237,10 +241,10 @@ Mitigacion: `throttleTime`, OnPush, updates por CSS vars, minimizar writes al DO
 Mitigacion: estrategia de snapshot atomico y validacion de esquema antes de hidratar.
 
 4. Complejidad de tabs (overflow + reorder + dirty state) en v1.
-Mitigacion: priorizar flujo MVP (select/close/reorder basico) y dejar multi-grupo para fase posterior.
+Mitigacion: implementar modelo multi-grupo minimo desde inicio y entregar capacidades por etapas.
 
 5. Divergencias cross-platform en titlebar y window controls.
-Mitigacion: matriz de pruebas por SO y feature flags por plataforma.
+Mitigacion: abstracciones por plataforma + checklist manual por SO en v1; automatizacion CI cross-platform en fase posterior.
 
 6. Riesgo de memory leaks por listeners de eventos y drag.
 Mitigacion: cleanup estricto (`takeUntil`/DestroyRef) y pruebas de larga sesion.
@@ -257,7 +261,7 @@ Mitigacion: aplicar Clean Architecture solo en fronteras criticas del shell, no 
 - Lazy loading para modulos no criticos fuera del shell base.
 - Evitar librerias UI pesadas en componentes nucleares.
 - Payload IPC minimo, serializable, tipado y con validacion de entrada.
-- Presupuesto de interaccion objetivo: operaciones de UI frecuentes por debajo de 16 ms por frame en entorno de desarrollo estandar.
+- Presupuesto v1: toggle de paneles < 100 ms, cambio de tab < 120 ms, resize > 30 FPS (60 ideal), shell visible < 2 s en entorno estandar.
 
 ## 8) Estrategia de testing
 
@@ -269,7 +273,7 @@ Mitigacion: aplicar Clean Architecture solo en fronteras criticas del shell, no 
 ### Cobertura objetivo v1
 - Unit: >= 80% en `core/services` y `core/state`.
 - Integracion: casos clave de sincronizacion layout/eventos.
-- E2E: smoke cross-platform (al menos Linux + una plataforma adicional en CI futura).
+- E2E: smoke en Linux para v1; cross-platform automatizado diferido a incrementos posteriores.
 
 ### Casos obligatorios MVP
 - Restauracion de `sidebarWidth` y `bottomPanelHeight` tras reinicio.
@@ -285,13 +289,31 @@ El MVP se considera funcional cuando:
 1. Electron abre una ventana con Angular embebido y shell completo renderizado.
 2. Existen TopBar, Sidebar, Toolbar, TabBar, ContentArea, BottomPanel y StatusBar operativos.
 3. Sidebar y BottomPanel se pueden mostrar/ocultar y redimensionar con persistencia.
-4. TabBar permite abrir, seleccionar, cerrar y reordenar tabs simples.
+4. TabBar permite abrir, seleccionar, cerrar y reordenar tabs en esquema multi-grupo.
 5. ContentArea muestra vista activa y empty state sin tabs.
 6. EventBus publica eventos de shell/layout/sidebar/bottom-panel/tabs.
 7. Estado global de layout y workspace funciona y se restaura.
 8. Tema oscuro por tokens globales aplicado en todas las regiones.
 9. Navegacion por teclado base y atributos ARIA esenciales estan activos.
 10. No hay errores de compilacion ni errores bloqueantes en consola al iniciar.
+
+## 11) Decisiones cerradas incorporadas (resumen)
+
+1. Comandos minimos en MVP: registro central + menu + toolbar + atajos basicos.
+2. Docking avanzado incluido en v1 con entrega por etapas.
+3. Preload API minima, tipada y segura (minimo privilegio).
+4. Persistencia por workspace/proyecto, solo local.
+5. Contrato minimo de extensibilidad interna en v1.
+6. Cierre dirty mediante `beforeClose()` definido por la vista de tab.
+7. Event Bus tipado con orden natural, aislamiento de errores y trazabilidad dev.
+8. Tabs multi-grupo reales desde v1.
+9. NgRx oficial desde inicio.
+10. Preferencias con versionado basico y defaults (sin rollback avanzado).
+11. Overflow tabs con scroll horizontal natural.
+12. Frontera publica estable para APIs de extensibilidad.
+13. Presupuestos de performance formalizados para v1.
+14. Accesibilidad baseline basica como criterio de aprobacion.
+15. Sin testing cross-platform automatizado en v1.
 
 ## 10) Secuencia sugerida de ejecucion (resumen operativo)
 
