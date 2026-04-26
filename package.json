@@ -40,6 +40,8 @@
     }
   },
   "dependencies": {
+    "@ngrx/effects": "^19.2.1",
+    "@ngrx/store": "^19.2.1",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },
