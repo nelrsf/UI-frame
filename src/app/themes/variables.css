@@ -1,0 +1,6 @@
+/* ============================================================
+   variables.css — re-exports the active theme token set.
+   Import this file when consuming tokens in component styles.
+   ============================================================ */
+
+@import './dark.css';
