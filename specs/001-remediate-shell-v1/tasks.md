@@ -53,7 +53,7 @@ This sequence covers governance validity, AppShell mounting, Electron bridge cor
 - [ ] T007 Add platform and Electron adapters in `src/app/core/infrastructure/electron/adapters/platform.adapter.ts`, `src/app/core/infrastructure/electron/adapters/preferences.adapter.ts`, and `src/app/core/infrastructure/electron/adapters/window-controls.adapter.ts`
 - [ ] T008 Create root shell state bootstrap in `src/app/app.config.ts`, `src/main.ts`, `src/app/core/state/index.ts`, and `src/app/core/state/app.state.ts`
 - [ ] T009 Define workspace identity and persistence utilities in `src/app/core/utils/workspace-id.util.ts`, `src/app/core/models/preferences.model.ts`, and `src/app/core/infrastructure/persistence/local-storage/preferences.repository.ts`
-- [ ] T010 Extend typed event contracts in `src/app/core/models/app-event.model.ts` and `src/app/core/services/event-bus.service.ts`
+- [x] T010 Extend typed event contracts in `src/app/core/models/app-event.model.ts` and `src/app/core/services/event-bus.service.ts`
 - [ ] T011 Extend centralized command contracts in `src/app/core/models/command-registration.model.ts` and `src/app/core/services/command-registry.service.ts`
 
 **Checkpoint**: Secure bridge, workspace identity, core eventing, and command foundations exist and satisfy Gates `CG-02` through `CG-05`.
