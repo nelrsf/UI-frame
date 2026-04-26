@@ -216,4 +216,86 @@ describe('CommandRegistryService', () => {
       expect(events[0].payload.timestamp).toBeLessThanOrEqual(after);
     });
   });
+
+  // ---------------------------------------------------------------------------
+  // UI integration metadata — icon, description, category
+  // ---------------------------------------------------------------------------
+
+  describe('UI integration metadata', () => {
+    it('list() should include optional icon field', () => {
+      service.register({ id: 'cmd.icon', label: 'Icon', icon: 'save', execute: () => {} });
+      expect(service.list()[0].icon).toBe('save');
+    });
+
+    it('list() should include optional description field', () => {
+      service.register({ id: 'cmd.desc', label: 'Desc', description: 'Save the file', execute: () => {} });
+      expect(service.list()[0].description).toBe('Save the file');
+    });
+
+    it('list() should include optional category field', () => {
+      service.register({ id: 'cmd.cat', label: 'Cat', category: 'File', execute: () => {} });
+      expect(service.list()[0].category).toBe('File');
+    });
+
+    it('list() should include all UI metadata fields together', () => {
+      service.register({
+        id: 'cmd.full',
+        label: 'Full',
+        shortcut: 'Ctrl+S',
+        context: 'editor',
+        icon: 'save',
+        description: 'Save the current file',
+        category: 'File',
+        execute: () => {},
+      });
+      const cmd = service.list()[0];
+      expect(cmd.icon).toBe('save');
+      expect(cmd.description).toBe('Save the current file');
+      expect(cmd.category).toBe('File');
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // getById
+  // ---------------------------------------------------------------------------
+
+  describe('getById', () => {
+    it('should return the registered command for a known id', () => {
+      service.register({ id: 'cmd.x', label: 'X', execute: () => {} });
+      const cmd = service.getById('cmd.x');
+      expect(cmd).toBeDefined();
+      expect(cmd!.id).toBe('cmd.x');
+      expect(cmd!.label).toBe('X');
+    });
+
+    it('should return undefined for an unknown id', () => {
+      expect(service.getById('nonexistent.id')).toBeUndefined();
+    });
+
+    it('should reflect the latest registration after overwrite', () => {
+      service.register({ id: 'cmd.y', label: 'First', execute: () => {} });
+      service.register({ id: 'cmd.y', label: 'Second', execute: () => {} });
+      expect(service.getById('cmd.y')!.label).toBe('Second');
+    });
+
+    it('should return the command including all metadata fields', () => {
+      service.register({
+        id: 'cmd.meta',
+        label: 'Meta',
+        shortcut: 'Ctrl+M',
+        context: 'global',
+        icon: 'menu',
+        description: 'Open menu',
+        category: 'View',
+        execute: () => {},
+      });
+      const cmd = service.getById('cmd.meta');
+      expect(cmd).toBeDefined();
+      expect(cmd!.shortcut).toBe('Ctrl+M');
+      expect(cmd!.context).toBe('global');
+      expect(cmd!.icon).toBe('menu');
+      expect(cmd!.description).toBe('Open menu');
+      expect(cmd!.category).toBe('View');
+    });
+  });
 });
