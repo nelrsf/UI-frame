@@ -4,11 +4,14 @@
    ============================================================ */
 
 /* ------------------------------------------------------------
-   Host: contenedor raíz del shell, ocupa todo el viewport
+   Host: contenedor raíz del shell, ocupa todo el viewport.
+   El grid se aplica en .shell-root para que los grid-area de
+   sus hijos directos (sidebar, workspace, statusbar) se
+   resuelvan correctamente.
    ------------------------------------------------------------ */
 
 :host {
-  display: grid;
+  display: block;
   width: 100%;
   height: 100vh;
 
@@ -16,7 +19,25 @@
   min-width: var(--shell-min-width);
   min-height: var(--shell-min-height);
 
-  /* El host no hace scroll: cada región gestiona el suyo */
+  overflow: hidden;
+
+  background-color: var(--color-bg-base);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-base);
+}
+
+/* ------------------------------------------------------------
+   Shell root: contenedor grid real. Sus hijos directos son las
+   regiones del shell (sidebar, workspace, statusbar).
+   ------------------------------------------------------------ */
+
+.shell-root {
+  display: grid;
+  width: 100%;
+  height: 100%;
+
+  /* El root no hace scroll: cada región gestiona el suyo */
   overflow: hidden;
 
   /* Grid principal desktop */
@@ -27,11 +48,6 @@
   grid-template-rows:
     1fr
     var(--shell-statusbar-height);
-
-  background-color: var(--color-bg-base);
-  color: var(--color-text-primary);
-  font-family: var(--font-family-ui);
-  font-size: var(--font-size-base);
 }
 
 /* ------------------------------------------------------------
@@ -149,7 +165,7 @@
 /* Mínimo desktop objetivo (≤ 800px): ocultar panel lateral,
    mantener activity-bar para acceso a secciones */
 @media (max-width: 800px) {
-  :host {
+  .shell-root {
     grid-template-columns: var(--shell-activity-bar-width) 1fr;
   }
 
