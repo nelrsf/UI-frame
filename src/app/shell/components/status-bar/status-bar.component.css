@@ -1,0 +1,96 @@
+/* ============================================================
+   status-bar.component.css — StatusBar shell region
+   Height: 24px (--shell-statusbar-height). Fixed to the bottom.
+   ============================================================ */
+
+:host {
+  display: block;
+  width: 100%;
+  height: var(--shell-statusbar-height, 24px);
+}
+
+.status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-statusbar-bg, #007acc);
+  color: var(--color-statusbar-text, #ffffff);
+  font-family: var(--font-family-ui, "Segoe UI", system-ui, sans-serif);
+  font-size: var(--font-size-xs, 11px);
+  overflow: hidden;
+}
+
+/* Left and right item zones */
+.status-bar__left,
+.status-bar__right {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  overflow: hidden;
+}
+
+.status-bar__left {
+  flex: 1;
+  justify-content: flex-start;
+}
+
+.status-bar__right {
+  flex-shrink: 0;
+  justify-content: flex-end;
+}
+
+/* Individual item */
+.status-bar__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1, 4px);
+  height: 100%;
+  padding: 0 var(--spacing-2, 8px);
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: default;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-radius: 0;
+}
+
+.status-bar__item--clickable {
+  cursor: pointer;
+}
+
+.status-bar__item--clickable:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.status-bar__item--clickable:focus-visible {
+  outline: 1px solid var(--color-border-focus, #007fd4);
+  outline-offset: -1px;
+}
+
+/* Semantic color variants */
+.status-bar__item--warning {
+  color: var(--color-warning, #cca700);
+}
+
+.status-bar__item--error {
+  color: var(--color-error, #f44747);
+}
+
+.status-bar__item--success {
+  color: var(--color-success, #4ec9b0);
+}
+
+.status-bar__item-icon {
+  flex-shrink: 0;
+}
+
+.status-bar__item-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
