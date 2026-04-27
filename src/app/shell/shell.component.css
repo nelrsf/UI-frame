@@ -21,12 +21,10 @@
 
   /* Grid principal desktop */
   grid-template-areas:
-    "topbar    topbar"
     "sidebar   workspace"
     "statusbar statusbar";
   grid-template-columns: var(--shell-sidebar-width) 1fr;
   grid-template-rows:
-    var(--shell-topbar-height)
     1fr
     var(--shell-statusbar-height);
 
@@ -34,18 +32,6 @@
   color: var(--color-text-primary);
   font-family: var(--font-family-ui);
   font-size: var(--font-size-base);
-}
-
-/* ------------------------------------------------------------
-   Región: TopBar
-   Altura fija. Sin overflow visible (contenido recortado).
-   ------------------------------------------------------------ */
-
-.shell-topbar {
-  grid-area: topbar;
-  height: var(--shell-topbar-height);
-  overflow: hidden;
-  z-index: 100;
 }
 
 /* ------------------------------------------------------------
