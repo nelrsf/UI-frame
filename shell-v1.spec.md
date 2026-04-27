@@ -27,9 +27,7 @@ Excepción v1: sí cubre un sistema mínimo centralizado de comandos (registro p
 ## 2. Wireframe Estructural
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│  TOP BAR  [Título / Menú / Acciones globales / Controles]   │  32px
-├───────┬─────────────────────────────────────────────────────┤
+┌───────┬─────────────────────────────────────────────────────┐
 │       │  TOOLBAR  [Acciones contextuales / Breadcrumb]      │  40px
 │       ├──────────────────────────────────────────┬──────────┤
 │  S    │  TAB BAR  [Tab1] [Tab2▸] [Tab3] [+]      │          │  36px
@@ -40,11 +38,13 @@ Excepción v1: sí cubre un sistema mínimo centralizado de comandos (registro p
 │  A    │                                          │          │
 │  R    ├──────────────────────────────────────────┴──────────┤
 │       │  BOTTOM PANEL  [Terminal / Logs / Output]  [^]      │  variable
-├───────┼─────────────────────────────────────────────────────┤
-│       │  STATUS BAR  [Info contextual derecha/izquierda]    │  24px
-└───────┴─────────────────────────────────────────────────────┘
+├───────┴─────────────────────────────────────────────────────┤
+│          STATUS BAR  [Info contextual derecha/izquierda]    │  24px
+└─────────────────────────────────────────────────────────────┘
  ← 240px →
 ```
+
+> **Nota:** La barra de título nativa del sistema operativo (minimizar, maximizar, cerrar) es proporcionada por Electron (`frame: true`). No existe un componente `TopBarComponent` personalizado.
 
 ---
 
@@ -73,45 +73,11 @@ Excepción v1: sí cubre un sistema mínimo centralizado de comandos (registro p
 **Contrato CSS Grid:**
 ```
 grid-template-areas:
-  "topbar   topbar"
   "sidebar  workspace"
   "statusbar statusbar"
 grid-template-columns: [sidebarWidth] 1fr
-grid-template-rows: 32px 1fr 24px
+grid-template-rows: 1fr 24px
 ```
-
----
-
-### 3.2 `TopBarComponent`
-
-**Responsabilidad única:** Barra superior con título de la app, controles nativos de ventana y acciones globales.
-
-**Comportamiento:**
-- Altura fija: 32px. No redimensionable.
-- Región draggable para mover la ventana (usando `-webkit-app-region: drag`).
-- Excluir botones del área draggable (`-webkit-app-region: no-drag`).
-- En Windows/Linux: mostrar botones de control de ventana (minimize, maximize, close) propios si la titlebarra nativa está deshabilitada. En macOS: respetar traffic lights nativos.
-- Detectar plataforma mediante `PlatformService` para ajustar comportamiento.
-
-**Slots de contenido (ng-content proyectados):**
-- `[slot="brand"]` — Nombre/icono de la app (izquierda).
-- `[slot="menu"]` — Menú principal horizontal (centro-izquierda).
-- `[slot="actions"]` — Acciones globales (centro-derecha).
-- `[slot="window-controls"]` — Control nativo de ventana (extremo derecho).
-
-**Interfaz de estado:**
-```typescript
-interface TopBarState {
-  title: string;
-  platform: 'win32' | 'darwin' | 'linux';
-  windowMaximized: boolean;
-}
-```
-
-**Criterio de aceptación:**
-- [x] Arrastrar la barra mueve la ventana Electron.
-- [x] Botones de ventana responden correctamente por plataforma.
-- [x] Slots de contenido proyectan contenido externo sin romper layout.
 
 ---
 

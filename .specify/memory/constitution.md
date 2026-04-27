@@ -31,11 +31,13 @@ Presentation code MUST NOT call Electron, Node.js, local storage, or operating-s
 directly. All operating-system capabilities MUST cross a port and adapter boundary.
 
 ### II. Shell-First UX Contract
-Shell v1 MUST deliver a professional desktop shell composed of TopBar, Sidebar, Toolbar,
+Shell v1 MUST deliver a professional desktop shell composed of Sidebar, Toolbar,
 TabBar, ContentArea, BottomPanel, and StatusBar mounted from a single AppShell root.
-The root shell MUST replace placeholder starter content before any new MVP work proceeds.
-Layout regions MUST be responsive desktop-first, keyboard reachable, and persist enough
-workspace state to restore the shell safely after restart.
+The native OS title bar (Electron default frame) provides window controls; no custom
+TopBar component is required. The root shell MUST replace placeholder starter content
+before any new MVP work proceeds. Layout regions MUST be responsive desktop-first,
+keyboard reachable, and persist enough workspace state to restore the shell safely
+after restart.
 
 ### III. State, Commands, and Events Discipline
 Global state MUST only contain transversal shell concerns such as layout, workspace,

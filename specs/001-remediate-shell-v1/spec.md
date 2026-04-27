@@ -50,8 +50,8 @@ project artifacts.
 runtime quality gate while the root component still renders placeholder content.
 
 **Independent Test**: Start the application and confirm that the root view renders AppShell with
-TopBar, Sidebar, Toolbar, TabBar, ContentArea, BottomPanel, and StatusBar, and that no Angular
-starter markup remains visible.
+Sidebar, Toolbar, TabBar, ContentArea, BottomPanel, and StatusBar using the native OS title bar,
+and that no Angular starter markup remains visible.
 
 **Acceptance Scenarios**:
 
@@ -187,8 +187,9 @@ integration, and Electron smoke checks to confirm every requirement maps to an e
   the precedence order `constitution > spec > plan > tasks`.
 - **FR-AppShell**: The Angular starter root MUST be replaced with a mounted AppShell entry point so
   the first visible UI is the real Shell v1 layout.
-- **FR-ShellComponents**: The shell MUST implement TopBar, Sidebar, Toolbar, TabBar, ContentArea,
-  BottomPanel, and StatusBar as explicit regions with clear responsibilities.
+- **FR-ShellComponents**: The shell MUST implement Sidebar, Toolbar, TabBar, ContentArea,
+  BottomPanel, and StatusBar as explicit regions with clear responsibilities. The native OS title
+  bar (Electron default frame) provides window controls without a custom TopBar component.
 - **FR-Layout**: The AppShell MUST use a desktop-first root grid, token-driven dimensions, and
   deterministic responsive behavior for supported desktop widths.
 - **FR-Tabs**: The shell MUST support multi-group tabs with selection, reorder, close, dirty state,
@@ -235,8 +236,6 @@ integration, and Electron smoke checks to confirm every requirement maps to an e
 
 - **AC-AppShell-01**: App startup renders AppShell as the root view, and no Angular starter content
   remains in the DOM.
-- **AC-TopBar-01**: TopBar exposes brand, menu/actions, and platform-aware window controls without
-  breaking drag versus non-drag interaction zones.
 - **AC-Sidebar-01**: Sidebar keeps a fixed activity bar, supports collapse/expand of the content
   panel, and persists the active item and allowed width range.
 - **AC-Toolbar-01**: Toolbar reflects context actions and layout toggles from centralized shell
