@@ -63,6 +63,13 @@ function createWindow(): void {
     );
   }
 
+  mainWindow.webContents.on('did-finish-load', () => {
+    // Emit a detectable signal so the headless smoke runner can confirm the
+    // shell became visible.  The prefix keeps it distinguishable from normal
+    // application output.
+    process.stdout.write('[smoke] shell:visible\n');
+  });
+
   mainWindow.webContents.setWindowOpenHandler(({ url: targetUrl }) => {
     // Validate before delegating to the OS — deny all non-allowlisted protocols.
     try {
