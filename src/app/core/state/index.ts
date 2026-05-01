@@ -5,3 +5,4 @@
  * can reference the application state shape from a single stable import path.
  */
 export type { AppState } from './app.state';
+export * from './session';
