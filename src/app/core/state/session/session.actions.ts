@@ -18,3 +18,12 @@ export const shellReady = createAction(
   '[Session] Shell Ready',
   props<{ timestamp: number }>()
 );
+
+/**
+ * Dispatched when the Electron window maximized/unmaximized state changes.
+ * Consumed by the shell to adjust layout chrome (e.g. resize-handle visibility).
+ */
+export const setWindowMaximized = createAction(
+  '[Session] Set Window Maximized',
+  props<{ maximized: boolean }>()
+);
