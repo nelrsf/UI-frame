@@ -25,6 +25,11 @@ describe('PreferencesRepository', () => {
       expect(key).toContain('my-ws');
       expect(key).toContain(String(PREFERENCES_SCHEMA_VERSION));
     });
+
+    it('should match the exact format prefs:{workspaceId}:v{version}', () => {
+      const key = repo.storageKey('ws-abc');
+      expect(key).toBe(`prefs:ws-abc:v${PREFERENCES_SCHEMA_VERSION}`);
+    });
   });
 
   describe('has', () => {
@@ -46,6 +51,16 @@ describe('PreferencesRepository', () => {
     it('should return false for corrupt JSON', () => {
       localStorage.setItem(repo.storageKey('corrupt-has-ws'), '{ not valid json }');
       expect(repo.has('corrupt-has-ws')).toBeFalse();
+    });
+
+    it('should return false when data field is null', () => {
+      localStorage.setItem(repo.storageKey('null-data-has-ws'), JSON.stringify({
+        schemaVersion: PREFERENCES_SCHEMA_VERSION,
+        workspaceId: 'null-data-has-ws',
+        savedAt: new Date().toISOString(),
+        data: null,
+      }));
+      expect(repo.has('null-data-has-ws')).toBeFalse();
     });
   });
 
@@ -101,6 +116,16 @@ describe('PreferencesRepository', () => {
         data: { key: 'value' },
       }));
       expect(repo.load('no-ts-ws')).toEqual({});
+    });
+
+    it('should return empty object when data field is null', () => {
+      localStorage.setItem(repo.storageKey('null-data-load-ws'), JSON.stringify({
+        schemaVersion: PREFERENCES_SCHEMA_VERSION,
+        workspaceId: 'null-data-load-ws',
+        savedAt: new Date().toISOString(),
+        data: null,
+      }));
+      expect(repo.load('null-data-load-ws')).toEqual({});
     });
   });
 

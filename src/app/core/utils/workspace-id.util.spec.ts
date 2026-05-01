@@ -50,6 +50,10 @@ describe('workspace-id.util', () => {
     it('should return empty string unchanged', () => {
       expect(normalizeWorkspaceRoot('')).toBe('');
     });
+
+    it('should handle mixed backslashes and forward slashes', () => {
+      expect(normalizeWorkspaceRoot('C:\\Users/dev\\project')).toBe('c:/Users/dev/project');
+    });
   });
 
   describe('generateWorkspaceId', () => {
@@ -73,6 +77,12 @@ describe('workspace-id.util', () => {
       const id1 = await generateWorkspaceId('/home/user/project-a');
       const id2 = await generateWorkspaceId('/home/user/project-b');
       expect(id1).not.toBe(id2);
+    });
+
+    it('should produce the known hash for a pinned path (algorithm regression guard)', async () => {
+      // SHA-256('/home/user/project') first 16 hex chars — pins the hashing algorithm.
+      const id = await generateWorkspaceId('/home/user/project');
+      expect(id).toBe('ws-9dad1e4e08b0b11c');
     });
   });
 
@@ -104,6 +114,14 @@ describe('workspace-id.util', () => {
       const id1 = await resolveWorkspaceId('C:\\Users\\dev\\project');
       const id2 = await resolveWorkspaceId('c:/Users/dev/project');
       expect(id1).toBe(id2);
+    });
+
+    it('should produce a generated hash (not FALLBACK_WORKSPACE_ID) for the default sentinel', async () => {
+      // The sentinel root is treated as a real path when passed explicitly;
+      // only absent/null/empty paths fall back to FALLBACK_WORKSPACE_ID.
+      const id = await resolveWorkspaceId(DEFAULT_WORKSPACE_SENTINEL);
+      expect(id).not.toBe(FALLBACK_WORKSPACE_ID);
+      expect(id).toMatch(/^ws-[0-9a-f]{16}$/);
     });
   });
 });

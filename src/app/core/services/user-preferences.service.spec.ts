@@ -168,4 +168,26 @@ describe('UserPreferencesService', () => {
       expect(service.get('hidden', 'fallback')).toBe('fallback');
     });
   });
+
+  describe('set before initWorkspace', () => {
+    it('should not write to localStorage when workspaceId is not yet set', () => {
+      service.set('earlyKey', 'earlyValue');
+      expect(localStorage.length).toBe(0);
+    });
+
+    it('should still update the in-memory value before initWorkspace', () => {
+      service.set('earlyKey', 'earlyValue');
+      expect(service.get('earlyKey', 'missing')).toBe('earlyValue');
+    });
+  });
+
+  describe('re-initialization', () => {
+    it('should reload persisted data when the same workspace is re-initialized', () => {
+      service.initWorkspace('ws-reload');
+      service.set('theme', 'dark');
+
+      service.initWorkspace('ws-reload');
+      expect(service.get('theme', 'light')).toBe('dark');
+    });
+  });
 });
