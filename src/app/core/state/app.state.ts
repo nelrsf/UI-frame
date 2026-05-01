@@ -1,3 +1,5 @@
+import { SessionState } from './session/session.reducer';
+
 /**
  * AppState defines the root NgRx state shape for the Shell v1 application.
  *
@@ -19,8 +21,8 @@ export interface AppState {
   readonly layout?: unknown;
   // Populated once the workspace feature slice is registered (T-future).
   readonly workspace?: unknown;
-  // Populated once the session feature slice is registered (T-future).
-  readonly session?: unknown;
+  // Registered in app.config.ts via provideState('session', sessionReducer).
+  readonly session?: SessionState;
   // Populated once the uiContext feature slice is registered (T-future).
   readonly uiContext?: unknown;
   // Populated once the preferences feature slice is registered (T-future).
