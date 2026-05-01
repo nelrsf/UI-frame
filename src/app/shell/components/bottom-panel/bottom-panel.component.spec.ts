@@ -129,4 +129,44 @@ describe('BottomPanelComponent', () => {
     const fixture = TestBed.createComponent(BottomPanelComponent);
     expect(fixture.componentInstance.heightChange).toBeDefined();
   });
+
+  it('should assign id to each tab button based on panel id', () => {
+    const fixture = TestBed.createComponent(BottomPanelComponent);
+    fixture.componentInstance.visible = true;
+    fixture.componentInstance.panels = [makePanel({ id: 'terminal', label: 'Terminal' })];
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const tabBtn = compiled.querySelector('[data-testid="panel-tab-terminal"]');
+    expect(tabBtn?.id).toBe('panel-tab-btn-terminal');
+  });
+
+  it('should set aria-controls="bottom-panel-content" on tab buttons', () => {
+    const fixture = TestBed.createComponent(BottomPanelComponent);
+    fixture.componentInstance.visible = true;
+    fixture.componentInstance.panels = [makePanel({ id: 'terminal', label: 'Terminal' })];
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const tabBtn = compiled.querySelector('[data-testid="panel-tab-terminal"]');
+    expect(tabBtn?.getAttribute('aria-controls')).toBe('bottom-panel-content');
+  });
+
+  it('should set id="bottom-panel-content" on the content area', () => {
+    const fixture = TestBed.createComponent(BottomPanelComponent);
+    fixture.componentInstance.visible = true;
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const content = compiled.querySelector('[data-testid="bottom-panel-content"]');
+    expect(content?.id).toBe('bottom-panel-content');
+  });
+
+  it('should set aria-labelledby on the tabpanel when activePanelId is set', () => {
+    const fixture = TestBed.createComponent(BottomPanelComponent);
+    fixture.componentInstance.visible = true;
+    fixture.componentInstance.panels = [makePanel({ id: 'terminal', label: 'Terminal' })];
+    fixture.componentInstance.activePanelId = 'terminal';
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const content = compiled.querySelector('[data-testid="bottom-panel-content"]');
+    expect(content?.getAttribute('aria-labelledby')).toBe('panel-tab-btn-terminal');
+  });
 });

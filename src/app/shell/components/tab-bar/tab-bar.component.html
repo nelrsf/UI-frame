@@ -7,6 +7,7 @@
       [class.tab-bar__tab--pinned]="tab.pinned"
       role="tab"
       [attr.aria-selected]="tab.id === activeTabId"
+      [attr.tabindex]="tab.id === activeTabId ? 0 : -1"
       [attr.data-testid]="'tab-' + tab.id"
       (click)="onTabSelect(tab.id)"
     >

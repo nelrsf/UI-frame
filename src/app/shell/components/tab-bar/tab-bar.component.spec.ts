@@ -139,4 +139,19 @@ describe('TabBarComponent', () => {
     const fixture = TestBed.createComponent(TabBarComponent);
     expect(fixture.componentInstance.tabReordered).toBeDefined();
   });
+
+  it('should set tabindex="0" on the active tab', () => {
+    const fixture = TestBed.createComponent(TabBarComponent);
+    fixture.componentInstance.tabs = [
+      makeTab({ id: 'tab-1', label: 'File.ts' }),
+      makeTab({ id: 'tab-2', label: 'README.md' }),
+    ];
+    fixture.componentInstance.activeTabId = 'tab-1';
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const activeTab = compiled.querySelector('[data-testid="tab-tab-1"]');
+    const inactiveTab = compiled.querySelector('[data-testid="tab-tab-2"]');
+    expect(activeTab?.getAttribute('tabindex')).toBe('0');
+    expect(inactiveTab?.getAttribute('tabindex')).toBe('-1');
+  });
 });

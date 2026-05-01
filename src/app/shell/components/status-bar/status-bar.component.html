@@ -18,7 +18,7 @@
   </button>
 </ng-template>
 
-<div class="status-bar" data-testid="status-bar" role="contentinfo" aria-label="Status bar">
+<div class="status-bar" data-testid="status-bar" role="contentinfo" aria-label="Status bar" aria-live="polite">
   <div class="status-bar__left" data-testid="status-bar-left">
     @for (item of leftItems; track item.id) {
       <ng-container *ngTemplateOutlet="statusItem; context: { $implicit: item }"></ng-container>

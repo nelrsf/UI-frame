@@ -13,7 +13,9 @@
             class="bottom-panel__tab"
             [class.bottom-panel__tab--active]="panel.id === activePanelId"
             role="tab"
+            [attr.id]="'panel-tab-btn-' + panel.id"
             [attr.aria-selected]="panel.id === activePanelId"
+            aria-controls="bottom-panel-content"
             [attr.data-testid]="'panel-tab-' + panel.id"
             (click)="onPanelSelect(panel.id)"
           >
@@ -41,7 +43,13 @@
       </div>
     </header>
 
-    <div class="bottom-panel__content" data-testid="bottom-panel-content" role="tabpanel">
+    <div
+      class="bottom-panel__content"
+      id="bottom-panel-content"
+      data-testid="bottom-panel-content"
+      role="tabpanel"
+      [attr.aria-labelledby]="activePanelId ? 'panel-tab-btn-' + activePanelId : null"
+    >
       <!-- Panel content will be rendered here via panel wiring -->
     </div>
   </div>
