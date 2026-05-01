@@ -12,6 +12,9 @@ export interface SessionState {
 }
 
 export const initialSessionState: SessionState = {
+  // 'linux' mirrors the PlatformAdapter fallback used when running outside Electron
+  // (e.g. in tests or a plain browser dev build). It is replaced immediately by
+  // the setPlatform action dispatched during ShellComponent.ngAfterViewInit.
   platform: 'linux',
   shellReady: false,
   shellReadyTimestamp: null,

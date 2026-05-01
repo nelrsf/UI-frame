@@ -36,11 +36,9 @@ export class ShellComponent implements AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    const timestamp = Date.now();
-
     // Persist platform and shell-readiness in the transversal session slice.
     this.store.dispatch(setPlatform({ platform: this.platformService.platform }));
-    this.store.dispatch(shellReady({ timestamp }));
+    this.store.dispatch(shellReady({ timestamp: Date.now() }));
 
     // Notify any EventBus subscribers that the shell is ready.
     this.eventBus.emit('shell.ready.v1', {}, 'ShellComponent');
