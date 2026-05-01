@@ -1,0 +1,17 @@
+<div class="sidebar" data-testid="sidebar" role="complementary" aria-label="Sidebar">
+  <app-activity-bar
+    class="sidebar__activity-bar"
+    [items]="items"
+    [activeItemId]="activeItemId"
+    (itemClick)="onItemClick($event)"
+    data-testid="sidebar-activity-bar"
+  ></app-activity-bar>
+
+  @if (!collapsed) {
+    <div class="sidebar__panel" data-testid="sidebar-panel" role="region" [attr.aria-label]="'Sidebar panel'">
+      <div class="sidebar__content">
+        <!-- Future: sidebar panel content will be rendered here based on activeItemId -->
+      </div>
+    </div>
+  }
+</div>

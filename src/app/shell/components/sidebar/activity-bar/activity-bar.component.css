@@ -1,0 +1,106 @@
+/* ============================================================
+   activity-bar.component.css — Activity Bar navigation rail
+   Width: 48px (--shell-activity-bar-width). Fixed vertical navigation.
+   ============================================================ */
+
+:host {
+  display: block;
+  width: var(--shell-activity-bar-width, 48px);
+  height: 100%;
+}
+
+.activity-bar {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-activity-bar-bg, #333333);
+  border-right: 1px solid var(--color-border-default, #454545);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Top items container */
+.activity-bar__items-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-1, 4px);
+  padding: var(--spacing-2, 8px) 0;
+}
+
+/* Bottom items container */
+.activity-bar__items-bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-1, 4px);
+  padding: var(--spacing-2, 8px) 0;
+}
+
+/* Individual activity bar item */
+.activity-bar__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary, #9d9d9d);
+  cursor: pointer;
+  transition: color var(--transition-fast, 100ms ease);
+  flex-shrink: 0;
+}
+
+.activity-bar__item:hover {
+  color: var(--color-text-primary, #cccccc);
+}
+
+.activity-bar__item:focus-visible {
+  outline: 2px solid var(--color-border-focus, #007fd4);
+  outline-offset: -2px;
+}
+
+.activity-bar__item--active {
+  color: var(--color-text-primary, #ffffff);
+}
+
+.activity-bar__item--active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 24px;
+  background-color: var(--color-accent, #007acc);
+}
+
+/* Icon */
+.activity-bar__item-icon {
+  font-size: var(--font-size-lg, 16px);
+  line-height: 1;
+}
+
+/* Badge indicator */
+.activity-bar__item-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background-color: var(--color-accent, #007acc);
+  color: var(--color-text-inverse, #ffffff);
+  font-size: var(--font-size-xs, 11px);
+  font-weight: var(--font-weight-semibold, 600);
+  line-height: 16px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

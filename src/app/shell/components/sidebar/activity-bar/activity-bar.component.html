@@ -1,0 +1,43 @@
+<div class="activity-bar" data-testid="activity-bar" role="navigation" aria-label="Activity Bar">
+  <div class="activity-bar__items-top" data-testid="activity-bar-items-top">
+    @for (item of topItems; track item.id) {
+      <button
+        class="activity-bar__item"
+        [class.activity-bar__item--active]="isActive(item)"
+        [attr.aria-label]="item.tooltip"
+        [attr.aria-pressed]="isActive(item)"
+        [attr.title]="item.tooltip"
+        [attr.data-testid]="'activity-bar-item-' + item.id"
+        (click)="onItemClick(item)"
+      >
+        <span class="activity-bar__item-icon" aria-hidden="true">{{ item.icon }}</span>
+        @if (item.badge) {
+          <span class="activity-bar__item-badge" [attr.aria-label]="item.badge + ' notifications'">
+            {{ item.badge }}
+          </span>
+        }
+      </button>
+    }
+  </div>
+
+  <div class="activity-bar__items-bottom" data-testid="activity-bar-items-bottom">
+    @for (item of bottomItems; track item.id) {
+      <button
+        class="activity-bar__item"
+        [class.activity-bar__item--active]="isActive(item)"
+        [attr.aria-label]="item.tooltip"
+        [attr.aria-pressed]="isActive(item)"
+        [attr.title]="item.tooltip"
+        [attr.data-testid]="'activity-bar-item-' + item.id"
+        (click)="onItemClick(item)"
+      >
+        <span class="activity-bar__item-icon" aria-hidden="true">{{ item.icon }}</span>
+        @if (item.badge) {
+          <span class="activity-bar__item-badge" [attr.aria-label]="item.badge + ' notifications'">
+            {{ item.badge }}
+          </span>
+        }
+      </button>
+    }
+  </div>
+</div>
