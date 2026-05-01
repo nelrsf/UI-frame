@@ -84,7 +84,7 @@ This sequence covers governance validity, AppShell mounting, Electron bridge cor
 - [ ] T020 [US1] Apply desktop-first shell layout and tokens in `src/app/shell/shell.component.css`, `src/app/themes/variables.css`, `src/app/themes/dark.css`, and `src/styles.css`
 - [ ] T021 [US1] Add baseline accessibility semantics and focus behavior in `src/app/shell/shell.component.html`, `src/app/shell/components/sidebar/sidebar.component.html`, `src/app/shell/components/toolbar/toolbar.component.html`, `src/app/shell/components/tab-bar/tab-bar.component.html`, `src/app/shell/components/bottom-panel/bottom-panel.component.html`, and `src/app/shell/components/status-bar/status-bar.component.html`
 - [ ] T022 [US1] Wire platform-aware shell root behavior and `shell.ready` emission in `src/app/shell/shell.component.ts`, `src/app/core/services/platform.service.ts`, and `src/app/core/state/session/`
-- [ ] T023 [US1] Validate User Story 1 MVP path by updating `scripts/electron-smoke.mjs`, `README.md`, and `specs/001-remediate-shell-v1/checklists/requirements.md`
+- [x] T023 [US1] Validate User Story 1 MVP path by updating `scripts/electron-smoke.mjs`, `README.md`, and `specs/001-remediate-shell-v1/checklists/requirements.md`
 
 **Checkpoint**: User Story 1 is independently functional, satisfying `FR-AppShell`, `FR-ShellComponents`, `FR-Layout`, and the structural part of `FR-Accessibility`.
 

@@ -110,10 +110,11 @@ Expected output:
 
   ✔  Main process did not exit prematurely
   ✔  App window became visible within 15s
+  ✔  Shell v1 became visible within 15s
   ✔  No blocking errors in startup output (got: none)
 
 ────────────────────────────────────────────────────────────
-  Results: 3 passed, 0 failed
+  Results: 4 passed, 0 failed
 ```
 
 Exit code `0` means all baseline assertions passed. Exit code `1` means one or more assertions failed; review the output for the failing assertion details.
