@@ -1,0 +1,137 @@
+/* ============================================================
+   bottom-panel.component.css — BottomPanel shell region
+   Collapsible panel for terminal, logs, output, etc.
+   Min: 80px. Max: 60vh. Default height: 220px.
+   ============================================================ */
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+.bottom-panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: var(--shell-bottom-panel-min, 80px);
+  max-height: 60vh;
+  background-color: var(--color-panel-bg, #1e1e1e);
+  color: var(--color-panel-text, #cccccc);
+  font-family: var(--font-family-ui, "Segoe UI", system-ui, sans-serif);
+  font-size: var(--font-size-sm, 13px);
+  border-top: 1px solid var(--color-border-default, #3e3e3e);
+  overflow: hidden;
+}
+
+/* Panel header: tabs + action buttons */
+.bottom-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  height: 35px;
+  background-color: var(--color-panel-header-bg, #252526);
+  border-bottom: 1px solid var(--color-border-default, #3e3e3e);
+  padding: 0 var(--spacing-1, 4px);
+  overflow: hidden;
+}
+
+/* Tab list inside the panel header */
+.bottom-panel__tabs {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  flex: 1;
+}
+
+.bottom-panel__tabs::-webkit-scrollbar {
+  display: none;
+}
+
+/* Individual panel tab button */
+.bottom-panel__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1, 4px);
+  flex-shrink: 0;
+  height: 100%;
+  padding: 0 var(--spacing-2, 8px);
+  border: none;
+  border-right: 1px solid transparent;
+  background: transparent;
+  color: var(--color-tab-inactive-text, #969696);
+  font: inherit;
+  font-size: var(--font-size-sm, 13px);
+  cursor: pointer;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.bottom-panel__tab:hover {
+  color: var(--color-tab-hover-text, #cccccc);
+}
+
+.bottom-panel__tab--active {
+  color: var(--color-tab-active-text, #ffffff);
+  border-bottom: 1px solid var(--color-border-focus, #007fd4);
+}
+
+.bottom-panel__tab:focus-visible {
+  outline: 1px solid var(--color-border-focus, #007fd4);
+  outline-offset: -1px;
+}
+
+.bottom-panel__tab-icon {
+  flex-shrink: 0;
+}
+
+.bottom-panel__tab-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Action buttons area */
+.bottom-panel__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1, 4px);
+  flex-shrink: 0;
+  padding-left: var(--spacing-2, 8px);
+}
+
+.bottom-panel__action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm, 3px);
+  background: transparent;
+  color: var(--color-tab-inactive-text, #969696);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.bottom-panel__action-btn:hover {
+  background-color: var(--color-toolbar-action-hover, rgba(255, 255, 255, 0.1));
+  color: var(--color-tab-active-text, #ffffff);
+}
+
+.bottom-panel__action-btn:focus-visible {
+  outline: 1px solid var(--color-border-focus, #007fd4);
+  outline-offset: -1px;
+}
+
+/* Content area */
+.bottom-panel__content {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+  padding: var(--spacing-2, 8px);
+}
