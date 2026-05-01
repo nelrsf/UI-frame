@@ -190,4 +190,60 @@ describe('UserPreferencesService', () => {
       expect(service.get('theme', 'light')).toBe('dark');
     });
   });
+
+  describe('initWorkspaceFromPath', () => {
+    it('should use ws-default when no path is provided', async () => {
+      await service.initWorkspaceFromPath();
+      expect(service.workspaceId).toBe('ws-default');
+    });
+
+    it('should use ws-default for null path', async () => {
+      await service.initWorkspaceFromPath(null);
+      expect(service.workspaceId).toBe('ws-default');
+    });
+
+    it('should use ws-default for empty string', async () => {
+      await service.initWorkspaceFromPath('');
+      expect(service.workspaceId).toBe('ws-default');
+    });
+
+    it('should derive a ws- prefixed ID from a real path', async () => {
+      await service.initWorkspaceFromPath('/home/user/project');
+      expect(service.workspaceId).toMatch(/^ws-[0-9a-f]{16}$/);
+    });
+
+    it('should produce the known ID for a pinned path (algorithm regression guard)', async () => {
+      await service.initWorkspaceFromPath('/home/user/project');
+      expect(service.workspaceId).toBe('ws-9dad1e4e08b0b11c');
+    });
+
+    it('should normalize the path before deriving the ID', async () => {
+      await service.initWorkspaceFromPath('/home/user/project/');
+      const idWithTrailingSlash = service.workspaceId;
+
+      await service.initWorkspaceFromPath('/home/user/project');
+      const idWithoutTrailingSlash = service.workspaceId;
+
+      expect(idWithTrailingSlash).toBe(idWithoutTrailingSlash);
+    });
+
+    it('should normalize Windows paths before deriving the ID', async () => {
+      await service.initWorkspaceFromPath('C:\\Users\\dev\\project');
+      const idWindows = service.workspaceId;
+
+      await service.initWorkspaceFromPath('c:/Users/dev/project');
+      const idPosix = service.workspaceId;
+
+      expect(idWindows).toBe(idPosix);
+    });
+
+    it('should load persisted preferences scoped to the derived ID', async () => {
+      await service.initWorkspaceFromPath('/home/user/project');
+      service.set('lang', 'fr');
+
+      const service2 = new UserPreferencesService(repository);
+      await service2.initWorkspaceFromPath('/home/user/project');
+      expect(service2.get('lang', 'en')).toBe('fr');
+    });
+  });
 });
