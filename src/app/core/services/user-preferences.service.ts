@@ -2,9 +2,12 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { PreferencesData } from '../models/preferences.model';
 import { PreferencesRepository } from '../infrastructure/persistence/local-storage/preferences.repository';
+import { resolveWorkspaceId } from '../utils/workspace-id.util';
 
 export interface IUserPreferencesService {
   readonly workspaceId: string;
+  /** Resolves the canonical workspace ID from a raw path and initializes the workspace. */
+  initWorkspaceFromPath(rawPath?: string | null): Promise<void>;
   get<T>(key: string, defaultValue: T): T;
   set<T>(key: string, value: T): void;
   reset(key?: string): void;
@@ -47,6 +50,20 @@ export class UserPreferencesService implements IUserPreferencesService {
     this._workspaceId = workspaceId;
     this._data = this.repository.load(workspaceId);
     this._preferences$.next({ ...this._data });
+  }
+
+  /**
+   * Resolves the canonical workspace ID from `rawPath` using the Shell v1
+   * identity algorithm and then initializes the workspace.
+   *
+   * - When `rawPath` is absent, empty, or `null` the stable fallback identifier
+   *   `ws-default` is used (spec §Workspace Identity closed decision).
+   * - Otherwise the path is normalized and `ws-<16 hex chars>` is derived from
+   *   its SHA-256 hash before initializing.
+   */
+  async initWorkspaceFromPath(rawPath?: string | null): Promise<void> {
+    const workspaceId = await resolveWorkspaceId(rawPath);
+    this.initWorkspace(workspaceId);
   }
 
   /**
