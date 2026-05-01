@@ -1,0 +1,53 @@
+/* ============================================================
+   sidebar.component.css — Sidebar shell region
+   Contains activity bar + resizable sidebar panel.
+   ============================================================ */
+
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-sidebar-bg, #252526);
+  overflow: hidden;
+}
+
+/* Activity bar section */
+.sidebar__activity-bar {
+  width: var(--shell-activity-bar-width, 48px);
+  flex-shrink: 0;
+  height: 100%;
+}
+
+/* Sidebar panel section */
+.sidebar__panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  background-color: var(--color-sidebar-bg, #252526);
+  border-right: 1px solid var(--color-border-default, #454545);
+}
+
+.sidebar__content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--spacing-2, 8px);
+  color: var(--color-text-primary, #cccccc);
+  font-family: var(--font-family-ui, "Segoe UI", system-ui, sans-serif);
+  font-size: var(--font-size-sm, 12px);
+}
+
+/* Width constraints for the entire sidebar */
+:host {
+  min-width: var(--shell-activity-bar-width, 48px);
+  max-width: var(--shell-sidebar-max-width, 480px);
+}
