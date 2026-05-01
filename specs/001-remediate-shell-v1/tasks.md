@@ -100,7 +100,7 @@ This sequence covers governance validity, AppShell mounting, Electron bridge cor
 
 ### Tests for User Story 2
 
-- [ ] T024 [P] [US2] Add repository and workspace identity tests in `src/app/core/infrastructure/persistence/local-storage/preferences.repository.spec.ts`, `src/app/core/services/user-preferences.service.spec.ts`, and `src/app/core/utils/workspace-id.util.spec.ts`
+- [x] T024 [P] [US2] Add repository and workspace identity tests in `src/app/core/infrastructure/persistence/local-storage/preferences.repository.spec.ts`, `src/app/core/services/user-preferences.service.spec.ts`, and `src/app/core/utils/workspace-id.util.spec.ts`
 - [ ] T025 [P] [US2] Add IPC and restoration integration tests in `src/app/core/infrastructure/electron/adapters/preferences.adapter.spec.ts`, `src/app/core/state/preferences/preferences.effects.spec.ts`, and `src/app/shell/shell.persistence.spec.ts`
 
 ### Implementation for User Story 2
