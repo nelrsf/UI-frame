@@ -168,6 +168,14 @@ async function runSmoke() {
   if (failed > 0) {
     process.exitCode = 1;
   }
+
+  // ── US1 Gate G2 ─────────────────────────────────────────────
+  // Four passing assertions confirm the Shell v1 MVP startup path is
+  // independently functional and satisfies the Phase 2 exit gate (G2):
+  //   FR-AppShell, FR-ShellComponents, FR-Layout, FR-Accessibility (structural).
+  if (failed === 0) {
+    console.log('  US1 Gate G2: Shell v1 independently functional ✔\n');
+  }
 }
 
 runSmoke().catch((err) => {
