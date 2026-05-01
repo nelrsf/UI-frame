@@ -51,6 +51,11 @@
   color: var(--color-tab-hover-text, #cccccc);
 }
 
+.tab-bar__tab:focus-visible {
+  outline: 1px solid var(--color-border-focus, #007fd4);
+  outline-offset: -1px;
+}
+
 .tab-bar__tab--active {
   background-color: var(--color-tab-active-bg, #1e1e1e);
   color: var(--color-tab-active-text, #ffffff);

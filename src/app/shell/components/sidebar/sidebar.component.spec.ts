@@ -85,4 +85,20 @@ describe('SidebarComponent', () => {
     expect(sidebarElement?.getAttribute('role')).toBe('complementary');
     expect(sidebarElement?.getAttribute('aria-label')).toBe('Sidebar');
   });
+
+  it('should expose aria-expanded="true" when not collapsed', () => {
+    component.collapsed = false;
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const sidebarElement = compiled.querySelector('[data-testid="sidebar"]');
+    expect(sidebarElement?.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('should expose aria-expanded="false" when collapsed', () => {
+    component.collapsed = true;
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const sidebarElement = compiled.querySelector('[data-testid="sidebar"]');
+    expect(sidebarElement?.getAttribute('aria-expanded')).toBe('false');
+  });
 });

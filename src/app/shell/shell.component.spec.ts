@@ -30,4 +30,20 @@ describe('ShellComponent', () => {
     expect(compiled.textContent).not.toContain('Hello,');
     expect(compiled.textContent).not.toContain('Congratulations!');
   });
+
+  it('should have role="application" on the shell-root container', () => {
+    const fixture = TestBed.createComponent(ShellComponent);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const root = compiled.querySelector('[data-testid="shell-root"]');
+    expect(root?.getAttribute('role')).toBe('application');
+  });
+
+  it('should have aria-label on the shell-root container', () => {
+    const fixture = TestBed.createComponent(ShellComponent);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const root = compiled.querySelector('[data-testid="shell-root"]');
+    expect(root?.getAttribute('aria-label')).toBeTruthy();
+  });
 });

@@ -1,4 +1,4 @@
-<div class="sidebar" data-testid="sidebar" role="complementary" aria-label="Sidebar">
+<div class="sidebar" data-testid="sidebar" role="complementary" aria-label="Sidebar" [attr.aria-expanded]="!collapsed">
   <app-activity-bar
     class="sidebar__activity-bar"
     [items]="items"

@@ -121,4 +121,12 @@ describe('StatusBarComponent', () => {
     expect(component.leftItems).toEqual([]);
     expect(component.rightItems).toEqual([]);
   });
+
+  it('should have aria-live="polite" on the container', () => {
+    const fixture = TestBed.createComponent(StatusBarComponent);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const bar = compiled.querySelector('.status-bar');
+    expect(bar?.getAttribute('aria-live')).toBe('polite');
+  });
 });
