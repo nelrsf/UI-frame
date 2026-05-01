@@ -19,6 +19,7 @@ import { spawn } from 'node:child_process';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { existsSync } from 'node:fs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -71,8 +72,23 @@ function assert(condition, message) {
 async function runSmoke() {
   console.log('\n── Shell v1 Smoke Validation ──────────────────────────────\n');
 
-  const electronBin = resolve(ROOT, 'node_modules', '.bin', 'electron');
+  const binName = process.platform === 'win32' ? 'electron.cmd' : 'electron';
+  const electronBin = resolve(ROOT, 'node_modules', '.bin', binName);
   const mainEntry = resolve(ROOT, 'dist-electron', 'main.js');
+
+  // Validate Electron binary exists
+  if (!existsSync(electronBin)) {
+    console.error(`Error: Electron binary not found at ${electronBin}`);
+    console.error('Try deleting node_modules and running npm install again.');
+    process.exit(1);
+  }
+
+  // Validate main entry point exists
+  if (!existsSync(mainEntry)) {
+    console.error(`Error: Main entry not found at ${mainEntry}`);
+    console.error('Ensure you have run npm run build && npm run build:electron successfully.');
+    process.exit(1);
+  }
 
   let windowVisible = false;
   let shellVisible = false;
@@ -87,15 +103,29 @@ async function runSmoke() {
     args.push('--no-sandbox');
   }
 
-  const child = spawn(electronBin, args, {
-    cwd: ROOT,
-    env: {
-      ...process.env,
-      ELECTRON_ENV: 'smoke',
-      DISPLAY: process.env.DISPLAY ?? ':99',
-    },
-    stdio: ['ignore', 'pipe', 'pipe'],
-  });
+  let child;
+  if (process.platform === 'win32') {
+    // Windows requires cmd /c to execute .cmd batch files
+    child = spawn('cmd.exe', ['/c', electronBin, ...args], {
+      cwd: ROOT,
+      env: {
+        ...process.env,
+        ELECTRON_ENV: 'smoke',
+        DISPLAY: process.env.DISPLAY ?? ':99',
+      },
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+  } else {
+    child = spawn(electronBin, args, {
+      cwd: ROOT,
+      env: {
+        ...process.env,
+        ELECTRON_ENV: 'smoke',
+        DISPLAY: process.env.DISPLAY ?? ':99',
+      },
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+  }
 
   /**
    * Process a line of output from the child process, updating visibility flags.
