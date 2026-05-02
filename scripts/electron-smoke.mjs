@@ -6,6 +6,8 @@
  *   2. The BrowserWindow becomes visible within the timeout.
  *   3. Shell v1 becomes visible within the timeout.
  *   4. No blocking console errors are emitted during renderer startup.
+ *   5. BrowserWindow security settings are verified (contextIsolation, no
+ *      nodeIntegration, sandbox) — NFR-Security-01.
  *
  * Usage:
  *   npm run test:smoke
@@ -56,6 +58,20 @@ const SHELL_VISIBLE_PATTERNS = [
   /shell.*visible/i,
 ];
 
+/**
+ * Patterns that confirm BrowserWindow security settings are active.
+ * The main process emits `[smoke] security:ok` when it detects that
+ * contextIsolation=true, nodeIntegration=false, and sandbox=true are all
+ * set on the live webContents — satisfying NFR-Security-01.
+ *
+ * Structured as an array (consistent with WINDOW_READY_PATTERNS and
+ * SHELL_VISIBLE_PATTERNS) so that additional security signals can be added
+ * without changing the processOutput logic.
+ */
+const SECURITY_OK_PATTERNS = [
+  /\[smoke\] security:ok/i,
+];
+
 let passed = 0;
 let failed = 0;
 
@@ -94,6 +110,7 @@ async function runSmoke() {
   let shellVisible = false;
   let blockingError = null;
   let processExitedEarly = false;
+  let securityOk = false;
 
   // --no-sandbox is required in headless CI environments (e.g. Linux without SUID sandbox).
   // It is enabled only when the CI environment variable is set so that local runs keep
@@ -142,6 +159,9 @@ async function runSmoke() {
       // Shell visibility implies the BrowserWindow is also visible.
       windowVisible = true;
     }
+    if (SECURITY_OK_PATTERNS.some((re) => re.test(text))) {
+      securityOk = true;
+    }
   }
 
   child.stdout.on('data', (chunk) => {
@@ -189,6 +209,7 @@ async function runSmoke() {
   assert(windowVisible, `App window became visible within ${WINDOW_VISIBLE_TIMEOUT_MS / 1000}s`);
   assert(shellVisible, `Shell v1 became visible within ${WINDOW_VISIBLE_TIMEOUT_MS / 1000}s`);
   assert(blockingError === null, `No blocking errors in startup output (got: ${blockingError ?? 'none'})`);
+  assert(securityOk, 'BrowserWindow security settings verified (contextIsolation=true, nodeIntegration=false, sandbox=true)');
 
   // ── Summary ─────────────────────────────────────────────────
 
@@ -199,12 +220,13 @@ async function runSmoke() {
     process.exitCode = 1;
   }
 
-  // ── US1 Gate G2 ─────────────────────────────────────────────
-  // Four passing assertions confirm the Shell v1 MVP startup path is
-  // independently functional and satisfies the Phase 2 exit gate (G2):
-  //   FR-AppShell, FR-ShellComponents, FR-Layout, FR-Accessibility (structural).
+  // ── US3 Gate G4 ─────────────────────────────────────────────
+  // Five passing assertions confirm the Shell v1 startup path is
+  // independently functional and secure, satisfying the Phase 4 exit gate (G4):
+  //   FR-AppShell, FR-ShellComponents, FR-Layout, FR-Accessibility (structural),
+  //   FR-Security (NFR-Security-01: contextIsolation, no nodeIntegration, sandbox).
   if (failed === 0) {
-    console.log('  US1 Gate G2: Shell v1 independently functional ✔\n');
+    console.log('  US3 Gate G4: Shell v1 independently functional and secure ✔\n');
   }
 }
 
