@@ -98,6 +98,64 @@ describe('PreferencesAdapter', () => {
   });
 
   // ---------------------------------------------------------------------------
+  // get — return-value validation (bridge returns invalid data)
+  // ---------------------------------------------------------------------------
+
+  describe('get — return-value validation', () => {
+    let getSpy: jasmine.Spy;
+
+    beforeEach(() => {
+      getSpy = jasmine.createSpy('get');
+      (window as TestWindow).electronAPI = {
+        preferences: {
+          get: getSpy,
+          set: jasmine.createSpy('set').and.returnValue(Promise.resolve()),
+        },
+      };
+    });
+
+    it('should return defaultValue when bridge returns null for a string default', async () => {
+      getSpy.and.returnValue(Promise.resolve(null));
+      expect(await adapter.get('theme', 'dark')).toBe('dark');
+    });
+
+    it('should return defaultValue when bridge returns null for an object default', async () => {
+      getSpy.and.returnValue(Promise.resolve(null));
+      expect(await adapter.get('prefs', {})).toEqual({});
+    });
+
+    it('should return defaultValue when bridge returns undefined for an object default', async () => {
+      getSpy.and.returnValue(Promise.resolve(undefined));
+      expect(await adapter.get('prefs', { key: 1 })).toEqual({ key: 1 });
+    });
+
+    it('should return defaultValue when bridge returns an array for an object default', async () => {
+      getSpy.and.returnValue(Promise.resolve([1, 2, 3]));
+      expect(await adapter.get('prefs', {})).toEqual({});
+    });
+
+    it('should return defaultValue when bridge returns a string for an object default', async () => {
+      getSpy.and.returnValue(Promise.resolve('not-an-object'));
+      expect(await adapter.get('prefs', { a: 1 })).toEqual({ a: 1 });
+    });
+
+    it('should return defaultValue when bridge returns a number for an object default', async () => {
+      getSpy.and.returnValue(Promise.resolve(42));
+      expect(await adapter.get('prefs', {})).toEqual({});
+    });
+
+    it('should NOT apply object validation for a string default — pass through valid strings', async () => {
+      getSpy.and.returnValue(Promise.resolve('light'));
+      expect(await adapter.get('theme', 'dark')).toBe('light');
+    });
+
+    it('should NOT apply object validation for a number default — pass through valid numbers', async () => {
+      getSpy.and.returnValue(Promise.resolve(18));
+      expect(await adapter.get('fontSize', 12)).toBe(18);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
   // set — bridge absent
   // ---------------------------------------------------------------------------
 

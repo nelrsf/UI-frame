@@ -156,6 +156,27 @@ describe('PreferencesRepository', () => {
       expect(typeof envelope['savedAt']).toBe('string');
       expect(envelope['savedAt']).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     });
+
+    it('should store workspaceRootPath in the envelope when provided', () => {
+      repo.save('ws-path', { key: 'value' }, '/home/user/project');
+      const raw = localStorage.getItem(repo.storageKey('ws-path'));
+      expect(raw).not.toBeNull();
+      const envelope = JSON.parse(raw!);
+      expect(envelope['workspaceRootPath']).toBe('/home/user/project');
+    });
+
+    it('should omit workspaceRootPath from the envelope when not provided', () => {
+      repo.save('ws-nopath', { key: 'value' });
+      const raw = localStorage.getItem(repo.storageKey('ws-nopath'));
+      expect(raw).not.toBeNull();
+      const envelope = JSON.parse(raw!);
+      expect(envelope['workspaceRootPath']).toBeUndefined();
+    });
+
+    it('should still load data correctly when workspaceRootPath is stored in the envelope', () => {
+      repo.save('ws-wpath', { theme: 'dark' }, '/home/user/project');
+      expect(repo.load('ws-wpath')).toEqual({ theme: 'dark' });
+    });
   });
 
   describe('clear', () => {

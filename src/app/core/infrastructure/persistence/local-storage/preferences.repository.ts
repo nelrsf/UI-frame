@@ -53,14 +53,18 @@ export class PreferencesRepository {
 
   /**
    * Persists `data` for `workspaceId` to localStorage as a versioned envelope.
+   * When `workspaceRootPath` is provided it is stored in the envelope for
+   * traceability (it is never used for validation).
    * Silently discards failures (e.g. storage quota exceeded).
    */
-  save(workspaceId: string, data: PreferencesData): void {
+  save(workspaceId: string, data: PreferencesData, workspaceRootPath?: string): void {
     try {
       const envelope: PreferencesEnvelope = {
         schemaVersion: PREFERENCES_SCHEMA_VERSION,
         workspaceId,
         savedAt: new Date().toISOString(),
+        // Only include workspaceRootPath when a non-empty path is provided.
+        ...(workspaceRootPath ? { workspaceRootPath } : {}),
         data,
       };
       localStorage.setItem(this.storageKey(workspaceId), JSON.stringify(envelope));
