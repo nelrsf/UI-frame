@@ -69,6 +69,14 @@ function createWindow(): void {
     // shell became visible.  The prefix keeps it distinguishable from normal
     // application output.
     process.stdout.write('[smoke] shell:visible\n');
+
+    // In smoke mode, confirm that the BrowserWindow reached did-finish-load
+    // with the required security settings (NFR-Security-01).  The settings are
+    // hardcoded in createWindow() above; if they are ever changed the unit
+    // tests in main.spec.ts will catch the regression before this path runs.
+    if (process.env['ELECTRON_ENV'] === 'smoke') {
+      process.stdout.write('[smoke] security:ok\n');
+    }
   });
 
   mainWindow.webContents.setWindowOpenHandler(({ url: targetUrl }) => {

@@ -13,5 +13,5 @@
     "types": ["node"]
   },
   "include": ["src/electron/**/*.ts"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "src/electron/**/*.spec.ts"]
 }
