@@ -97,6 +97,9 @@ export class ShellComponent implements OnInit, AfterViewInit {
 
       this.store.dispatch(
         restoreLayout({
+          // The WorkspaceSession v1 model does not persist sidebar collapsed/expanded
+          // state — the sidebar is always shown on restore so the workspace is
+          // immediately usable. Future sessions may add a sidebarVisible field.
           sidebarVisible: true,
           sidebarWidth: clamp(session.dimensions.sidebarWidth, SIDEBAR_WIDTH_MIN, SIDEBAR_WIDTH_MAX),
           bottomPanelVisible: bottomZone?.visible ?? false,

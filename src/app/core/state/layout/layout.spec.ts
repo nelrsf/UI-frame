@@ -211,14 +211,15 @@ describe('layout reducer', () => {
   });
 
   describe('restoreLayout', () => {
-    const restoredAction = restoreLayout({
+    const restorePayload = {
       sidebarVisible: false,
       sidebarWidth: 320,
       bottomPanelVisible: true,
       bottomPanelHeight: 280,
       secondaryPanelVisible: true,
       secondaryPanelWidth: 400,
-    });
+    };
+    const restoredAction = restoreLayout(restorePayload);
 
     it('should restore sidebarVisible', () => {
       const state = layoutReducer(initialLayoutState, restoredAction);
@@ -251,37 +252,37 @@ describe('layout reducer', () => {
     });
 
     it('should clamp sidebarWidth to SIDEBAR_WIDTH_MIN when below minimum', () => {
-      const action = restoreLayout({ ...restoredAction, sidebarWidth: 10 });
+      const action = restoreLayout({ ...restorePayload, sidebarWidth: 10 });
       const state = layoutReducer(initialLayoutState, action);
       expect(state.sidebarWidth).toBe(SIDEBAR_WIDTH_MIN);
     });
 
     it('should clamp sidebarWidth to SIDEBAR_WIDTH_MAX when above maximum', () => {
-      const action = restoreLayout({ ...restoredAction, sidebarWidth: 9999 });
+      const action = restoreLayout({ ...restorePayload, sidebarWidth: 9999 });
       const state = layoutReducer(initialLayoutState, action);
       expect(state.sidebarWidth).toBe(SIDEBAR_WIDTH_MAX);
     });
 
     it('should clamp bottomPanelHeight to BOTTOM_PANEL_HEIGHT_MIN when below minimum', () => {
-      const action = restoreLayout({ ...restoredAction, bottomPanelHeight: 1 });
+      const action = restoreLayout({ ...restorePayload, bottomPanelHeight: 1 });
       const state = layoutReducer(initialLayoutState, action);
       expect(state.bottomPanelHeight).toBe(BOTTOM_PANEL_HEIGHT_MIN);
     });
 
     it('should clamp bottomPanelHeight to BOTTOM_PANEL_HEIGHT_MAX when above maximum', () => {
-      const action = restoreLayout({ ...restoredAction, bottomPanelHeight: 9999 });
+      const action = restoreLayout({ ...restorePayload, bottomPanelHeight: 9999 });
       const state = layoutReducer(initialLayoutState, action);
       expect(state.bottomPanelHeight).toBe(BOTTOM_PANEL_HEIGHT_MAX);
     });
 
     it('should clamp secondaryPanelWidth to SECONDARY_PANEL_WIDTH_MIN when below minimum', () => {
-      const action = restoreLayout({ ...restoredAction, secondaryPanelWidth: 1 });
+      const action = restoreLayout({ ...restorePayload, secondaryPanelWidth: 1 });
       const state = layoutReducer(initialLayoutState, action);
       expect(state.secondaryPanelWidth).toBe(SECONDARY_PANEL_WIDTH_MIN);
     });
 
     it('should clamp secondaryPanelWidth to SECONDARY_PANEL_WIDTH_MAX when above maximum', () => {
-      const action = restoreLayout({ ...restoredAction, secondaryPanelWidth: 9999 });
+      const action = restoreLayout({ ...restorePayload, secondaryPanelWidth: 9999 });
       const state = layoutReducer(initialLayoutState, action);
       expect(state.secondaryPanelWidth).toBe(SECONDARY_PANEL_WIDTH_MAX);
     });
