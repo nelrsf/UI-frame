@@ -54,11 +54,23 @@ const api: ElectronAPI = {
   },
 
   preferences: {
-    get: <T>(key: string, defaultValue: T): Promise<T> =>
-      ipcRenderer.invoke(IPC_CHANNELS.PREFERENCES.GET, key, defaultValue),
+    get: <T>(key: string, defaultValue: T): Promise<T> => {
+      // Sender-side validation: reject empty or non-string keys before the IPC
+      // message reaches the main process (least-privilege, defence-in-depth).
+      if (typeof key !== 'string' || key.trim() === '') {
+        return Promise.resolve(defaultValue);
+      }
+      return ipcRenderer.invoke(IPC_CHANNELS.PREFERENCES.GET, key, defaultValue);
+    },
 
-    set: <T>(key: string, value: T): Promise<void> =>
-      ipcRenderer.invoke(IPC_CHANNELS.PREFERENCES.SET, key, value),
+    set: <T>(key: string, value: T): Promise<void> => {
+      // Sender-side validation: reject empty or non-string keys before the IPC
+      // message reaches the main process (least-privilege, defence-in-depth).
+      if (typeof key !== 'string' || key.trim() === '') {
+        return Promise.resolve();
+      }
+      return ipcRenderer.invoke(IPC_CHANNELS.PREFERENCES.SET, key, value);
+    },
   },
 };
 

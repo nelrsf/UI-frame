@@ -12,6 +12,9 @@ let mainWindow: BrowserWindow | null = null;
 
 function registerIpcHandlers(): void {
   registerWindowHandlers(() => mainWindow);
+  // Preferences handlers validate the `key` argument at BOTH the sender
+  // (preload) and receiver (main) boundary — same dual-validation strategy
+  // as the shell:openExternal handler below.
   registerPreferencesHandlers();
 
   // Handler-side validation: re-validate the URL even though the preload also
