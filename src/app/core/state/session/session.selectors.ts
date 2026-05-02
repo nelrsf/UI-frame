@@ -17,3 +17,8 @@ export const selectShellReadyTimestamp = createSelector(
   selectSessionState,
   (state) => state.shellReadyTimestamp
 );
+
+export const selectWindowMaximized = createSelector(
+  selectSessionState,
+  (state) => state.windowMaximized
+);

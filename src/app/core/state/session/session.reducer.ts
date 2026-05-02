@@ -9,6 +9,8 @@ export interface SessionState {
   readonly shellReady: boolean;
   /** Unix timestamp (ms) recorded when shell.ready was first emitted, or null before that. */
   readonly shellReadyTimestamp: number | null;
+  /** True while the Electron window is maximized. */
+  readonly windowMaximized: boolean;
 }
 
 export const initialSessionState: SessionState = {
@@ -18,6 +20,7 @@ export const initialSessionState: SessionState = {
   platform: 'linux',
   shellReady: false,
   shellReadyTimestamp: null,
+  windowMaximized: false,
 };
 
 export const sessionReducer = createReducer(
@@ -30,5 +33,9 @@ export const sessionReducer = createReducer(
     ...state,
     shellReady: true,
     shellReadyTimestamp: timestamp,
+  })),
+  on(SessionActions.setWindowMaximized, (state, { maximized }) => ({
+    ...state,
+    windowMaximized: maximized,
   }))
 );

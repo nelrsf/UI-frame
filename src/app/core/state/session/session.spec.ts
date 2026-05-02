@@ -1,9 +1,10 @@
 import { sessionReducer, initialSessionState, SessionState } from './session.reducer';
-import { setPlatform, shellReady } from './session.actions';
+import { setPlatform, shellReady, setWindowMaximized } from './session.actions';
 import {
   selectPlatform,
   selectShellReady,
   selectShellReadyTimestamp,
+  selectWindowMaximized,
 } from './session.selectors';
 
 describe('session reducer', () => {
@@ -53,6 +54,25 @@ describe('session reducer', () => {
       expect(withReady.platform).toBe('win32');
     });
   });
+
+  describe('setWindowMaximized', () => {
+    it('should set windowMaximized to true', () => {
+      const state = sessionReducer(initialSessionState, setWindowMaximized({ maximized: true }));
+      expect(state.windowMaximized).toBeTrue();
+    });
+
+    it('should set windowMaximized to false', () => {
+      const maximized = { ...initialSessionState, windowMaximized: true };
+      const state = sessionReducer(maximized, setWindowMaximized({ maximized: false }));
+      expect(state.windowMaximized).toBeFalse();
+    });
+
+    it('should not affect platform or shellReady when setting windowMaximized', () => {
+      const state = sessionReducer(initialSessionState, setWindowMaximized({ maximized: true }));
+      expect(state.platform).toBe('linux');
+      expect(state.shellReady).toBeFalse();
+    });
+  });
 });
 
 describe('session selectors', () => {
@@ -61,6 +81,7 @@ describe('session selectors', () => {
       platform: 'darwin',
       shellReady: true,
       shellReadyTimestamp: 9999,
+      windowMaximized: true,
     },
   };
 
@@ -74,5 +95,9 @@ describe('session selectors', () => {
 
   it('selectShellReadyTimestamp should return the timestamp', () => {
     expect(selectShellReadyTimestamp(state)).toBe(9999);
+  });
+
+  it('selectWindowMaximized should return the windowMaximized flag', () => {
+    expect(selectWindowMaximized(state)).toBeTrue();
   });
 });

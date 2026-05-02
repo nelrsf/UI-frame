@@ -1,4 +1,7 @@
 import { SessionState } from './session/session.reducer';
+import { LayoutState } from './layout/layout.reducer';
+import { UiContextState } from './ui-context/ui-context.reducer';
+import { PreferencesState } from './preferences/preferences.reducer';
 
 /**
  * AppState defines the root NgRx state shape for the Shell v1 application.
@@ -17,14 +20,14 @@ import { SessionState } from './session/session.reducer';
  * and are NOT inlined here; this interface acts only as the root type contract.
  */
 export interface AppState {
-  // Populated once the layout feature slice is registered (T-future).
-  readonly layout?: unknown;
+  // Registered in app.config.ts via provideState('layout', layoutReducer).
+  readonly layout?: LayoutState;
   // Populated once the workspace feature slice is registered (T-future).
   readonly workspace?: unknown;
   // Registered in app.config.ts via provideState('session', sessionReducer).
   readonly session?: SessionState;
-  // Populated once the uiContext feature slice is registered (T-future).
-  readonly uiContext?: unknown;
-  // Populated once the preferences feature slice is registered (T-future).
-  readonly preferences?: unknown;
+  // Registered in app.config.ts via provideState('uiContext', uiContextReducer).
+  readonly uiContext?: UiContextState;
+  // Registered in app.config.ts via provideState('preferences', preferencesReducer).
+  readonly preferences?: PreferencesState;
 }
