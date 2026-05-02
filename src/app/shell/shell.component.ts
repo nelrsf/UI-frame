@@ -28,14 +28,6 @@ import {
   selectBottomPanelHeight,
   selectActiveSidebarItem,
 } from '../core/state/layout/layout.selectors';
-import {
-  SIDEBAR_WIDTH_MIN,
-  SIDEBAR_WIDTH_MAX,
-  BOTTOM_PANEL_HEIGHT_MIN,
-  BOTTOM_PANEL_HEIGHT_MAX,
-  SECONDARY_PANEL_WIDTH_MIN,
-  SECONDARY_PANEL_WIDTH_MAX,
-} from '../core/state/layout/layout.reducer';
 
 @Component({
   selector: 'app-shell',
@@ -86,6 +78,7 @@ export class ShellComponent implements OnInit, AfterViewInit {
     // Attempt to restore the persisted workspace session for the default workspace.
     // Valid dimension and visibility values are dispatched as a layout restoration;
     // absent or corrupt sessions fall back to the reducer's safe defaults.
+    // The reducer clamps all dimension values to their configured min/max bounds.
     const session = this.sessionService.restore(FALLBACK_WORKSPACE_ID);
     if (session) {
       const bottomZone = session.zoneAssignments.find(
@@ -101,19 +94,11 @@ export class ShellComponent implements OnInit, AfterViewInit {
           // state — the sidebar is always shown on restore so the workspace is
           // immediately usable. Future sessions may add a sidebarVisible field.
           sidebarVisible: true,
-          sidebarWidth: clamp(session.dimensions.sidebarWidth, SIDEBAR_WIDTH_MIN, SIDEBAR_WIDTH_MAX),
+          sidebarWidth: session.dimensions.sidebarWidth,
           bottomPanelVisible: bottomZone?.visible ?? false,
-          bottomPanelHeight: clamp(
-            session.dimensions.bottomPanelHeight,
-            BOTTOM_PANEL_HEIGHT_MIN,
-            BOTTOM_PANEL_HEIGHT_MAX
-          ),
+          bottomPanelHeight: session.dimensions.bottomPanelHeight,
           secondaryPanelVisible: secondaryZone?.visible ?? false,
-          secondaryPanelWidth: clamp(
-            session.dimensions.secondaryPanelWidth,
-            SECONDARY_PANEL_WIDTH_MIN,
-            SECONDARY_PANEL_WIDTH_MAX
-          ),
+          secondaryPanelWidth: session.dimensions.secondaryPanelWidth,
         })
       );
     }
@@ -147,14 +132,5 @@ export class ShellComponent implements OnInit, AfterViewInit {
   onBottomPanelHeightChange(height: number): void {
     this.store.dispatch(setBottomPanelHeight({ height }));
   }
-}
-
-// ---------------------------------------------------------------------------
-// Module-private helpers
-// ---------------------------------------------------------------------------
-
-/** Clamps `value` to the inclusive range [min, max]. */
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value));
 }
 

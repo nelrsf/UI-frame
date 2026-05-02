@@ -342,5 +342,3 @@ describe('layout selectors', () => {
     });
   });
 });
-
-
