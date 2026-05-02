@@ -18,6 +18,15 @@ export class SidebarComponent {
   @Output() collapsedChange = new EventEmitter<boolean>();
 
   onItemClick(item: SidebarItem): void {
-    this.activeItemChange.emit(item.id);
+    if (item.id === this.activeItemId && !this.collapsed) {
+      // Clicking the already-active item while the panel is open collapses it.
+      this.collapsedChange.emit(true);
+    } else {
+      if (this.collapsed) {
+        // Clicking any item while collapsed opens the sidebar panel.
+        this.collapsedChange.emit(false);
+      }
+      this.activeItemChange.emit(item.id);
+    }
   }
 }

@@ -1,11 +1,29 @@
-<div class="shell-root" data-testid="shell-root" role="application" aria-label="Application shell">
-  <app-sidebar class="shell-sidebar"></app-sidebar>
+<div
+  class="shell-root"
+  data-testid="shell-root"
+  role="application"
+  aria-label="Application shell"
+  [style.--shell-sidebar-width]="((sidebarWidth$ | async) ?? 240) + 'px'"
+>
+  <app-sidebar
+    class="shell-sidebar"
+    [collapsed]="!(sidebarVisible$ | async)"
+    [activeItemId]="activeSidebarItem$ | async"
+    (collapsedChange)="onSidebarCollapsedChange($event)"
+    (activeItemChange)="onSidebarActiveItemChange($event)"
+  ></app-sidebar>
 
   <div class="shell-workspace" role="region" aria-label="Workspace">
     <app-toolbar class="shell-toolbar"></app-toolbar>
     <app-tab-bar class="shell-tabbar"></app-tab-bar>
     <app-content-area class="shell-content-area"></app-content-area>
-    <app-bottom-panel class="shell-bottom-panel"></app-bottom-panel>
+    <app-bottom-panel
+      class="shell-bottom-panel"
+      [visible]="(bottomPanelVisible$ | async) ?? false"
+      [height]="(bottomPanelHeight$ | async) ?? 220"
+      (visibilityChange)="onBottomPanelVisibilityChange($event)"
+      (heightChange)="onBottomPanelHeightChange($event)"
+    ></app-bottom-panel>
   </div>
 
   <footer class="shell-statusbar" role="contentinfo" aria-label="Status bar">

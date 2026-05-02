@@ -15,6 +15,13 @@ export const BOTTOM_PANEL_HEIGHT_MAX = 600;
 /** Default bottom-panel height in pixels. */
 export const BOTTOM_PANEL_HEIGHT_DEFAULT = 200;
 
+/** Minimum allowed secondary panel width in pixels. */
+export const SECONDARY_PANEL_WIDTH_MIN = 200;
+/** Maximum allowed secondary panel width in pixels. */
+export const SECONDARY_PANEL_WIDTH_MAX = 500;
+/** Default secondary panel width in pixels. */
+export const SECONDARY_PANEL_WIDTH_DEFAULT = 300;
+
 export interface LayoutState {
   /** Whether the sidebar content-panel is currently visible. */
   readonly sidebarVisible: boolean;
@@ -26,6 +33,10 @@ export interface LayoutState {
   readonly bottomPanelHeight: number;
   /** The ID of the currently active sidebar item, or null when none is active. */
   readonly activeSidebarItem: string | null;
+  /** Whether the secondary right-side panel is currently visible. */
+  readonly secondaryPanelVisible: boolean;
+  /** Current secondary panel width in pixels (clamped to [SECONDARY_PANEL_WIDTH_MIN, SECONDARY_PANEL_WIDTH_MAX]). */
+  readonly secondaryPanelWidth: number;
 }
 
 export const initialLayoutState: LayoutState = {
@@ -34,6 +45,8 @@ export const initialLayoutState: LayoutState = {
   bottomPanelVisible: false,
   bottomPanelHeight: BOTTOM_PANEL_HEIGHT_DEFAULT,
   activeSidebarItem: null,
+  secondaryPanelVisible: false,
+  secondaryPanelWidth: SECONDARY_PANEL_WIDTH_DEFAULT,
 };
 
 export const layoutReducer = createReducer(
@@ -57,5 +70,25 @@ export const layoutReducer = createReducer(
   on(LayoutActions.setActiveSidebarItem, (state, { itemId }) => ({
     ...state,
     activeSidebarItem: itemId,
-  }))
+  })),
+  on(LayoutActions.toggleSecondaryPanel, (state) => ({
+    ...state,
+    secondaryPanelVisible: !state.secondaryPanelVisible,
+  })),
+  on(LayoutActions.setSecondaryPanelWidth, (state, { width }) => ({
+    ...state,
+    secondaryPanelWidth: Math.min(SECONDARY_PANEL_WIDTH_MAX, Math.max(SECONDARY_PANEL_WIDTH_MIN, width)),
+  })),
+  on(
+    LayoutActions.restoreLayout,
+    (state, { sidebarVisible, sidebarWidth, bottomPanelVisible, bottomPanelHeight, secondaryPanelVisible, secondaryPanelWidth }) => ({
+      ...state,
+      sidebarVisible,
+      sidebarWidth: Math.min(SIDEBAR_WIDTH_MAX, Math.max(SIDEBAR_WIDTH_MIN, sidebarWidth)),
+      bottomPanelVisible,
+      bottomPanelHeight: Math.min(BOTTOM_PANEL_HEIGHT_MAX, Math.max(BOTTOM_PANEL_HEIGHT_MIN, bottomPanelHeight)),
+      secondaryPanelVisible,
+      secondaryPanelWidth: Math.min(SECONDARY_PANEL_WIDTH_MAX, Math.max(SECONDARY_PANEL_WIDTH_MIN, secondaryPanelWidth)),
+    })
+  )
 );

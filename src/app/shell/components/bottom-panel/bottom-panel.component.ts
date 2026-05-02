@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
 import { NgFor, NgIf } from '@angular/common';
 import { PanelTab } from '../../models/panel-tab.model';
 
@@ -8,6 +8,7 @@ import { PanelTab } from '../../models/panel-tab.model';
   imports: [NgFor, NgIf],
   templateUrl: './bottom-panel.component.html',
   styleUrl: './bottom-panel.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BottomPanelComponent {
   @Input() visible: boolean = false;
