@@ -41,9 +41,11 @@ async function writeEnvelope(envelope: PreferencesEnvelope): Promise<void> {
 /**
  * Register all preferences IPC handlers.
  *
- * Handlers validate that the `key` argument is a non-empty string before
- * reading or writing, returning the `defaultValue` on any validation or I/O
- * failure so the renderer always receives a deterministic result.
+ * Validation is applied at BOTH the sender (preload) and receiver (main)
+ * boundary per the least-privilege security policy.  Handlers validate that
+ * the `key` argument is a non-empty string before reading or writing,
+ * returning the `defaultValue` on any validation or I/O failure so the
+ * renderer always receives a deterministic result.
  */
 export function registerPreferencesHandlers(): void {
   ipcMain.handle(
