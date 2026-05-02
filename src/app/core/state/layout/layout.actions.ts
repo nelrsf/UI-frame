@@ -35,3 +35,34 @@ export const setActiveSidebarItem = createAction(
   '[Layout] Set Active Sidebar Item',
   props<{ itemId: string | null }>()
 );
+
+/**
+ * Toggles the secondary right-side panel visibility (show ↔ hide).
+ */
+export const toggleSecondaryPanel = createAction('[Layout] Toggle Secondary Panel');
+
+/**
+ * Sets the secondary panel width, clamped to
+ * [SECONDARY_PANEL_WIDTH_MIN, SECONDARY_PANEL_WIDTH_MAX].
+ */
+export const setSecondaryPanelWidth = createAction(
+  '[Layout] Set Secondary Panel Width',
+  props<{ width: number }>()
+);
+
+/**
+ * Restores the full layout state from a persisted workspace session.
+ * All dimension values are clamped to their configured min/max bounds.
+ * Dispatched once during shell initialisation when a valid session is found.
+ */
+export const restoreLayout = createAction(
+  '[Layout] Restore Layout',
+  props<{
+    sidebarVisible: boolean;
+    sidebarWidth: number;
+    bottomPanelVisible: boolean;
+    bottomPanelHeight: number;
+    secondaryPanelVisible: boolean;
+    secondaryPanelWidth: number;
+  }>()
+);

@@ -28,6 +28,16 @@ export const selectActiveSidebarItem = createSelector(
   (state) => state.activeSidebarItem
 );
 
+export const selectSecondaryPanelVisible = createSelector(
+  selectLayoutState,
+  (state) => state.secondaryPanelVisible
+);
+
+export const selectSecondaryPanelWidth = createSelector(
+  selectLayoutState,
+  (state) => state.secondaryPanelWidth
+);
+
 /**
  * Returns a snapshot object matching the payload shape of the
  * `shell.layout.changed.v1` event so the shell can publish consistent
@@ -39,4 +49,6 @@ export const selectLayoutSnapshot = createSelector(selectLayoutState, (state) =>
   bottomPanelVisible: state.bottomPanelVisible,
   bottomPanelHeight: state.bottomPanelHeight,
   activeSidebarItem: state.activeSidebarItem,
+  secondaryPanelVisible: state.secondaryPanelVisible,
+  secondaryPanelWidth: state.secondaryPanelWidth,
 }));
