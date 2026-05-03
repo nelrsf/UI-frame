@@ -128,7 +128,7 @@ This sequence covers governance validity, AppShell mounting, Electron bridge cor
 
 - [x] T032 [P] [US3] Add event bus and command registry unit tests in `src/app/core/services/event-bus.service.spec.ts` and `src/app/core/services/command-registry.service.spec.ts`
 - [ ] T033 [P] [US3] Add tab, docking, and guard integration tests in `src/app/core/state/workspace/workspace.reducer.spec.ts`, `src/app/shell/components/tab-bar/tab-bar.component.spec.ts`, and `src/app/shell/docking.integration.spec.ts`
-- [ ] T034 [P] [US3] Add Electron security and startup smoke assertions in `scripts/electron-smoke.mjs`, `src/electron/main.spec.ts`, and `src/electron/preload.spec.ts`
+- [x] T034 [P] [US3] Add Electron security and startup smoke assertions in `scripts/electron-smoke.mjs`, `src/electron/main.spec.ts`, and `src/electron/preload.spec.ts`
 - [ ] T042 [P] Configure coverage thresholds and CI-visible validation in `package.json`, `karma.conf.js`, and `README.md`
 - [ ] T043 [P] Raise core service and state coverage to target in `src/app/core/services/*.spec.ts`, `src/app/core/state/**/*.spec.ts`, and `src/app/shell/**/*.spec.ts`
 - [ ] T044 [P] Finalize accessibility and keyboard regression checks in `src/app/shell/**/*.spec.ts`, `scripts/electron-smoke.mjs`, and `README.md`
@@ -141,7 +141,7 @@ This sequence covers governance validity, AppShell mounting, Electron bridge cor
 - [ ] T037 [US3] Implement MVP docking zones and right-side panel behavior in `src/app/shell/shell.component.ts`, `src/app/shell/shell.component.html`, `src/app/shell/components/content-area/content-area.component.ts`, and `src/app/core/models/dock-zone-assignment.model.ts`
 - [ ] T038 [US3] Implement centralized command surface and shortcut normalization in `src/app/core/services/command-registry.service.ts`, `src/app/core/models/command-registration.model.ts`, `src/app/core/services/shell-shortcuts.service.ts`, and `src/app/shell/components/toolbar/toolbar.component.ts`
 - [ ] T039 [US3] Integrate typed event publication and dev tracing across shell interactions in `src/app/core/services/event-bus.service.ts`, `src/app/core/models/app-event.model.ts`, `src/app/shell/shell.component.ts`, `src/app/shell/components/sidebar/sidebar.component.ts`, `src/app/shell/components/tab-bar/tab-bar.component.ts`, and `src/app/shell/components/bottom-panel/bottom-panel.component.ts`
-- [ ] T040 [US3] Enforce strict security validation and URL allowlist behavior in `src/electron/main.ts`, `src/electron/preload.ts`, `src/electron/ipc/channels.ts`, and `src/electron/ipc/handlers/preferences.handlers.ts`
+- [x] T040 [US3] Enforce strict security validation and URL allowlist behavior in `src/electron/main.ts`, `src/electron/preload.ts`, `src/electron/ipc/channels.ts`, and `src/electron/ipc/handlers/preferences.handlers.ts`
 - [ ] T041 [US3] Apply performance instrumentation and interaction-path optimizations in `src/app/shell/shell.component.ts`, `src/app/shell/components/sidebar/sidebar.component.ts`, `src/app/shell/components/tab-bar/tab-bar.component.ts`, and `scripts/measure-shell-performance.mjs`
 
 ### Closure for Phase 4

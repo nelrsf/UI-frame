@@ -112,9 +112,12 @@ Expected output:
   ✔  App window became visible within 15s
   ✔  Shell v1 became visible within 15s
   ✔  No blocking errors in startup output (got: none)
+  ✔  BrowserWindow security settings verified (contextIsolation=true, nodeIntegration=false, sandbox=true)
 
 ────────────────────────────────────────────────────────────
-  Results: 4 passed, 0 failed
+  Results: 5 passed, 0 failed
+
+  US3 Gate G4: Shell v1 independently functional and secure ✔
 ```
 
 Exit code `0` means all baseline assertions passed. Exit code `1` means one or more assertions failed; review the output for the failing assertion details.
