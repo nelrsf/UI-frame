@@ -72,6 +72,19 @@ const SECURITY_OK_PATTERNS = [
   /\[smoke\] security:ok/i,
 ];
 
+/**
+ * Patterns that confirm at least one keyboard-reachable interactive element
+ * is present in the rendered shell DOM — satisfying the keyboard reachability
+ * requirement from US1 Acceptance Scenario 3 (FR-Accessibility).
+ *
+ * The main process emits `[smoke] keyboard:reachable` in smoke mode after
+ * querying the renderer for focusable interactive elements via
+ * webContents.executeJavaScript().
+ */
+const KEYBOARD_REACHABLE_PATTERNS = [
+  /\[smoke\] keyboard:reachable/i,
+];
+
 let passed = 0;
 let failed = 0;
 
@@ -111,6 +124,7 @@ async function runSmoke() {
   let blockingError = null;
   let processExitedEarly = false;
   let securityOk = false;
+  let keyboardReachable = false;
 
   // --no-sandbox is required in headless CI environments (e.g. Linux without SUID sandbox).
   // It is enabled only when the CI environment variable is set so that local runs keep
@@ -162,6 +176,9 @@ async function runSmoke() {
     if (SECURITY_OK_PATTERNS.some((re) => re.test(text))) {
       securityOk = true;
     }
+    if (KEYBOARD_REACHABLE_PATTERNS.some((re) => re.test(text))) {
+      keyboardReachable = true;
+    }
   }
 
   child.stdout.on('data', (chunk) => {
@@ -210,6 +227,7 @@ async function runSmoke() {
   assert(shellVisible, `Shell v1 became visible within ${WINDOW_VISIBLE_TIMEOUT_MS / 1000}s`);
   assert(blockingError === null, `No blocking errors in startup output (got: ${blockingError ?? 'none'})`);
   assert(securityOk, 'BrowserWindow security settings verified (contextIsolation=true, nodeIntegration=false, sandbox=true)');
+  assert(keyboardReachable, 'Shell DOM contains keyboard-reachable interactive elements');
 
   // ── Summary ─────────────────────────────────────────────────
 
@@ -221,10 +239,11 @@ async function runSmoke() {
   }
 
   // ── US3 Gate G4 ─────────────────────────────────────────────
-  // Five passing assertions confirm the Shell v1 startup path is
-  // independently functional and secure, satisfying the Phase 4 exit gate (G4):
-  //   FR-AppShell, FR-ShellComponents, FR-Layout, FR-Accessibility (structural),
-  //   FR-Security (NFR-Security-01: contextIsolation, no nodeIntegration, sandbox).
+  // Six passing assertions confirm the Shell v1 startup path is
+  // independently functional, secure, and keyboard-accessible,
+  // satisfying the Phase 4 exit gate (G4):
+  //   FR-AppShell, FR-ShellComponents, FR-Layout, FR-Accessibility
+  //   (structural + keyboard reachability), FR-Security (NFR-Security-01).
   if (failed === 0) {
     console.log('  US3 Gate G4: Shell v1 independently functional and secure ✔\n');
   }

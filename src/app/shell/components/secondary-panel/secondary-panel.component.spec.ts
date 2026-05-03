@@ -141,4 +141,66 @@ describe('SecondaryPanelComponent', () => {
     const fixture = TestBed.createComponent(SecondaryPanelComponent);
     expect(fixture.componentInstance.width).toBe(300);
   });
+
+  // ---------------------------------------------------------------------------
+  // Accessibility regression checks
+  // ---------------------------------------------------------------------------
+
+  describe('accessibility', () => {
+    it('should have aria-label on the secondary panel container', () => {
+      const fixture = TestBed.createComponent(SecondaryPanelComponent);
+      fixture.componentInstance.visible = true;
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement as HTMLElement;
+      const panel = compiled.querySelector('[data-testid="secondary-panel"]');
+      expect(panel?.getAttribute('aria-label')).toBeTruthy();
+    });
+
+    it('should have role="tablist" on the panel tabs container', () => {
+      const fixture = TestBed.createComponent(SecondaryPanelComponent);
+      fixture.componentInstance.visible = true;
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement as HTMLElement;
+      const tabsContainer = compiled.querySelector('.secondary-panel__tabs');
+      expect(tabsContainer?.getAttribute('role')).toBe('tablist');
+    });
+
+    it('should have aria-label on the toggle button', () => {
+      const fixture = TestBed.createComponent(SecondaryPanelComponent);
+      fixture.componentInstance.visible = true;
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement as HTMLElement;
+      const toggleBtn = compiled.querySelector('[data-testid="secondary-panel-toggle"]');
+      expect(toggleBtn?.getAttribute('aria-label')).toBeTruthy();
+    });
+
+    it('should have aria-label on the close button', () => {
+      const fixture = TestBed.createComponent(SecondaryPanelComponent);
+      fixture.componentInstance.visible = true;
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement as HTMLElement;
+      const closeBtn = compiled.querySelector('[data-testid="secondary-panel-close"]');
+      expect(closeBtn?.getAttribute('aria-label')).toBeTruthy();
+    });
+
+    it('should have role="tabpanel" on the content area', () => {
+      const fixture = TestBed.createComponent(SecondaryPanelComponent);
+      fixture.componentInstance.visible = true;
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement as HTMLElement;
+      const content = compiled.querySelector('[data-testid="secondary-panel-content"]');
+      expect(content?.getAttribute('role')).toBe('tabpanel');
+    });
+
+    it('should set aria-selected on panel tab buttons', () => {
+      const fixture = TestBed.createComponent(SecondaryPanelComponent);
+      fixture.componentInstance.visible = true;
+      fixture.componentInstance.panels = [makePanel({ id: 'outline', label: 'Outline' })];
+      fixture.componentInstance.activePanelId = 'outline';
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement as HTMLElement;
+      const tabBtn = compiled.querySelector('[data-testid="secondary-panel-tab-outline"]');
+      expect(tabBtn?.getAttribute('aria-selected')).toBe('true');
+    });
+  });
 });

@@ -76,6 +76,25 @@ function createWindow(): void {
     // tests in main.spec.ts will catch the regression before this path runs.
     if (process.env['ELECTRON_ENV'] === 'smoke') {
       process.stdout.write('[smoke] security:ok\n');
+
+      // Verify keyboard reachability: query the rendered shell DOM for at least
+      // one non-disabled interactive element reachable via the Tab key.
+      // The tab bar's new-tab button is always rendered even with no open tabs,
+      // guaranteeing a minimum of one focusable target on a fresh shell load.
+      // Failure to find any focusable element indicates an accessibility regression
+      // (e.g. all buttons mistakenly disabled or given tabindex="-1").
+      mainWindow!.webContents
+        .executeJavaScript(
+          `document.querySelectorAll('button:not([disabled]),[tabindex="0"]').length`
+        )
+        .then((count: unknown) => {
+          if (typeof count === 'number' && count >= 1) {
+            process.stdout.write('[smoke] keyboard:reachable\n');
+          }
+        })
+        .catch(() => {
+          // DOM query failed — keyboard:reachable signal will not be emitted.
+        });
     }
   });
 

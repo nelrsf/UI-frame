@@ -115,9 +115,10 @@ Expected output:
   ✔  Shell v1 became visible within 15s
   ✔  No blocking errors in startup output (got: none)
   ✔  BrowserWindow security settings verified (contextIsolation=true, nodeIntegration=false, sandbox=true)
+  ✔  Shell DOM contains keyboard-reachable interactive elements
 
 ────────────────────────────────────────────────────────────
-  Results: 5 passed, 0 failed
+  Results: 6 passed, 0 failed
 
   US3 Gate G4: Shell v1 independently functional and secure ✔
 ```
@@ -197,4 +198,40 @@ angular.json
 tsconfig.json
 tsconfig.electron.json  # TypeScript config for Electron sources
 ```
+
+## Accessibility
+
+Shell v1 maintains a baseline of structural accessibility across all shell regions. Contributors
+must preserve the following expectations; they are validated by targeted unit tests in
+`src/app/shell/**/*.spec.ts` and by the keyboard reachability assertion in the automated smoke test.
+
+### ARIA landmarks
+
+| Shell region | Element selector | Role |
+|---|---|---|
+| Application root | `.shell-root` | `application` |
+| Workspace area | `.shell-workspace` | `region` |
+| Sidebar | `[data-testid="sidebar"]` | `complementary` |
+| Activity bar | `[data-testid="activity-bar"]` | `navigation` |
+| Sidebar panel | `[data-testid="sidebar-panel"]` | `region` |
+| Toolbar | `[data-testid="toolbar"]` | `toolbar` |
+| Tab bar | `[data-testid="tab-bar"]` | `tablist` |
+| Content area | `[data-testid="content-area"]` | `main` |
+| Bottom panel | `[data-testid="bottom-panel"]` | `complementary` |
+| Secondary panel | `[data-testid="secondary-panel"]` | `complementary` |
+| Status bar | `.shell-statusbar` | `contentinfo` |
+
+### Key ARIA attributes
+
+- All interactive buttons carry a descriptive `aria-label`.
+- Tabs use `aria-selected` to reflect active state and `tabindex="0"` / `tabindex="-1"` for roving focus.
+- The sidebar carries `aria-expanded` to reflect its collapsed/expanded state.
+- The status bar carries `aria-live="polite"` so screen readers announce status changes.
+- The content area empty state carries `aria-live="polite"` for assistive technology announcements.
+
+### Keyboard navigation
+
+- All interactive shell regions are reachable via the `Tab` key. Buttons are native `<button>` elements and are naturally keyboard focusable.
+- Within a tab bar, the active tab has `tabindex="0"` and inactive tabs have `tabindex="-1"` (roving tabindex pattern). This is validated by the unit tests and by the `[smoke] keyboard:reachable` assertion in the automated smoke test.
+- The smoke test verifies that at least one non-disabled interactive element is reachable by keyboard on a fresh shell launch.
 

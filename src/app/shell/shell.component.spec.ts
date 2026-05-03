@@ -100,6 +100,52 @@ describe('ShellComponent', () => {
     });
   });
 
+  describe('accessibility — shell landmark regions', () => {
+    it('should have role="region" on the workspace container', () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement as HTMLElement;
+      const workspace = compiled.querySelector('.shell-workspace');
+      expect(workspace?.getAttribute('role')).toBe('region');
+    });
+
+    it('should have aria-label on the workspace container', () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement as HTMLElement;
+      const workspace = compiled.querySelector('.shell-workspace');
+      expect(workspace?.getAttribute('aria-label')).toBeTruthy();
+    });
+
+    it('should have role="contentinfo" on the statusbar footer', () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement as HTMLElement;
+      const footer = compiled.querySelector('.shell-statusbar');
+      expect(footer?.getAttribute('role')).toBe('contentinfo');
+    });
+
+    it('should have aria-label on the statusbar footer', () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement as HTMLElement;
+      const footer = compiled.querySelector('.shell-statusbar');
+      expect(footer?.getAttribute('aria-label')).toBeTruthy();
+    });
+
+    it('should contain at least one keyboard-focusable interactive element', () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement as HTMLElement;
+      // Native <button> elements and elements with tabindex="0" are keyboard reachable.
+      // The new-tab button in the tab bar is always rendered, providing a guaranteed target.
+      const focusable = compiled.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), [tabindex="0"]'
+      );
+      expect(focusable.length).toBeGreaterThanOrEqual(1);
+    });
+  });
+
   describe('layout event emissions', () => {
     it('should emit shell.layout.changed.v1 when sidebar is toggled', () => {
       const fixture = TestBed.createComponent(ShellComponent);

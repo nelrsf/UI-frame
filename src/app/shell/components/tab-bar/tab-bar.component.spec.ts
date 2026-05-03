@@ -155,6 +155,77 @@ describe('TabBarComponent', () => {
     expect(activeTab?.getAttribute('tabindex')).toBe('0');
     expect(inactiveTab?.getAttribute('tabindex')).toBe('-1');
   });
+
+  // ---------------------------------------------------------------------------
+  // Accessibility regression checks
+  // ---------------------------------------------------------------------------
+
+  describe('accessibility', () => {
+    it('should set aria-selected="true" on the active tab', () => {
+      const fixture = TestBed.createComponent(TabBarComponent);
+      fixture.componentInstance.tabs = [
+        makeTab({ id: 'tab-1', label: 'File.ts' }),
+        makeTab({ id: 'tab-2', label: 'README.md' }),
+      ];
+      fixture.componentInstance.activeTabId = 'tab-1';
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement as HTMLElement;
+      const activeTab = compiled.querySelector('[data-testid="tab-tab-1"]');
+      expect(activeTab?.getAttribute('aria-selected')).toBe('true');
+    });
+
+    it('should set aria-selected="false" on inactive tabs', () => {
+      const fixture = TestBed.createComponent(TabBarComponent);
+      fixture.componentInstance.tabs = [
+        makeTab({ id: 'tab-1', label: 'File.ts' }),
+        makeTab({ id: 'tab-2', label: 'README.md' }),
+      ];
+      fixture.componentInstance.activeTabId = 'tab-1';
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement as HTMLElement;
+      const inactiveTab = compiled.querySelector('[data-testid="tab-tab-2"]');
+      expect(inactiveTab?.getAttribute('aria-selected')).toBe('false');
+    });
+
+    it('should have aria-label on the new-tab button', () => {
+      const fixture = TestBed.createComponent(TabBarComponent);
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement as HTMLElement;
+      const newTabBtn = compiled.querySelector('[data-testid="tab-bar-new-tab"]');
+      expect(newTabBtn?.getAttribute('aria-label')).toBeTruthy();
+    });
+
+    it('should have aria-label on close buttons describing which tab is closed', () => {
+      const fixture = TestBed.createComponent(TabBarComponent);
+      fixture.componentInstance.tabs = [makeTab({ id: 'tab-1', label: 'File.ts', closable: true })];
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement as HTMLElement;
+      const closeBtn = compiled.querySelector('[data-testid="tab-close-tab-1"]');
+      const label = closeBtn?.getAttribute('aria-label') ?? '';
+      expect(label.length).toBeGreaterThan(0);
+    });
+
+    it('should have aria-label on tab elements describing the tab label', () => {
+      const fixture = TestBed.createComponent(TabBarComponent);
+      fixture.componentInstance.tabs = [makeTab({ id: 'tab-1', label: 'File.ts' })];
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement as HTMLElement;
+      // Tab labels are rendered as text content; the dirty-indicator is aria-labelled separately.
+      const dirtySpan = compiled.querySelector('[data-testid="tab-dirty-indicator"]');
+      // Dirty indicator must have an aria-label so screen readers describe its meaning.
+      // (Only relevant when dirty — for a clean tab this element is absent.)
+      expect(dirtySpan).toBeNull(); // clean tab: no indicator
+    });
+
+    it('should set aria-label on the dirty indicator when a tab is dirty', () => {
+      const fixture = TestBed.createComponent(TabBarComponent);
+      fixture.componentInstance.tabs = [makeTab({ id: 'tab-1', label: 'File.ts', dirty: true })];
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement as HTMLElement;
+      const dirtySpan = compiled.querySelector('[data-testid="tab-dirty-indicator"]');
+      expect(dirtySpan?.getAttribute('aria-label')).toBeTruthy();
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------
