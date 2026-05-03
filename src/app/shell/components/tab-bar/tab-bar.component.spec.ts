@@ -1,6 +1,7 @@
 import { TestBed, fakeAsync, tick, flushMicrotasks } from '@angular/core/testing';
 import { TabBarComponent } from './tab-bar.component';
 import { TabItem, TabCloseGuard } from '../../models/tab-item.model';
+import { EventBusService } from '../../../core/services/event-bus.service';
 
 const makeTab = (partial: Partial<TabItem> & { id: string; label: string }): TabItem => ({
   dirty: false,
@@ -605,5 +606,33 @@ describe('TabBarComponent — guarded close', () => {
   it('should expose closeGuardTimeout as an EventEmitter', () => {
     const fixture = TestBed.createComponent(TabBarComponent);
     expect(fixture.componentInstance.closeGuardTimeout).toBeDefined();
+  });
+
+  // ── EventBus emissions ───────────────────────────────────────────────────
+
+  describe('EventBus emissions', () => {
+    it('should emit tabs.active.changed.v1 when a tab is selected', () => {
+      const fixture = TestBed.createComponent(TabBarComponent);
+      const eventBus = TestBed.inject(EventBusService);
+      const emitSpy = spyOn(eventBus, 'emit');
+
+      fixture.componentInstance.onTabSelect('tab-42');
+
+      expect(emitSpy).toHaveBeenCalledWith('tabs.active.changed.v1', { tabId: 'tab-42' }, 'TabBarComponent');
+    });
+
+    it('should emit tabs.active.changed.v1 with the correct tabId for each selection', () => {
+      const fixture = TestBed.createComponent(TabBarComponent);
+      const eventBus = TestBed.inject(EventBusService);
+      const emitSpy = spyOn(eventBus, 'emit');
+
+      fixture.componentInstance.onTabSelect('file-a');
+      fixture.componentInstance.onTabSelect('file-b');
+
+      expect(emitSpy.calls.allArgs()).toEqual([
+        ['tabs.active.changed.v1', { tabId: 'file-a' }, 'TabBarComponent'],
+        ['tabs.active.changed.v1', { tabId: 'file-b' }, 'TabBarComponent'],
+      ]);
+    });
   });
 });

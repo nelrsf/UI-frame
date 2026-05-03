@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { BottomPanelComponent } from './bottom-panel.component';
 import { PanelTab } from '../../models/panel-tab.model';
+import { EventBusService } from '../../../core/services/event-bus.service';
 
 const makePanel = (partial: Partial<PanelTab> & { id: string; label: string }): PanelTab => ({
   closable: true,
@@ -168,5 +169,46 @@ describe('BottomPanelComponent', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     const content = compiled.querySelector('[data-testid="bottom-panel-content"]');
     expect(content?.getAttribute('aria-labelledby')).toBe('panel-tab-btn-terminal');
+  });
+
+  describe('EventBus emissions', () => {
+    it('should emit bottomPanel.toggled.v1 with visible:false when toggle is called while visible', () => {
+      const fixture = TestBed.createComponent(BottomPanelComponent);
+      fixture.componentInstance.visible = true;
+      fixture.detectChanges();
+
+      const eventBus = TestBed.inject(EventBusService);
+      const emitSpy = spyOn(eventBus, 'emit');
+
+      fixture.componentInstance.onToggle();
+
+      expect(emitSpy).toHaveBeenCalledWith('bottomPanel.toggled.v1', { visible: false }, 'BottomPanelComponent');
+    });
+
+    it('should emit bottomPanel.toggled.v1 with visible:true when toggle is called while hidden', () => {
+      const fixture = TestBed.createComponent(BottomPanelComponent);
+      fixture.componentInstance.visible = false;
+      fixture.detectChanges();
+
+      const eventBus = TestBed.inject(EventBusService);
+      const emitSpy = spyOn(eventBus, 'emit');
+
+      fixture.componentInstance.onToggle();
+
+      expect(emitSpy).toHaveBeenCalledWith('bottomPanel.toggled.v1', { visible: true }, 'BottomPanelComponent');
+    });
+
+    it('should emit bottomPanel.toggled.v1 with visible:false when close is called', () => {
+      const fixture = TestBed.createComponent(BottomPanelComponent);
+      fixture.componentInstance.visible = true;
+      fixture.detectChanges();
+
+      const eventBus = TestBed.inject(EventBusService);
+      const emitSpy = spyOn(eventBus, 'emit');
+
+      fixture.componentInstance.onClose();
+
+      expect(emitSpy).toHaveBeenCalledWith('bottomPanel.toggled.v1', { visible: false }, 'BottomPanelComponent');
+    });
   });
 });
