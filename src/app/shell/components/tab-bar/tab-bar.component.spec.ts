@@ -1,6 +1,6 @@
-import { TestBed } from '@angular/core/testing';
+import { TestBed, fakeAsync, tick, flushMicrotasks } from '@angular/core/testing';
 import { TabBarComponent } from './tab-bar.component';
-import { TabItem } from '../../models/tab-item.model';
+import { TabItem, TabCloseGuard } from '../../models/tab-item.model';
 
 const makeTab = (partial: Partial<TabItem> & { id: string; label: string }): TabItem => ({
   dirty: false,
@@ -394,5 +394,216 @@ describe('TabBarComponent — integration', () => {
       const compiled = fixture.nativeElement as HTMLElement;
       expect(compiled.querySelector('.tab-bar__tab-icon')).toBeNull();
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// TabBarComponent — guarded close tests (T036 / T033)
+// ---------------------------------------------------------------------------
+
+describe('TabBarComponent — guarded close', () => {
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [TabBarComponent],
+    }).compileComponents();
+  });
+
+  // ── non-dirty tab closes immediately ────────────────────────────────────
+
+  it('should emit tabClosed immediately for a non-dirty closable tab', fakeAsync(() => {
+    const fixture = TestBed.createComponent(TabBarComponent);
+    fixture.componentInstance.tabs = [makeTab({ id: 't1', label: 'Clean.ts', dirty: false, closable: true })];
+    fixture.detectChanges();
+    const spy = spyOn(fixture.componentInstance.tabClosed, 'emit');
+
+    (fixture.nativeElement.querySelector('[data-testid="tab-close-t1"]') as HTMLElement).click();
+    flushMicrotasks();
+
+    expect(spy).toHaveBeenCalledWith('t1');
+  }));
+
+  // ── dirty tab without a guard closes immediately ─────────────────────────
+
+  it('should emit tabClosed immediately for a dirty tab with no registered guard', fakeAsync(() => {
+    const fixture = TestBed.createComponent(TabBarComponent);
+    fixture.componentInstance.tabs = [makeTab({ id: 't1', label: 'Dirty.ts', dirty: true, closable: true })];
+    fixture.componentInstance.closeGuards = {};
+    fixture.detectChanges();
+    const spy = spyOn(fixture.componentInstance.tabClosed, 'emit');
+
+    (fixture.nativeElement.querySelector('[data-testid="tab-close-t1"]') as HTMLElement).click();
+    flushMicrotasks();
+
+    expect(spy).toHaveBeenCalledWith('t1');
+  }));
+
+  // ── synchronous guard returns true ──────────────────────────────────────
+
+  it('should emit tabClosed when a synchronous guard returns true', fakeAsync(() => {
+    const fixture = TestBed.createComponent(TabBarComponent);
+    fixture.componentInstance.tabs = [makeTab({ id: 't1', label: 'Dirty.ts', dirty: true, closable: true })];
+    const guard: TabCloseGuard = { beforeClose: () => true };
+    fixture.componentInstance.closeGuards = { t1: guard };
+    fixture.detectChanges();
+    const spy = spyOn(fixture.componentInstance.tabClosed, 'emit');
+
+    (fixture.nativeElement.querySelector('[data-testid="tab-close-t1"]') as HTMLElement).click();
+    flushMicrotasks();
+
+    expect(spy).toHaveBeenCalledWith('t1');
+  }));
+
+  // ── synchronous guard returns false ─────────────────────────────────────
+
+  it('should NOT emit tabClosed when a synchronous guard returns false', fakeAsync(() => {
+    const fixture = TestBed.createComponent(TabBarComponent);
+    fixture.componentInstance.tabs = [makeTab({ id: 't1', label: 'Dirty.ts', dirty: true, closable: true })];
+    const guard: TabCloseGuard = { beforeClose: () => false };
+    fixture.componentInstance.closeGuards = { t1: guard };
+    fixture.detectChanges();
+    const spy = spyOn(fixture.componentInstance.tabClosed, 'emit');
+
+    (fixture.nativeElement.querySelector('[data-testid="tab-close-t1"]') as HTMLElement).click();
+    flushMicrotasks();
+
+    expect(spy).not.toHaveBeenCalled();
+  }));
+
+  // ── asynchronous guard resolves true ────────────────────────────────────
+
+  it('should emit tabClosed when an async guard resolves with true', fakeAsync(() => {
+    const fixture = TestBed.createComponent(TabBarComponent);
+    fixture.componentInstance.tabs = [makeTab({ id: 't1', label: 'Dirty.ts', dirty: true, closable: true })];
+    const guard: TabCloseGuard = { beforeClose: () => Promise.resolve(true) };
+    fixture.componentInstance.closeGuards = { t1: guard };
+    fixture.detectChanges();
+    const spy = spyOn(fixture.componentInstance.tabClosed, 'emit');
+
+    (fixture.nativeElement.querySelector('[data-testid="tab-close-t1"]') as HTMLElement).click();
+    flushMicrotasks();
+
+    expect(spy).toHaveBeenCalledWith('t1');
+  }));
+
+  // ── asynchronous guard resolves false ────────────────────────────────────
+
+  it('should NOT emit tabClosed when an async guard resolves with false', fakeAsync(() => {
+    const fixture = TestBed.createComponent(TabBarComponent);
+    fixture.componentInstance.tabs = [makeTab({ id: 't1', label: 'Dirty.ts', dirty: true, closable: true })];
+    const guard: TabCloseGuard = { beforeClose: () => Promise.resolve(false) };
+    fixture.componentInstance.closeGuards = { t1: guard };
+    fixture.detectChanges();
+    const spy = spyOn(fixture.componentInstance.tabClosed, 'emit');
+
+    (fixture.nativeElement.querySelector('[data-testid="tab-close-t1"]') as HTMLElement).click();
+    flushMicrotasks();
+
+    expect(spy).not.toHaveBeenCalled();
+  }));
+
+  // ── asynchronous guard that rejects ─────────────────────────────────────
+
+  it('should NOT emit tabClosed when an async guard rejects', fakeAsync(() => {
+    const fixture = TestBed.createComponent(TabBarComponent);
+    fixture.componentInstance.tabs = [makeTab({ id: 't1', label: 'Dirty.ts', dirty: true, closable: true })];
+    const guard: TabCloseGuard = { beforeClose: () => Promise.reject(new Error('cancelled')) };
+    fixture.componentInstance.closeGuards = { t1: guard };
+    fixture.detectChanges();
+    const spy = spyOn(fixture.componentInstance.tabClosed, 'emit');
+
+    (fixture.nativeElement.querySelector('[data-testid="tab-close-t1"]') as HTMLElement).click();
+    flushMicrotasks();
+
+    expect(spy).not.toHaveBeenCalled();
+  }));
+
+  // ── guard timeout ────────────────────────────────────────────────────────
+
+  it('should emit closeGuardTimeout and NOT emit tabClosed when guard times out', fakeAsync(() => {
+    const fixture = TestBed.createComponent(TabBarComponent);
+    fixture.componentInstance.tabs = [makeTab({ id: 't1', label: 'Dirty.ts', dirty: true, closable: true })];
+    // A guard that never resolves
+    const guard: TabCloseGuard = { beforeClose: () => new Promise<boolean>(() => { /* never resolves */ }) };
+    fixture.componentInstance.closeGuards = { t1: guard };
+    fixture.detectChanges();
+    const closedSpy = spyOn(fixture.componentInstance.tabClosed, 'emit');
+    const timeoutSpy = spyOn(fixture.componentInstance.closeGuardTimeout, 'emit');
+
+    (fixture.nativeElement.querySelector('[data-testid="tab-close-t1"]') as HTMLElement).click();
+    tick(10_000); // advance past the 10-second guard timeout
+    flushMicrotasks();
+
+    expect(timeoutSpy).toHaveBeenCalledWith('t1');
+    expect(closedSpy).not.toHaveBeenCalled();
+  }));
+
+  // ── duplicate close attempt is ignored while guard is pending ────────────
+
+  it('should ignore a duplicate close click while a guard is already resolving', fakeAsync(() => {
+    const fixture = TestBed.createComponent(TabBarComponent);
+    fixture.componentInstance.tabs = [makeTab({ id: 't1', label: 'Dirty.ts', dirty: true, closable: true })];
+    let resolveGuard!: (v: boolean) => void;
+    const guard: TabCloseGuard = {
+      beforeClose: () => new Promise<boolean>((r) => { resolveGuard = r; }),
+    };
+    fixture.componentInstance.closeGuards = { t1: guard };
+    fixture.detectChanges();
+    const spy = spyOn(fixture.componentInstance.tabClosed, 'emit');
+
+    const closeBtn = fixture.nativeElement.querySelector('[data-testid="tab-close-t1"]') as HTMLElement;
+    closeBtn.click(); // first attempt → guard in-flight
+    flushMicrotasks();
+    closeBtn.click(); // second attempt → should be ignored
+
+    resolveGuard(true);
+    flushMicrotasks();
+
+    // Guard called only once; tabClosed emitted only once.
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith('t1');
+
+    // Discard the 10s timeout timer to avoid leaking.
+    tick(10_000);
+  }));
+
+  // ── close button is disabled while guard is pending ──────────────────────
+
+  it('should disable the close button while a guard is resolving', fakeAsync(() => {
+    const fixture = TestBed.createComponent(TabBarComponent);
+    fixture.componentInstance.tabs = [makeTab({ id: 't1', label: 'Dirty.ts', dirty: true, closable: true })];
+    let resolveGuard!: (v: boolean) => void;
+    const guard: TabCloseGuard = {
+      beforeClose: () => new Promise<boolean>((r) => { resolveGuard = r; }),
+    };
+    fixture.componentInstance.closeGuards = { t1: guard };
+    fixture.detectChanges();
+
+    const closeBtn = fixture.nativeElement.querySelector('[data-testid="tab-close-t1"]') as HTMLButtonElement;
+    closeBtn.click();
+    fixture.detectChanges();
+
+    expect(closeBtn.disabled).toBeTrue();
+
+    resolveGuard(false);
+    flushMicrotasks();
+    fixture.detectChanges();
+
+    expect(closeBtn.disabled).toBeFalse();
+
+    tick(10_000);
+  }));
+
+  // ── closeGuards input defaults to empty map ──────────────────────────────
+
+  it('should default closeGuards to an empty record', () => {
+    const fixture = TestBed.createComponent(TabBarComponent);
+    expect(fixture.componentInstance.closeGuards).toEqual({});
+  });
+
+  // ── closeGuardTimeout output is exposed ─────────────────────────────────
+
+  it('should expose closeGuardTimeout as an EventEmitter', () => {
+    const fixture = TestBed.createComponent(TabBarComponent);
+    expect(fixture.componentInstance.closeGuardTimeout).toBeDefined();
   });
 });

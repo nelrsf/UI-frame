@@ -21,8 +21,10 @@
       @if (tab.closable && !tab.pinned) {
         <button
           class="tab-bar__close-btn"
+          [class.tab-bar__close-btn--pending]="isClosingGuardPending(tab.id)"
           [attr.aria-label]="'Close ' + tab.label"
           [attr.data-testid]="'tab-close-' + tab.id"
+          [disabled]="isClosingGuardPending(tab.id)"
           (click)="onTabClose($event, tab.id)"
         >×</button>
       }
