@@ -132,7 +132,7 @@ This sequence covers governance validity, AppShell mounting, Electron bridge cor
 - [x] T042 [P] Configure coverage thresholds and CI-visible validation in `package.json`, `karma.conf.js`, and `README.md`
 - [ ] T043 [P] Raise core service and state coverage to target in `src/app/core/services/*.spec.ts`, `src/app/core/state/**/*.spec.ts`, and `src/app/shell/**/*.spec.ts`
 - [ ] T044 [P] Finalize accessibility and keyboard regression checks in `src/app/shell/**/*.spec.ts`, `scripts/electron-smoke.mjs`, and `README.md`
-- [ ] T045 [P] Finalize startup and performance validation scripts in `scripts/electron-smoke.mjs`, `scripts/measure-shell-performance.mjs`, and `package.json`
+- [x] T045 [P] Finalize startup and performance validation scripts in `scripts/electron-smoke.mjs`, `scripts/measure-shell-performance.mjs`, and `package.json`
 
 ### Implementation for Phase 4 (User Story 3)
 
