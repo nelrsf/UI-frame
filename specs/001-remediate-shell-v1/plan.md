@@ -2,6 +2,7 @@
 
 **Branch**: `001-remediate-shell-v1` | **Date**: 2026-04-26 | **Spec**: [spec.md](./spec.md)
 **Input**: Feature specification from `specs/001-remediate-shell-v1/spec.md`
+**Delivery Status**: All phases complete — Gate G4 passed 2026-05-03
 
 ## Summary
 
@@ -116,7 +117,7 @@ from being a real executable surface.
 - Validated IPC handler map for every preload-exposed preferences operation.
 - Baseline startup path that completes without blocking renderer, preload, or main-process errors.
 
-**Exit Gate G0**:
+**Exit Gate G0**: ✅ Passed
 
 - `FR-Governance`, `FR-AppShell`, `FR-Security`, and `NFR-Reliability-01` all have concrete
   implementation intent and no unresolved blockers.
@@ -155,7 +156,7 @@ interactive regions.
 - Depends on G0.
 - Must complete before shell interaction work that needs tabs, docking, or persistence semantics.
 
-**Exit Gate G1**:
+**Exit Gate G1**: ✅ Passed
 
 - `FR-EventBus`, `FR-Commands`, `FR-Preferences`, `FR-Platform`, and the state-related parts of
   `DoD-03` and `DoD-05` have explicit design coverage.
@@ -193,7 +194,7 @@ layout.
 - Depends on G1.
 - Interaction-heavy tab/docking work cannot begin before this phase is stable.
 
-**Exit Gate G2**:
+**Exit Gate G2**: ✅ Passed
 
 - `AC-AppShell-01`, `AC-TopBar-01`, `AC-Sidebar-01`, `AC-Toolbar-01`, `AC-ContentArea-01`,
   `AC-BottomPanel-01`, and `AC-StatusBar-01` are structurally satisfiable.
@@ -231,7 +232,7 @@ layout.
 - Depends on G2.
 - Performance tuning work may begin here but cannot close until Phase 4 validation.
 
-**Exit Gate G3**:
+**Exit Gate G3**: ✅ Passed
 
 - `FR-Tabs`, `FR-Docking`, `FR-Commands`, and `FR-Preferences` are all executable without
   violating out-of-scope rules.
@@ -272,7 +273,7 @@ performance, and traceability obligations.
 - Depends on G3.
 - This is the release gate for Shell v1 remediation.
 
-**Exit Gate G4**:
+**Exit Gate G4**: ✅ Passed — 2026-05-03
 
 - `DoD-01` through `DoD-06` are satisfied.
 - `SC-001` through `SC-006` are measurable and test-ready.
@@ -300,13 +301,13 @@ performance, and traceability obligations.
 
 ### Gate Matrix
 
-| Gate | Trigger | Pass Condition | Fails If |
-|------|---------|----------------|---------|
-| G0 | End of Phase 0 | Canonical governance is clean, AppShell is the target root, preload handlers match exposed preference calls, startup path has no known blockers | Placeholder governance remains, preferences bridge is asymmetric, or startup errors are still expected |
-| G1 | End of Phase 1 | State boundaries, workspace identity, command contract, event contract, and preference envelope are stable | Global state is undefined, `workspaceId` is ambiguous, or shell contracts still drift across artifacts |
-| G2 | End of Phase 2 | Structural shell renders as the real root and preserves layout integrity and baseline keyboard access | Starter UI remains, shell regions are missing, or layout breaks under supported resize |
-| G3 | End of Phase 3 | Tabs, docking, commands, and persistence behave within the closed MVP scope | Docking scope expands beyond v1, dirty close is ambiguous, or persistence restores invalid session state |
-| G4 | End of Phase 4 | DoD and success criteria are test-backed and the feature is ready for task generation | Coverage, security, performance, reliability, or traceability targets remain unmet |
+| Gate | Trigger | Pass Condition | Status |
+|------|---------|----------------|--------|
+| G0 | End of Phase 0 | Canonical governance is clean, AppShell is the target root, preload handlers match exposed preference calls, startup path has no known blockers | ✅ Passed |
+| G1 | End of Phase 1 | State boundaries, workspace identity, command contract, event contract, and preference envelope are stable | ✅ Passed |
+| G2 | End of Phase 2 | Structural shell renders as the real root and preserves layout integrity and baseline keyboard access | ✅ Passed |
+| G3 | End of Phase 3 | Tabs, docking, commands, and persistence behave within the closed MVP scope | ✅ Passed |
+| G4 | End of Phase 4 | DoD and success criteria are test-backed and the feature is ready for task generation | ✅ Passed 2026-05-03 |
 
 ### Continuous Quality Controls
 

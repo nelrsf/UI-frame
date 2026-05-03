@@ -32,12 +32,12 @@ This sequence covers governance validity, AppShell mounting, Electron bridge cor
 **Purpose**: Freeze the governing artifact set, establish executable validation scripts, and prepare missing shell/state folders without widening scope.
 
 - [x] T001 Verify cross-reference consistency in `.specify/memory/constitution.md`, `specs/001-remediate-shell-v1/spec.md`, `specs/001-remediate-shell-v1/plan.md`, and `.github/copilot-instructions.md`. Ensure all version dates match (2026-04-26), no stale cross-references remain, and precedence order `constitution > spec > plan > tasks` is documented in each artifact.
-- [ ] T002 Create missing shell and state scaffolding in `src/app/shell/`, `src/app/shell/components/`, `src/app/shell/models/`, `src/app/core/state/`, and `src/app/core/utils/`
-- [ ] T003 Configure reproducible validation commands in `package.json` (add scripts: `test:shell`, `test:smoke`, `test:coverage`), `README.md` (add invocation and expected output docs), and `scripts/electron-smoke.mjs` (add baseline assertions for app window opening and no startup errors in DevTools console).
+- [x] T002 Create missing shell and state scaffolding in `src/app/shell/`, `src/app/shell/components/`, `src/app/shell/models/`, `src/app/core/state/`, and `src/app/core/utils/`
+- [x] T003 Configure reproducible validation commands in `package.json` (add scripts: `test:shell`, `test:smoke`, `test:coverage`), `README.md` (add invocation and expected output docs), and `scripts/electron-smoke.mjs` (add baseline assertions for app window opening and no startup errors in DevTools console).
 
-**Checkpoint**: Repository points to one canonical constitution and one active feature plan, and the tasking environment has defined smoke entrypoints.
+**Checkpoint**: Repository points to one canonical constitution and one active feature plan, and the tasking environment has defined smoke entrypoints. ✅ Complete.
 
-**Gate G0**: Canonical governance is clean, AppShell is the target root, preload handlers match exposed preference calls, and startup path has no known blockers.
+**Gate G0**: Canonical governance is clean, AppShell is the target root, preload handlers match exposed preference calls, and startup path has no known blockers. ✅ **Passed.**
 
 ---
 
@@ -47,18 +47,18 @@ This sequence covers governance validity, AppShell mounting, Electron bridge cor
 
 **⚠️ CRITICAL**: No user story work begins until this phase completes.
 
-- [ ] T004 Create typed Electron bridge contracts in `src/app/core/application/ports/electron-api.port.ts`, `src/app/core/application/ports/preferences.port.ts`, and `src/app/core/application/ports/window-controls.port.ts`
-- [ ] T005 Implement validated IPC channel constants and handlers in `src/electron/ipc/channels.ts`, `src/electron/ipc/handlers/preferences.handlers.ts`, and `src/electron/ipc/handlers/window.handlers.ts`
-- [ ] T006 Harden preload and main process bridge behavior in `src/electron/preload.ts` and `src/electron/main.ts`
-- [ ] T007 Add platform and Electron adapters in `src/app/core/infrastructure/electron/adapters/platform.adapter.ts`, `src/app/core/infrastructure/electron/adapters/preferences.adapter.ts`, and `src/app/core/infrastructure/electron/adapters/window-controls.adapter.ts`
-- [ ] T008 Create root shell state bootstrap in `src/app/app.config.ts`, `src/main.ts`, `src/app/core/state/index.ts`, and `src/app/core/state/app.state.ts`
-- [ ] T009 Define workspace identity and persistence utilities in `src/app/core/utils/workspace-id.util.ts`, `src/app/core/models/preferences.model.ts`, and `src/app/core/infrastructure/persistence/local-storage/preferences.repository.ts`
+- [x] T004 Create typed Electron bridge contracts in `src/app/core/application/ports/electron-api.port.ts`, `src/app/core/application/ports/preferences.port.ts`, and `src/app/core/application/ports/window-controls.port.ts`
+- [x] T005 Implement validated IPC channel constants and handlers in `src/electron/ipc/channels.ts`, `src/electron/ipc/handlers/preferences.handlers.ts`, and `src/electron/ipc/handlers/window.handlers.ts`
+- [x] T006 Harden preload and main process bridge behavior in `src/electron/preload.ts` and `src/electron/main.ts`
+- [x] T007 Add platform and Electron adapters in `src/app/core/infrastructure/electron/adapters/platform.adapter.ts`, `src/app/core/infrastructure/electron/adapters/preferences.adapter.ts`, and `src/app/core/infrastructure/electron/adapters/window-controls.adapter.ts`
+- [x] T008 Create root shell state bootstrap in `src/app/app.config.ts`, `src/main.ts`, `src/app/core/state/index.ts`, and `src/app/core/state/app.state.ts`
+- [x] T009 Define workspace identity and persistence utilities in `src/app/core/utils/workspace-id.util.ts`, `src/app/core/models/preferences.model.ts`, and `src/app/core/infrastructure/persistence/local-storage/preferences.repository.ts`
 - [x] T010 Extend typed event contracts in `src/app/core/models/app-event.model.ts` and `src/app/core/services/event-bus.service.ts`
-- [ ] T011 Extend centralized command contracts in `src/app/core/models/command-registration.model.ts` and `src/app/core/services/command-registry.service.ts`
+- [x] T011 Extend centralized command contracts in `src/app/core/models/command-registration.model.ts` and `src/app/core/services/command-registry.service.ts`
 
-**Checkpoint**: Secure bridge, workspace identity, core eventing, and command foundations exist and satisfy Gates `CG-02` through `CG-05`.
+**Checkpoint**: Secure bridge, workspace identity, core eventing, and command foundations exist and satisfy Gates `CG-02` through `CG-05`. ✅ Complete.
 
-**Gate G1**: State boundaries, workspace identity, command contract, event contract, and preference envelope are stable.
+**Gate G1**: State boundaries, workspace identity, command contract, event contract, and preference envelope are stable. ✅ **Passed.**
 
 ---
 
@@ -70,25 +70,25 @@ This sequence covers governance validity, AppShell mounting, Electron bridge cor
 
 ### Tests for User Story 1
 
-- [ ] T012 [P] [US1] Add root bootstrap regression tests in `src/app/app.component.spec.ts` and `src/app/shell/shell.component.spec.ts`
+- [x] T012 [P] [US1] Add root bootstrap regression tests in `src/app/app.component.spec.ts` and `src/app/shell/shell.component.spec.ts`
 - [x] T013 [P] [US1] Add startup smoke validation for shell visibility in `scripts/electron-smoke.mjs` and `package.json`
 
 ### Implementation for User Story 1
 
-- [ ] T014 [US1] Replace Angular starter root with AppShell mounting in `src/app/app.component.ts`, `src/app/app.component.html`, `src/app/app.component.css`, and `src/main.ts`
-- [ ] T015 [P] [US1] Create shell root component contracts in `src/app/shell/shell.component.ts`, `src/app/shell/shell.component.html`, and `src/app/shell/models/layout-region.model.ts`
+- [x] T014 [US1] Replace Angular starter root with AppShell mounting in `src/app/app.component.ts`, `src/app/app.component.html`, `src/app/app.component.css`, and `src/main.ts`
+- [x] T015 [P] [US1] Create shell root component contracts in `src/app/shell/shell.component.ts`, `src/app/shell/shell.component.html`, and `src/app/shell/models/layout-region.model.ts`
 - [x] T016 [P] [US1] Implement StatusBar component in `src/app/shell/components/status-bar/status-bar.component.ts`, `src/app/shell/components/status-bar/status-bar.component.html`, and `src/app/shell/components/status-bar/status-bar.component.css`. Enable native OS title bar in `src/electron/main.ts` (remove `frame: false` / `titleBarStyle: 'hidden'`).
-- [ ] T017 [P] [US1] Implement Toolbar and ContentArea components in `src/app/shell/components/toolbar/toolbar.component.ts`, `src/app/shell/components/toolbar/toolbar.component.html`, `src/app/shell/components/toolbar/toolbar.component.css`, `src/app/shell/components/content-area/content-area.component.ts`, `src/app/shell/components/content-area/content-area.component.html`, and `src/app/shell/components/content-area/content-area.component.css`
-- [ ] T018 [P] [US1] Implement Sidebar and ActivityBar components in `src/app/shell/components/sidebar/sidebar.component.ts`, `src/app/shell/components/sidebar/sidebar.component.html`, `src/app/shell/components/sidebar/sidebar.component.css`, `src/app/shell/components/sidebar/activity-bar/activity-bar.component.ts`, `src/app/shell/components/sidebar/activity-bar/activity-bar.component.html`, and `src/app/shell/components/sidebar/activity-bar/activity-bar.component.css`
-- [ ] T019 [P] [US1] Implement TabBar and BottomPanel structural components in `src/app/shell/components/tab-bar/tab-bar.component.ts`, `src/app/shell/components/tab-bar/tab-bar.component.html`, `src/app/shell/components/tab-bar/tab-bar.component.css`, `src/app/shell/components/bottom-panel/bottom-panel.component.ts`, `src/app/shell/components/bottom-panel/bottom-panel.component.html`, and `src/app/shell/components/bottom-panel/bottom-panel.component.css`
-- [ ] T020 [US1] Apply desktop-first shell layout and tokens in `src/app/shell/shell.component.css`, `src/app/themes/variables.css`, `src/app/themes/dark.css`, and `src/styles.css`
-- [ ] T021 [US1] Add baseline accessibility semantics and focus behavior in `src/app/shell/shell.component.html`, `src/app/shell/components/sidebar/sidebar.component.html`, `src/app/shell/components/toolbar/toolbar.component.html`, `src/app/shell/components/tab-bar/tab-bar.component.html`, `src/app/shell/components/bottom-panel/bottom-panel.component.html`, and `src/app/shell/components/status-bar/status-bar.component.html`
-- [ ] T022 [US1] Wire platform-aware shell root behavior and `shell.ready` emission in `src/app/shell/shell.component.ts`, `src/app/core/services/platform.service.ts`, and `src/app/core/state/session/`
+- [x] T017 [P] [US1] Implement Toolbar and ContentArea components in `src/app/shell/components/toolbar/toolbar.component.ts`, `src/app/shell/components/toolbar/toolbar.component.html`, `src/app/shell/components/toolbar/toolbar.component.css`, `src/app/shell/components/content-area/content-area.component.ts`, `src/app/shell/components/content-area/content-area.component.html`, and `src/app/shell/components/content-area/content-area.component.css`
+- [x] T018 [P] [US1] Implement Sidebar and ActivityBar components in `src/app/shell/components/sidebar/sidebar.component.ts`, `src/app/shell/components/sidebar/sidebar.component.html`, `src/app/shell/components/sidebar/sidebar.component.css`, `src/app/shell/components/sidebar/activity-bar/activity-bar.component.ts`, `src/app/shell/components/sidebar/activity-bar/activity-bar.component.html`, and `src/app/shell/components/sidebar/activity-bar/activity-bar.component.css`
+- [x] T019 [P] [US1] Implement TabBar and BottomPanel structural components in `src/app/shell/components/tab-bar/tab-bar.component.ts`, `src/app/shell/components/tab-bar/tab-bar.component.html`, `src/app/shell/components/tab-bar/tab-bar.component.css`, `src/app/shell/components/bottom-panel/bottom-panel.component.ts`, `src/app/shell/components/bottom-panel/bottom-panel.component.html`, and `src/app/shell/components/bottom-panel/bottom-panel.component.css`
+- [x] T020 [US1] Apply desktop-first shell layout and tokens in `src/app/shell/shell.component.css`, `src/app/themes/variables.css`, `src/app/themes/dark.css`, and `src/styles.css`
+- [x] T021 [US1] Add baseline accessibility semantics and focus behavior in `src/app/shell/shell.component.html`, `src/app/shell/components/sidebar/sidebar.component.html`, `src/app/shell/components/toolbar/toolbar.component.html`, `src/app/shell/components/tab-bar/tab-bar.component.html`, `src/app/shell/components/bottom-panel/bottom-panel.component.html`, and `src/app/shell/components/status-bar/status-bar.component.html`
+- [x] T022 [US1] Wire platform-aware shell root behavior and `shell.ready` emission in `src/app/shell/shell.component.ts`, `src/app/core/services/platform.service.ts`, and `src/app/core/state/session/`
 - [x] T023 [US1] Validate User Story 1 MVP path by updating `scripts/electron-smoke.mjs`, `README.md`, and `specs/001-remediate-shell-v1/checklists/requirements.md`
 
-**Checkpoint**: User Story 1 is independently functional, satisfying `FR-AppShell`, `FR-ShellComponents`, `FR-Layout`, and the structural part of `FR-Accessibility`.
+**Checkpoint**: User Story 1 is independently functional, satisfying `FR-AppShell`, `FR-ShellComponents`, `FR-Layout`, and the structural part of `FR-Accessibility`. ✅ Complete.
 
-**Gate G2**: Structural shell renders as the real root and preserves layout integrity and baseline keyboard access.
+**Gate G2**: Structural shell renders as the real root and preserves layout integrity and baseline keyboard access. ✅ **Passed.**
 
 ---
 
@@ -101,7 +101,7 @@ This sequence covers governance validity, AppShell mounting, Electron bridge cor
 ### Tests for User Story 2
 
 - [x] T024 [P] [US2] Add repository and workspace identity tests in `src/app/core/infrastructure/persistence/local-storage/preferences.repository.spec.ts`, `src/app/core/services/user-preferences.service.spec.ts`, and `src/app/core/utils/workspace-id.util.spec.ts`
-- [ ] T025 [P] [US2] Add IPC and restoration integration tests in `src/app/core/infrastructure/electron/adapters/preferences.adapter.spec.ts`, `src/app/core/state/preferences/preferences.effects.spec.ts`, and `src/app/shell/shell.persistence.spec.ts`
+- [x] T025 [P] [US2] Add IPC and restoration integration tests in `src/app/core/infrastructure/electron/adapters/preferences.adapter.spec.ts`, `src/app/core/state/preferences/preferences.effects.spec.ts`, and `src/app/shell/shell.persistence.spec.ts`
 
 ### Implementation for User Story 2
 
@@ -109,12 +109,12 @@ This sequence covers governance validity, AppShell mounting, Electron bridge cor
 - [x] T027 [US2] Create layout, preferences, session, and ui-context state slices in `src/app/core/state/layout/layout.actions.ts`, `src/app/core/state/layout/layout.reducer.ts`, `src/app/core/state/layout/layout.selectors.ts`, `src/app/core/state/preferences/preferences.actions.ts`, `src/app/core/state/preferences/preferences.reducer.ts`, `src/app/core/state/preferences/preferences.effects.ts`, `src/app/core/state/preferences/preferences.selectors.ts`, `src/app/core/state/session/session.actions.ts`, `src/app/core/state/session/session.reducer.ts`, `src/app/core/state/session/session.selectors.ts`, `src/app/core/state/ui-context/ui-context.actions.ts`, `src/app/core/state/ui-context/ui-context.reducer.ts`, and `src/app/core/state/ui-context/ui-context.selectors.ts`
 - [x] T028 [US2] Implement validated preference IPC handling in `src/electron/ipc/handlers/preferences.handlers.ts`, `src/electron/main.ts`, and `src/electron/preload.ts`
 - [x] T029 [US2] Implement preference adapters and envelope validation in `src/app/core/infrastructure/electron/adapters/preferences.adapter.ts`, `src/app/core/infrastructure/persistence/local-storage/preferences.repository.ts`, and `src/app/core/services/user-preferences.service.ts`
-- [ ] T030 [US2] Implement workspace session orchestration in `src/app/core/services/workspace-session.service.ts`, `src/app/core/models/workspace-session.model.ts`, and `src/app/core/models/dock-zone-assignment.model.ts`
-- [ ] T031 [US2] Wire sidebar, bottom panel, and secondary zone restoration in `src/app/shell/shell.component.ts`, `src/app/shell/components/sidebar/sidebar.component.ts`, and `src/app/shell/components/bottom-panel/bottom-panel.component.ts`
+- [x] T030 [US2] Implement workspace session orchestration in `src/app/core/services/workspace-session.service.ts`, `src/app/core/models/workspace-session.model.ts`, and `src/app/core/models/dock-zone-assignment.model.ts`
+- [x] T031 [US2] Wire sidebar, bottom panel, and secondary zone restoration in `src/app/shell/shell.component.ts`, `src/app/shell/components/sidebar/sidebar.component.ts`, and `src/app/shell/components/bottom-panel/bottom-panel.component.ts`
 
-**Checkpoint**: User Story 2 is independently functional, satisfying `FR-Preferences`, `FR-Platform` persistence boundaries, `FR-Security` preference bridge requirements, and the workspace recovery scenarios.
+**Checkpoint**: User Story 2 is independently functional, satisfying `FR-Preferences`, `FR-Platform` persistence boundaries, `FR-Security` preference bridge requirements, and the workspace recovery scenarios. ✅ Complete.
 
-**Gate G3**: Tabs, docking, commands, and persistence behave within the closed MVP scope.
+**Gate G3**: Tabs, docking, commands, and persistence behave within the closed MVP scope. ✅ **Passed.**
 
 ---
 
@@ -127,30 +127,30 @@ This sequence covers governance validity, AppShell mounting, Electron bridge cor
 ### Tests and Validation for Phase 4
 
 - [x] T032 [P] [US3] Add event bus and command registry unit tests in `src/app/core/services/event-bus.service.spec.ts` and `src/app/core/services/command-registry.service.spec.ts`
-- [ ] T033 [P] [US3] Add tab, docking, and guard integration tests in `src/app/core/state/workspace/workspace.reducer.spec.ts`, `src/app/shell/components/tab-bar/tab-bar.component.spec.ts`, and `src/app/shell/docking.integration.spec.ts`
+- [x] T033 [P] [US3] Add tab, docking, and guard integration tests in `src/app/core/state/workspace/workspace.reducer.spec.ts`, `src/app/shell/components/tab-bar/tab-bar.component.spec.ts`, and `src/app/shell/docking.integration.spec.ts`
 - [x] T034 [P] [US3] Add Electron security and startup smoke assertions in `scripts/electron-smoke.mjs`, `src/electron/main.spec.ts`, and `src/electron/preload.spec.ts`
 - [x] T042 [P] Configure coverage thresholds and CI-visible validation in `package.json`, `karma.conf.js`, and `README.md`
-- [ ] T043 [P] Raise core service and state coverage to target in `src/app/core/services/*.spec.ts`, `src/app/core/state/**/*.spec.ts`, and `src/app/shell/**/*.spec.ts`
-- [ ] T044 [P] Finalize accessibility and keyboard regression checks in `src/app/shell/**/*.spec.ts`, `scripts/electron-smoke.mjs`, and `README.md`
+- [x] T043 [P] Raise core service and state coverage to target in `src/app/core/services/*.spec.ts`, `src/app/core/state/**/*.spec.ts`, and `src/app/shell/**/*.spec.ts`
+- [x] T044 [P] Finalize accessibility and keyboard regression checks in `src/app/shell/**/*.spec.ts`, `scripts/electron-smoke.mjs`, and `README.md`
 - [x] T045 [P] Finalize startup and performance validation scripts in `scripts/electron-smoke.mjs`, `scripts/measure-shell-performance.mjs`, and `package.json`
 
 ### Implementation for Phase 4 (User Story 3)
 
-- [ ] T035 [US3] Implement workspace tabs state and models in `src/app/core/state/workspace/workspace.actions.ts`, `src/app/core/state/workspace/workspace.reducer.ts`, `src/app/core/state/workspace/workspace.selectors.ts`, `src/app/shell/models/tab-item.model.ts`, and `src/app/core/models/tab-descriptor.model.ts`
-- [ ] T036 [US3] Implement guarded TabBar interactions in `src/app/shell/components/tab-bar/tab-bar.component.ts`, `src/app/shell/components/tab-bar/tab-bar.component.html`, and `src/app/shell/components/tab-bar/tab-bar.component.css`
-- [ ] T037 [US3] Implement MVP docking zones and right-side panel behavior in `src/app/shell/shell.component.ts`, `src/app/shell/shell.component.html`, `src/app/shell/components/content-area/content-area.component.ts`, and `src/app/core/models/dock-zone-assignment.model.ts`
-- [ ] T038 [US3] Implement centralized command surface and shortcut normalization in `src/app/core/services/command-registry.service.ts`, `src/app/core/models/command-registration.model.ts`, `src/app/core/services/shell-shortcuts.service.ts`, and `src/app/shell/components/toolbar/toolbar.component.ts`
-- [ ] T039 [US3] Integrate typed event publication and dev tracing across shell interactions in `src/app/core/services/event-bus.service.ts`, `src/app/core/models/app-event.model.ts`, `src/app/shell/shell.component.ts`, `src/app/shell/components/sidebar/sidebar.component.ts`, `src/app/shell/components/tab-bar/tab-bar.component.ts`, and `src/app/shell/components/bottom-panel/bottom-panel.component.ts`
+- [x] T035 [US3] Implement workspace tabs state and models in `src/app/core/state/workspace/workspace.actions.ts`, `src/app/core/state/workspace/workspace.reducer.ts`, `src/app/core/state/workspace/workspace.selectors.ts`, `src/app/shell/models/tab-item.model.ts`, and `src/app/core/models/tab-descriptor.model.ts`
+- [x] T036 [US3] Implement guarded TabBar interactions in `src/app/shell/components/tab-bar/tab-bar.component.ts`, `src/app/shell/components/tab-bar/tab-bar.component.html`, and `src/app/shell/components/tab-bar/tab-bar.component.css`
+- [x] T037 [US3] Implement MVP docking zones and right-side panel behavior in `src/app/shell/shell.component.ts`, `src/app/shell/shell.component.html`, `src/app/shell/components/content-area/content-area.component.ts`, and `src/app/core/models/dock-zone-assignment.model.ts`
+- [x] T038 [US3] Implement centralized command surface and shortcut normalization in `src/app/core/services/command-registry.service.ts`, `src/app/core/models/command-registration.model.ts`, `src/app/core/services/shell-shortcuts.service.ts`, and `src/app/shell/components/toolbar/toolbar.component.ts`
+- [x] T039 [US3] Integrate typed event publication and dev tracing across shell interactions in `src/app/core/services/event-bus.service.ts`, `src/app/core/models/app-event.model.ts`, `src/app/shell/shell.component.ts`, `src/app/shell/components/sidebar/sidebar.component.ts`, `src/app/shell/components/tab-bar/tab-bar.component.ts`, and `src/app/shell/components/bottom-panel/bottom-panel.component.ts`
 - [x] T040 [US3] Enforce strict security validation and URL allowlist behavior in `src/electron/main.ts`, `src/electron/preload.ts`, `src/electron/ipc/channels.ts`, and `src/electron/ipc/handlers/preferences.handlers.ts`
-- [ ] T041 [US3] Apply performance instrumentation and interaction-path optimizations in `src/app/shell/shell.component.ts`, `src/app/shell/components/sidebar/sidebar.component.ts`, `src/app/shell/components/tab-bar/tab-bar.component.ts`, and `scripts/measure-shell-performance.mjs`
+- [x] T041 [US3] Apply performance instrumentation and interaction-path optimizations in `src/app/shell/shell.component.ts`, `src/app/shell/components/sidebar/sidebar.component.ts`, `src/app/shell/components/tab-bar/tab-bar.component.ts`, and `scripts/measure-shell-performance.mjs`
 
 ### Closure for Phase 4
 
-- [ ] T046 Close requirement traceability and update delivery docs in `specs/001-remediate-shell-v1/spec.md`, `specs/001-remediate-shell-v1/plan.md`, `specs/001-remediate-shell-v1/tasks.md`, and `README.md`
+- [x] T046 Close requirement traceability and update delivery docs in `specs/001-remediate-shell-v1/spec.md`, `specs/001-remediate-shell-v1/plan.md`, `specs/001-remediate-shell-v1/tasks.md`, and `README.md`
 
-**Checkpoint**: User Story 3 is fully functional and all quality criteria are validated. `DoD-01` through `DoD-06` and `SC-001` through `SC-006` are fully backed by executable work and validation.
+**Checkpoint**: User Story 3 is fully functional and all quality criteria are validated. `DoD-01` through `DoD-06` and `SC-001` through `SC-006` are fully backed by executable work and validation. ✅ Complete.
 
-**Gate G4**: Tabs, docking, commands, event tracing, security, reliability, and testing are all complete. The feature is ready for implementation handoff and release.
+**Gate G4**: Tabs, docking, commands, event tracing, security, reliability, and testing are all complete. The feature is ready for implementation handoff and release. ✅ **Passed.**
 
 ---
 
