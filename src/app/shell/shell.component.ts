@@ -129,6 +129,7 @@ export class ShellComponent implements OnInit, AfterViewInit {
 
   onSidebarCollapsedChange(_collapsed: boolean): void {
     this.store.dispatch(toggleSidebar());
+    this.eventBus.emit('shell.layout.changed.v1', { layout: 'sidebar' }, 'ShellComponent');
   }
 
   onSidebarActiveItemChange(itemId: string): void {
@@ -137,10 +138,12 @@ export class ShellComponent implements OnInit, AfterViewInit {
 
   onBottomPanelVisibilityChange(_visible: boolean): void {
     this.store.dispatch(toggleBottomPanel());
+    this.eventBus.emit('shell.layout.changed.v1', { layout: 'bottom-panel' }, 'ShellComponent');
   }
 
   onBottomPanelHeightChange(height: number): void {
     this.store.dispatch(setBottomPanelHeight({ height }));
+    this.eventBus.emit('bottomPanel.resized.v1', { height }, 'ShellComponent');
   }
 
   onSecondaryPanelVisibilityChange(_visible: boolean): void {

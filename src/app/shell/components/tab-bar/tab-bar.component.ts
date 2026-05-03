@@ -1,6 +1,7 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { NgFor, NgIf } from '@angular/common';
 import { TabItem, TabCloseGuard } from '../../models/tab-item.model';
+import { EventBusService } from '../../../core/services/event-bus.service';
 
 /** Duration (ms) after which an unresolved async `beforeClose()` guard times out. */
 const CLOSE_GUARD_TIMEOUT_MS = 10_000;
@@ -13,6 +14,8 @@ const CLOSE_GUARD_TIMEOUT_MS = 10_000;
   styleUrl: './tab-bar.component.css',
 })
 export class TabBarComponent {
+  private readonly eventBus = inject(EventBusService);
+
   @Input() tabs: TabItem[] = [];
   @Input() activeTabId: string = '';
   @Input() groupId: string = '';
@@ -32,6 +35,7 @@ export class TabBarComponent {
 
   onTabSelect(tabId: string): void {
     this.tabSelected.emit(tabId);
+    this.eventBus.emit('tabs.active.changed.v1', { tabId }, 'TabBarComponent');
   }
 
   async onTabClose(event: MouseEvent, tabId: string): Promise<void> {

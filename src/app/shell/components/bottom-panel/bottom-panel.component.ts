@@ -1,6 +1,7 @@
-import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, inject } from '@angular/core';
 import { NgFor, NgIf } from '@angular/common';
 import { PanelTab } from '../../models/panel-tab.model';
+import { EventBusService } from '../../../core/services/event-bus.service';
 
 @Component({
   selector: 'app-bottom-panel',
@@ -11,6 +12,8 @@ import { PanelTab } from '../../models/panel-tab.model';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BottomPanelComponent {
+  private readonly eventBus = inject(EventBusService);
+
   @Input() visible: boolean = false;
   @Input() height: number = 220;
   @Input() panels: PanelTab[] = [];
@@ -27,9 +30,11 @@ export class BottomPanelComponent {
 
   onToggle(): void {
     this.visibilityChange.emit(!this.visible);
+    this.eventBus.emit('bottomPanel.toggled.v1', { visible: !this.visible }, 'BottomPanelComponent');
   }
 
   onClose(): void {
     this.visibilityChange.emit(false);
+    this.eventBus.emit('bottomPanel.toggled.v1', { visible: false }, 'BottomPanelComponent');
   }
 }

@@ -99,4 +99,36 @@ describe('ShellComponent', () => {
       expect(readyCalls.length).toBe(1);
     });
   });
+
+  describe('layout event emissions', () => {
+    it('should emit shell.layout.changed.v1 when sidebar is toggled', () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      const eventBus = TestBed.inject(EventBusService);
+      const emitSpy = spyOn(eventBus, 'emit').and.callThrough();
+
+      fixture.componentInstance.onSidebarCollapsedChange(true);
+
+      expect(emitSpy).toHaveBeenCalledWith('shell.layout.changed.v1', { layout: 'sidebar' }, 'ShellComponent');
+    });
+
+    it('should emit shell.layout.changed.v1 when bottom panel visibility changes', () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      const eventBus = TestBed.inject(EventBusService);
+      const emitSpy = spyOn(eventBus, 'emit').and.callThrough();
+
+      fixture.componentInstance.onBottomPanelVisibilityChange(false);
+
+      expect(emitSpy).toHaveBeenCalledWith('shell.layout.changed.v1', { layout: 'bottom-panel' }, 'ShellComponent');
+    });
+
+    it('should emit bottomPanel.resized.v1 when bottom panel height changes', () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      const eventBus = TestBed.inject(EventBusService);
+      const emitSpy = spyOn(eventBus, 'emit').and.callThrough();
+
+      fixture.componentInstance.onBottomPanelHeightChange(350);
+
+      expect(emitSpy).toHaveBeenCalledWith('bottomPanel.resized.v1', { height: 350 }, 'ShellComponent');
+    });
+  });
 });

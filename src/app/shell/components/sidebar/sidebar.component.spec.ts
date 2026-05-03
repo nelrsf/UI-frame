@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { SidebarComponent } from './sidebar.component';
 import { SidebarItem } from '../../models/sidebar-item.model';
+import { EventBusService } from '../../../core/services/event-bus.service';
 
 describe('SidebarComponent', () => {
   let component: SidebarComponent;
@@ -100,5 +101,80 @@ describe('SidebarComponent', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     const sidebarElement = compiled.querySelector('[data-testid="sidebar"]');
     expect(sidebarElement?.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  describe('EventBus emissions', () => {
+    let eventBus: EventBusService;
+    let emitSpy: jasmine.Spy;
+
+    const item: SidebarItem = {
+      id: 'explorer',
+      icon: '📁',
+      label: 'Explorer',
+      tooltip: 'Explorer',
+      position: 'top',
+    };
+
+    beforeEach(() => {
+      eventBus = TestBed.inject(EventBusService);
+      emitSpy = spyOn(eventBus, 'emit');
+    });
+
+    it('should emit sidebar.collapsed.v1 with collapsed:true when active item is clicked while panel is open', () => {
+      component.items = [item];
+      component.activeItemId = 'explorer';
+      component.collapsed = false;
+      fixture.detectChanges();
+
+      component.onItemClick(item);
+
+      expect(emitSpy).toHaveBeenCalledWith('sidebar.collapsed.v1', { collapsed: true }, 'SidebarComponent');
+    });
+
+    it('should emit sidebar.collapsed.v1 with collapsed:false when any item is clicked while sidebar is collapsed', () => {
+      const other: SidebarItem = { id: 'git', icon: '🔀', label: 'Git', tooltip: 'Git', position: 'top' };
+      component.items = [item, other];
+      component.activeItemId = 'explorer';
+      component.collapsed = true;
+      fixture.detectChanges();
+
+      component.onItemClick(other);
+
+      expect(emitSpy).toHaveBeenCalledWith('sidebar.collapsed.v1', { collapsed: false }, 'SidebarComponent');
+    });
+
+    it('should emit sidebar.section.activated.v1 when a new item is activated', () => {
+      const other: SidebarItem = { id: 'git', icon: '🔀', label: 'Git', tooltip: 'Git', position: 'top' };
+      component.items = [item, other];
+      component.activeItemId = 'explorer';
+      component.collapsed = false;
+      fixture.detectChanges();
+
+      component.onItemClick(other);
+
+      expect(emitSpy).toHaveBeenCalledWith('sidebar.section.activated.v1', { sectionId: 'git' }, 'SidebarComponent');
+    });
+
+    it('should emit sidebar.section.activated.v1 when an item is clicked from collapsed state', () => {
+      component.items = [item];
+      component.activeItemId = null;
+      component.collapsed = true;
+      fixture.detectChanges();
+
+      component.onItemClick(item);
+
+      expect(emitSpy).toHaveBeenCalledWith('sidebar.section.activated.v1', { sectionId: 'explorer' }, 'SidebarComponent');
+    });
+
+    it('should not emit sidebar.section.activated.v1 when active item collapses the sidebar', () => {
+      component.items = [item];
+      component.activeItemId = 'explorer';
+      component.collapsed = false;
+      fixture.detectChanges();
+
+      component.onItemClick(item);
+
+      expect(emitSpy).not.toHaveBeenCalledWith('sidebar.section.activated.v1', jasmine.any(Object), jasmine.any(String));
+    });
   });
 });
