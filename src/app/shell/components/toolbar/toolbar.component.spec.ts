@@ -1,12 +1,16 @@
 import { TestBed } from '@angular/core/testing';
 import { ToolbarComponent } from './toolbar.component';
 import { BreadcrumbItem, ToolbarAction } from '../../models/toolbar-action.model';
+import { CommandRegistryService } from '../../../core/services/command-registry.service';
 
 describe('ToolbarComponent', () => {
+  let commandRegistry: CommandRegistryService;
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ToolbarComponent],
     }).compileComponents();
+    commandRegistry = TestBed.inject(CommandRegistryService);
   });
 
   it('should create the toolbar component', () => {
@@ -124,5 +128,65 @@ describe('ToolbarComponent', () => {
     const component = fixture.componentInstance;
     expect(component.breadcrumbs).toEqual([]);
     expect(component.actions).toEqual([]);
+  });
+
+  // ---------------------------------------------------------------------------
+  // Command registry wiring
+  // ---------------------------------------------------------------------------
+
+  describe('command registry dispatch', () => {
+    it('should call commandRegistry.execute with the commandId when action has a commandId', async () => {
+      const fixture = TestBed.createComponent(ToolbarComponent);
+      const component = fixture.componentInstance;
+      const executeSpy = spyOn(commandRegistry, 'execute').and.returnValue(Promise.resolve());
+
+      const action: ToolbarAction = {
+        id: 'toggle-sidebar',
+        commandId: 'shell.toggleSidebar',
+        icon: '☰',
+        label: 'Toggle Sidebar',
+        tooltip: 'Toggle sidebar',
+        group: 'layout',
+      };
+      component.onActionClick(action);
+
+      expect(executeSpy).toHaveBeenCalledOnceWith('shell.toggleSidebar');
+    });
+
+    it('should not call commandRegistry.execute when action has no commandId', () => {
+      const fixture = TestBed.createComponent(ToolbarComponent);
+      const component = fixture.componentInstance;
+      const executeSpy = spyOn(commandRegistry, 'execute').and.returnValue(Promise.resolve());
+
+      const action: ToolbarAction = {
+        id: 'custom',
+        icon: '⊞',
+        label: 'Custom',
+        tooltip: 'Custom action',
+        group: 'secondary',
+      };
+      component.onActionClick(action);
+
+      expect(executeSpy).not.toHaveBeenCalled();
+    });
+
+    it('should not call commandRegistry.execute when action is disabled even with a commandId', () => {
+      const fixture = TestBed.createComponent(ToolbarComponent);
+      const component = fixture.componentInstance;
+      const executeSpy = spyOn(commandRegistry, 'execute').and.returnValue(Promise.resolve());
+
+      const action: ToolbarAction = {
+        id: 'save',
+        commandId: 'shell.save',
+        icon: '💾',
+        label: 'Save',
+        tooltip: 'Save',
+        group: 'primary',
+        disabled: true,
+      };
+      component.onActionClick(action);
+
+      expect(executeSpy).not.toHaveBeenCalled();
+    });
   });
 });
