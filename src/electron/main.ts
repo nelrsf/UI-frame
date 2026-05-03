@@ -85,7 +85,7 @@ function createWindow(): void {
       // (e.g. all buttons mistakenly disabled or given tabindex="-1").
       mainWindow!.webContents
         .executeJavaScript(
-          'document.querySelectorAll(\'button:not([disabled]),[tabindex="0"]\').length'
+          `document.querySelectorAll('button:not([disabled]),[tabindex="0"]').length`
         )
         .then((count: unknown) => {
           if (typeof count === 'number' && count >= 1) {

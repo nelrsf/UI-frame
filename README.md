@@ -219,7 +219,7 @@ must preserve the following expectations; they are validated by targeted unit te
 | Content area | `[data-testid="content-area"]` | `main` |
 | Bottom panel | `[data-testid="bottom-panel"]` | `complementary` |
 | Secondary panel | `[data-testid="secondary-panel"]` | `complementary` |
-| Status bar | `.shell-statusbar` / `.status-bar` | `contentinfo` |
+| Status bar | `.shell-statusbar` | `contentinfo` |
 
 ### Key ARIA attributes
 
