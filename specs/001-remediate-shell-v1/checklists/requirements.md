@@ -69,3 +69,40 @@
 - [x] Shell v1 is independently functional for Phase 2 exit
 - [x] Smoke script produces **4 passed, 0 failed** with the US1 Gate G2 confirmation line
 - [x] `README.md` expected output reflects all four smoke assertions
+
+---
+
+## Phase 4 Security Validation (Gate G4 / T034, T040)
+
+**Validated**: 2026-05-03  
+**Reference**: T034, T040, Phase 4, Gate G4  
+**Streams**: TS-05, TS-06, TS-07, TS-08, TS-11, TS-12, TS-13, TS-14, TS-15
+
+### IPC and Preload Security (`src/electron/main.spec.ts`, `src/electron/preload.spec.ts`)
+
+- [x] `ALLOWED_EXTERNAL_PROTOCOLS` contains exactly `['https:', 'http:']` (NFR-Security-02)
+- [x] Receiver-side URL validation rejects `javascript:`, `file:`, `data:`, `ftp:`, non-strings, and malformed URLs
+- [x] `setWindowOpenHandler` always returns `{ action: 'deny' }` regardless of URL (FR-Security)
+- [x] Preference key validation rejects empty strings, whitespace-only keys, non-strings at both sender and receiver boundaries (FR-Security)
+- [x] IPC channel names are namespaced and unique across all namespaces (FR-Security)
+- [x] BrowserWindow requires `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true` (NFR-Security-01)
+- [x] Dual-validation (sender + receiver) enforced for `shell:openExternal` and both preference channels (FR-Security)
+
+### Startup Smoke Assertions — Security (`npm run test:smoke`)
+
+- [x] Fifth smoke assertion: BrowserWindow security settings verified (`contextIsolation=true`, `nodeIntegration=false`, `sandbox=true`)
+- [x] Smoke script produces **5 passed, 0 failed** with the US3 Gate G4 confirmation line
+- [x] `README.md` expected output updated to reflect the fifth security assertion
+
+### Requirement Traceability
+
+- [x] FR-Security: preload exposes minimum-privilege capabilities; all IPC validated at sender and receiver boundary
+- [x] NFR-Security-01: BrowserWindow runs with `contextIsolation=true`, `nodeIntegration=false`, `sandbox=true`
+- [x] NFR-Security-02: External URL opening enforces strict `['https:', 'http:']` allowlist; all other targets denied
+- [x] DoD-04: Preference IPC handlers exist for every preload-exposed preference operation; all requests validated
+
+### Gate G4 Exit
+
+- [x] All 66 unit tests in `src/electron/main.spec.ts` and `src/electron/preload.spec.ts` pass with 0 failures
+- [x] T034 marked complete: Electron security assertions present in smoke script and spec files
+- [x] T040 marked complete: strict security validation and URL allowlist enforced across all 4 target files
