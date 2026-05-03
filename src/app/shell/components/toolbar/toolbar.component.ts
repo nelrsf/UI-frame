@@ -1,6 +1,7 @@
-import { Component, Input } from '@angular/core';
+import { Component, inject, Input } from '@angular/core';
 import { NgFor, NgIf } from '@angular/common';
 import { BreadcrumbItem, ToolbarAction } from '../../models/toolbar-action.model';
+import { CommandRegistryService } from '../../../core/services/command-registry.service';
 
 @Component({
   selector: 'app-toolbar',
@@ -10,6 +11,8 @@ import { BreadcrumbItem, ToolbarAction } from '../../models/toolbar-action.model
   styleUrl: './toolbar.component.css',
 })
 export class ToolbarComponent {
+  private readonly commandRegistry = inject(CommandRegistryService);
+
   @Input() breadcrumbs: BreadcrumbItem[] = [];
   @Input() actions: ToolbarAction[] = [];
 
@@ -17,6 +20,8 @@ export class ToolbarComponent {
     if (action.disabled) {
       return;
     }
-    // commandId wiring is reserved for future command-registry integration
+    if (action.commandId) {
+      this.commandRegistry.execute(action.commandId);
+    }
   }
 }

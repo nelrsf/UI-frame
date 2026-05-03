@@ -1,14 +1,31 @@
 /**
  * Minimal metadata for a command that can be registered, listed, and executed.
  * Serves as the single descriptor consumed by menu, toolbar, and shortcut entry points.
+ *
+ * Shortcut conventions:
+ * - Use the canonical `Mod` token for the primary modifier key.
+ *   `Mod` is resolved to `Ctrl` on Windows/Linux and `Cmd` on macOS at render time
+ *   by `ShellShortcutsService`.
+ * - Provide `shortcutMac` only when the macOS binding must differ from the
+ *   platform-normalized `shortcut` (e.g. to avoid an OS-reserved key combination).
  */
 export interface CommandRegistration {
   /** Unique identifier used to look up and execute the command. */
   id: string;
   /** Human-readable label for menus, toolbars, and accessibility. */
   label: string;
-  /** Optional keyboard shortcut string (e.g. 'Ctrl+Shift+P'). */
+  /**
+   * Optional canonical keyboard shortcut string using the `Mod` token
+   * (e.g. `'Mod+Shift+P'`).  `Mod` is resolved per-platform by
+   * `ShellShortcutsService.normalize()`.
+   */
   shortcut?: string;
+  /**
+   * Optional macOS-specific shortcut override.  When present this value
+   * is used instead of `shortcut` on macOS, allowing platform-specific
+   * bindings without separate command registrations.
+   */
+  shortcutMac?: string;
   /** Optional context scope that restricts when the command is active. */
   context?: string;
   /** Optional icon identifier or ligature name for toolbar and menu rendering. */

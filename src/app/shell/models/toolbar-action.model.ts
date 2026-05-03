@@ -5,6 +5,11 @@ export interface BreadcrumbItem {
 
 export interface ToolbarAction {
   id: string;
+  /**
+   * Optional command identifier.  When set, clicking this action dispatches
+   * the matching command through `CommandRegistryService`.
+   */
+  commandId?: string;
   icon: string;
   label: string;
   tooltip: string;
