@@ -5,6 +5,7 @@ import { sessionReducer } from './core/state/session';
 import { layoutReducer } from './core/state/layout';
 import { uiContextReducer } from './core/state/ui-context';
 import { preferencesReducer, PreferencesEffects } from './core/state/preferences';
+import { workspaceReducer } from './core/state/workspace';
 
 /**
  * Root application configuration for the Shell v1 Angular bootstrap.
@@ -18,6 +19,7 @@ import { preferencesReducer, PreferencesEffects } from './core/state/preferences
  *   - Layout feature slice: sidebar/panel visibility and dimensions.
  *   - UiContext feature slice: breadcrumbs, status items, available actions.
  *   - Preferences feature slice: versioned workspace preference snapshot.
+ *   - Workspace feature slice: tab groups, active tabs, dirty/pinned state.
  */
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -26,6 +28,7 @@ export const appConfig: ApplicationConfig = {
     provideState('layout', layoutReducer),
     provideState('uiContext', uiContextReducer),
     provideState('preferences', preferencesReducer),
+    provideState('workspace', workspaceReducer),
     provideEffects([PreferencesEffects]),
   ],
 };
