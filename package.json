@@ -15,8 +15,9 @@
     "electron:dist": "npm run build && npm run build:electron && electron-builder",
     "test:shell": "ng test --include='src/app/shell/**/*.spec.ts' --watch=false",
     "test:smoke": "npm run build && npm run build:electron && node scripts/electron-smoke.mjs",
-    "validate": "npm run test:shell && npm run test:smoke",
-    "test:coverage": "ng test --watch=false --code-coverage"
+    "test:coverage": "ng test --watch=false --code-coverage",
+    "test:coverage:ci": "ng test --watch=false --code-coverage --browsers=ChromeHeadless",
+    "validate": "npm run test:coverage:ci && npm run test:smoke"
   },
   "private": true,
   "build": {
