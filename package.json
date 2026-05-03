@@ -17,7 +17,9 @@
     "test:smoke": "npm run build && npm run build:electron && node scripts/electron-smoke.mjs",
     "test:coverage": "ng test --watch=false --code-coverage",
     "test:coverage:ci": "ng test --watch=false --code-coverage --browsers=ChromeHeadless",
-    "validate": "npm run test:coverage:ci && npm run test:smoke"
+    "perf:measure": "node scripts/measure-shell-performance.mjs",
+    "validate": "npm run test:coverage:ci && npm run test:smoke",
+    "validate:release": "npm run validate && npm run perf:measure"
   },
   "private": true,
   "build": {

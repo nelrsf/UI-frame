@@ -29,6 +29,8 @@ npm install
 | Coverage report | `npm run test:coverage` | Runs all unit tests, generates a coverage report in `coverage/`, and enforces thresholds |
 | Coverage report (CI) | `npm run test:coverage:ci` | Same as above, forces `ChromeHeadless` — use in CI pipelines |
 | Full validation | `npm run validate` | Runs coverage check (with thresholds) **and** the automated smoke test — the CI gate |
+| Performance measurement | `npm run perf:measure` | Times shell startup and prints NFR-Perf budget guidance via `scripts/measure-shell-performance.mjs` (requires pre-built app) |
+| Release validation | `npm run validate:release` | Runs `validate` then `perf:measure` — the full release gate covering coverage, startup visibility, and performance budgets |
 
 ## Development
 
@@ -177,6 +179,69 @@ npm run validate
 ```
 
 Exit code `0` means all coverage thresholds passed and all smoke assertions passed. A non-zero exit code means at least one gate failed; review the output for details.
+
+### Performance measurement (NFR-Perf-04 startup budget)
+
+Build the app and run the performance measurement script to validate the NFR-Perf-04 startup time budget and print interactive performance guidance:
+
+```bash
+npm run build && npm run build:electron && npm run perf:measure
+```
+
+> **Note**: `perf:measure` runs `node scripts/measure-shell-performance.mjs` directly and expects the app to already be built. Running via `validate:release` (see below) handles the build automatically as part of the full sequence.
+
+Expected output:
+
+```
+── Shell v1 Performance Measurement ────────────────────────
+
+Performance budgets:
+  NFR-Perf-01  Panel toggle     ≤ 100 ms
+  NFR-Perf-02  Tab switch        ≤ 120 ms
+  NFR-Perf-03  Resize frame      ≤ 33.3 ms  (> 30 FPS)
+  NFR-Perf-04  Shell startup     ≤ 2000 ms
+
+Interactive measurement names (inspect in DevTools):
+  shell.sidebar.toggle                 budget: 100.0 ms  (sidebarToggle)
+  sidebar.interaction                  budget: 100.0 ms  (sidebarInteraction)
+  shell.bottom-panel.toggle            budget: 100.0 ms  (bottomPanelToggle)
+  shell.bottom-panel.resize            budget: 33.3 ms  (bottomPanelResize)
+  shell.secondary-panel.toggle         budget: 100.0 ms  (secondaryPanelToggle)
+  shell.secondary-panel.resize         budget: 33.3 ms  (secondaryPanelResize)
+  tabs.switch                          budget: 120.0 ms  (tabSwitch)
+
+── NFR-Perf-04: Startup time ────────────────────────────────
+
+  ✔  App process did not exit prematurely
+  ✔  NFR-Perf-04: Shell visible in 843 ms (budget: 2000 ms)
+
+────────────────────────────────────────────────────────────
+  Results: 2 passed, 0 failed
+
+  Shell v1 startup budget satisfied (NFR-Perf-04) ✔
+
+  To validate NFR-Perf-01 through NFR-Perf-03, open DevTools,
+  interact with the shell (toggle panels, switch tabs, resize),
+  and inspect the PerformanceMeasure entries listed above.
+```
+
+To validate NFR-Perf-01 through NFR-Perf-03 interactively, open DevTools in the running app and run:
+
+```js
+performance.getEntriesByType('measure')
+  .filter(e => e.name.startsWith('shell.') || e.name === 'tabs.switch' || e.name === 'sidebar.interaction')
+  .forEach(e => console.log(e.name, e.duration.toFixed(2) + ' ms'));
+```
+
+### Release validation (full release gate)
+
+Run coverage, startup smoke, and performance budget checks in one command:
+
+```bash
+npm run validate:release
+```
+
+This is the complete release gate for Shell v1. It runs `validate` (coverage thresholds + startup smoke assertions) followed by `perf:measure` (NFR-Perf-04 startup time budget). Exit code `0` means all checks passed.
 
 ## Unit tests
 
