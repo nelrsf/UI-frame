@@ -129,7 +129,7 @@ This sequence covers governance validity, AppShell mounting, Electron bridge cor
 - [x] T032 [P] [US3] Add event bus and command registry unit tests in `src/app/core/services/event-bus.service.spec.ts` and `src/app/core/services/command-registry.service.spec.ts`
 - [ ] T033 [P] [US3] Add tab, docking, and guard integration tests in `src/app/core/state/workspace/workspace.reducer.spec.ts`, `src/app/shell/components/tab-bar/tab-bar.component.spec.ts`, and `src/app/shell/docking.integration.spec.ts`
 - [x] T034 [P] [US3] Add Electron security and startup smoke assertions in `scripts/electron-smoke.mjs`, `src/electron/main.spec.ts`, and `src/electron/preload.spec.ts`
-- [ ] T042 [P] Configure coverage thresholds and CI-visible validation in `package.json`, `karma.conf.js`, and `README.md`
+- [x] T042 [P] Configure coverage thresholds and CI-visible validation in `package.json`, `karma.conf.js`, and `README.md`
 - [ ] T043 [P] Raise core service and state coverage to target in `src/app/core/services/*.spec.ts`, `src/app/core/state/**/*.spec.ts`, and `src/app/shell/**/*.spec.ts`
 - [ ] T044 [P] Finalize accessibility and keyboard regression checks in `src/app/shell/**/*.spec.ts`, `scripts/electron-smoke.mjs`, and `README.md`
 - [ ] T045 [P] Finalize startup and performance validation scripts in `scripts/electron-smoke.mjs`, `scripts/measure-shell-performance.mjs`, and `package.json`

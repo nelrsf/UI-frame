@@ -26,7 +26,9 @@ npm install
 | Unit tests | `npm test` | Runs Karma/Jasmine unit tests |
 | Shell unit tests | `npm run test:shell` | Runs only shell component unit tests (non-interactive) |
 | Automated smoke test | `npm run test:smoke` | Builds and runs headless startup assertions via `scripts/electron-smoke.mjs` |
-| Coverage report | `npm run test:coverage` | Runs all unit tests and generates a coverage report in `coverage/` |
+| Coverage report | `npm run test:coverage` | Runs all unit tests, generates a coverage report in `coverage/`, and enforces thresholds |
+| Coverage report (CI) | `npm run test:coverage:ci` | Same as above, forces `ChromeHeadless` — use in CI pipelines |
+| Full validation | `npm run validate` | Runs coverage check (with thresholds) **and** the automated smoke test — the CI gate |
 
 ## Development
 
@@ -130,7 +132,50 @@ Run all unit tests and generate a code-coverage report:
 npm run test:coverage
 ```
 
-Coverage artifacts are written to `coverage/ui-frame/`. Open `coverage/ui-frame/index.html` in a browser to browse the report.
+Coverage artifacts are written to `coverage/ui-frame/`. Open `coverage/ui-frame/index.html` in a browser to browse the report. An LCOV trace for CI consumption is written to `coverage/ui-frame/lcov.info`.
+
+### Coverage thresholds
+
+Coverage thresholds are enforced by `karma.conf.js` and apply whenever `--code-coverage` is active (i.e. `test:coverage`, `test:coverage:ci`, and `validate`).
+
+The thresholds are **global** — they are computed across all instrumented source files and must pass as an aggregate:
+
+| Metric | Global threshold |
+|---|---|
+| Statements | ≥ 80 % |
+| Functions | ≥ 80 % |
+| Lines | ≥ 80 % |
+| Branches | ≥ 70 % |
+
+These gates implement **SC-006** / **NFR-Quality-01**. Core shell services (`src/app/core/services/`) and global shell state (`src/app/core/state/`) are the primary contributors expected to drive these aggregate numbers above the threshold; reaching 80 % coverage in those areas satisfies the requirement across the overall project metric.
+
+If any threshold is not met, Karma exits with a non-zero code and prints a summary such as:
+
+```
+ERROR [coverage-summary]: Coverage for statements (72%) does not meet global threshold (80%)
+```
+
+Run the following to verify the quality bar locally before pushing:
+
+```bash
+npm run test:coverage
+```
+
+For CI pipelines (forces `ChromeHeadless`, no interactive watcher):
+
+```bash
+npm run test:coverage:ci
+```
+
+### Full validation (CI gate)
+
+Run both the coverage threshold check and the automated smoke test in one command:
+
+```bash
+npm run validate
+```
+
+Exit code `0` means all coverage thresholds passed and all smoke assertions passed. A non-zero exit code means at least one gate failed; review the output for details.
 
 ## Unit tests
 
