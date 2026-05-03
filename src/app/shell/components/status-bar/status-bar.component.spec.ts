@@ -107,6 +107,16 @@ describe('StatusBarComponent', () => {
     expect(() => component.onItemClick(item)).not.toThrow();
   });
 
+  it('should return early (no-op) when a non-clickable item is clicked', () => {
+    const fixture = TestBed.createComponent(StatusBarComponent);
+    const component = fixture.componentInstance;
+    const item: StatusBarItem = { id: 'noclk', label: 'No click', clickable: false };
+    component.leftItems = [item];
+    fixture.detectChanges();
+    // Calling onItemClick with clickable=false must not throw and must return without effect.
+    expect(() => component.onItemClick(item)).not.toThrow();
+  });
+
   it('should have role="contentinfo" on the container', () => {
     const fixture = TestBed.createComponent(StatusBarComponent);
     fixture.detectChanges();
