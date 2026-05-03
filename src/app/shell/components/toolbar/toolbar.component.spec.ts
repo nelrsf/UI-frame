@@ -123,6 +123,45 @@ describe('ToolbarComponent', () => {
     expect(toolbar?.getAttribute('role')).toBe('toolbar');
   });
 
+  // ---------------------------------------------------------------------------
+  // Accessibility regression checks
+  // ---------------------------------------------------------------------------
+
+  describe('accessibility', () => {
+    it('should have aria-label on the toolbar container', () => {
+      const fixture = TestBed.createComponent(ToolbarComponent);
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement as HTMLElement;
+      const toolbar = compiled.querySelector('[data-testid="toolbar"]');
+      expect(toolbar?.getAttribute('aria-label')).toBeTruthy();
+    });
+
+    it('should have aria-label on the breadcrumb nav', () => {
+      const fixture = TestBed.createComponent(ToolbarComponent);
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement as HTMLElement;
+      const nav = compiled.querySelector('[data-testid="toolbar-breadcrumbs"]');
+      expect(nav?.getAttribute('aria-label')).toBeTruthy();
+    });
+
+    it('should set aria-label on action buttons matching the tooltip', () => {
+      const fixture = TestBed.createComponent(ToolbarComponent);
+      const component = fixture.componentInstance;
+      const action: ToolbarAction = {
+        id: 'toggle-sidebar',
+        icon: '☰',
+        label: 'Toggle Sidebar',
+        tooltip: 'Toggle sidebar visibility',
+        group: 'layout',
+      };
+      component.actions = [action];
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement as HTMLElement;
+      const btn = compiled.querySelector('[data-testid="toolbar-action-toggle-sidebar"]');
+      expect(btn?.getAttribute('aria-label')).toBe('Toggle sidebar visibility');
+    });
+  });
+
   it('should default to empty breadcrumbs and actions', () => {
     const fixture = TestBed.createComponent(ToolbarComponent);
     const component = fixture.componentInstance;

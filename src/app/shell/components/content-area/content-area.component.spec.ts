@@ -64,6 +64,23 @@ describe('ContentAreaComponent', () => {
     expect(area?.getAttribute('role')).toBe('main');
   });
 
+  it('should have aria-label on the container', () => {
+    const fixture = TestBed.createComponent(ContentAreaComponent);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const area = compiled.querySelector('[data-testid="content-area"]');
+    expect(area?.getAttribute('aria-label')).toBeTruthy();
+  });
+
+  it('should have aria-live="polite" on the empty state', () => {
+    const fixture = TestBed.createComponent(ContentAreaComponent);
+    fixture.componentInstance.activeTab = null;
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const emptyState = compiled.querySelector('[data-testid="content-area-empty-state"]');
+    expect(emptyState?.getAttribute('aria-live')).toBe('polite');
+  });
+
   it('should default activeTab to null', () => {
     const fixture = TestBed.createComponent(ContentAreaComponent);
     const component = fixture.componentInstance;

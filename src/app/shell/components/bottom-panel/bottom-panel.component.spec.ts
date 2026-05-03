@@ -131,6 +131,68 @@ describe('BottomPanelComponent', () => {
     expect(fixture.componentInstance.heightChange).toBeDefined();
   });
 
+  // ---------------------------------------------------------------------------
+  // Accessibility regression checks
+  // ---------------------------------------------------------------------------
+
+  describe('accessibility', () => {
+    it('should have aria-label on the bottom panel container', () => {
+      const fixture = TestBed.createComponent(BottomPanelComponent);
+      fixture.componentInstance.visible = true;
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement as HTMLElement;
+      const panel = compiled.querySelector('[data-testid="bottom-panel"]');
+      expect(panel?.getAttribute('aria-label')).toBeTruthy();
+    });
+
+    it('should have role="tablist" on the panel tabs container', () => {
+      const fixture = TestBed.createComponent(BottomPanelComponent);
+      fixture.componentInstance.visible = true;
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement as HTMLElement;
+      const tabsContainer = compiled.querySelector('.bottom-panel__tabs');
+      expect(tabsContainer?.getAttribute('role')).toBe('tablist');
+    });
+
+    it('should have aria-label on the toggle button', () => {
+      const fixture = TestBed.createComponent(BottomPanelComponent);
+      fixture.componentInstance.visible = true;
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement as HTMLElement;
+      const toggleBtn = compiled.querySelector('[data-testid="bottom-panel-toggle"]');
+      expect(toggleBtn?.getAttribute('aria-label')).toBeTruthy();
+    });
+
+    it('should have aria-label on the close button', () => {
+      const fixture = TestBed.createComponent(BottomPanelComponent);
+      fixture.componentInstance.visible = true;
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement as HTMLElement;
+      const closeBtn = compiled.querySelector('[data-testid="bottom-panel-close"]');
+      expect(closeBtn?.getAttribute('aria-label')).toBeTruthy();
+    });
+
+    it('should have role="tabpanel" on the content area', () => {
+      const fixture = TestBed.createComponent(BottomPanelComponent);
+      fixture.componentInstance.visible = true;
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement as HTMLElement;
+      const content = compiled.querySelector('[data-testid="bottom-panel-content"]');
+      expect(content?.getAttribute('role')).toBe('tabpanel');
+    });
+
+    it('should set aria-selected on panel tab buttons', () => {
+      const fixture = TestBed.createComponent(BottomPanelComponent);
+      fixture.componentInstance.visible = true;
+      fixture.componentInstance.panels = [makePanel({ id: 'terminal', label: 'Terminal' })];
+      fixture.componentInstance.activePanelId = 'terminal';
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement as HTMLElement;
+      const tabBtn = compiled.querySelector('[data-testid="panel-tab-terminal"]');
+      expect(tabBtn?.getAttribute('aria-selected')).toBe('true');
+    });
+  });
+
   it('should assign id to each tab button based on panel id', () => {
     const fixture = TestBed.createComponent(BottomPanelComponent);
     fixture.componentInstance.visible = true;

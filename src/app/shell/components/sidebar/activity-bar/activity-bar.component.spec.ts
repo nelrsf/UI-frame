@@ -129,4 +129,55 @@ describe('ActivityBarComponent', () => {
     const itemElement = compiled.querySelector('[data-testid="activity-bar-item-explorer"]');
     expect(itemElement?.getAttribute('aria-pressed')).toBe('true');
   });
+
+  // ---------------------------------------------------------------------------
+  // Accessibility regression checks
+  // ---------------------------------------------------------------------------
+
+  describe('accessibility', () => {
+    it('should have role="navigation" on the container', () => {
+      const compiled = fixture.nativeElement as HTMLElement;
+      const bar = compiled.querySelector('[data-testid="activity-bar"]');
+      expect(bar?.getAttribute('role')).toBe('navigation');
+    });
+
+    it('should have aria-label on the container', () => {
+      const compiled = fixture.nativeElement as HTMLElement;
+      const bar = compiled.querySelector('[data-testid="activity-bar"]');
+      expect(bar?.getAttribute('aria-label')).toBeTruthy();
+    });
+
+    it('should set aria-label on items matching the tooltip', () => {
+      const item: SidebarItem = {
+        id: 'explorer',
+        icon: '📁',
+        label: 'Explorer',
+        tooltip: 'Explorer',
+        position: 'top',
+      };
+      component.items = [item];
+      fixture.detectChanges();
+
+      const compiled = fixture.nativeElement as HTMLElement;
+      const itemElement = compiled.querySelector('[data-testid="activity-bar-item-explorer"]');
+      expect(itemElement?.getAttribute('aria-label')).toBe('Explorer');
+    });
+
+    it('should set aria-pressed="false" on inactive items', () => {
+      const item: SidebarItem = {
+        id: 'explorer',
+        icon: '📁',
+        label: 'Explorer',
+        tooltip: 'Explorer',
+        position: 'top',
+      };
+      component.items = [item];
+      component.activeItemId = 'other';
+      fixture.detectChanges();
+
+      const compiled = fixture.nativeElement as HTMLElement;
+      const itemElement = compiled.querySelector('[data-testid="activity-bar-item-explorer"]');
+      expect(itemElement?.getAttribute('aria-pressed')).toBe('false');
+    });
+  });
 });

@@ -103,6 +103,22 @@ describe('SidebarComponent', () => {
     expect(sidebarElement?.getAttribute('aria-expanded')).toBe('false');
   });
 
+  it('should have role="region" on the sidebar panel when not collapsed', () => {
+    component.collapsed = false;
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const panel = compiled.querySelector('[data-testid="sidebar-panel"]');
+    expect(panel?.getAttribute('role')).toBe('region');
+  });
+
+  it('should have aria-label on the sidebar panel when not collapsed', () => {
+    component.collapsed = false;
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const panel = compiled.querySelector('[data-testid="sidebar-panel"]');
+    expect(panel?.getAttribute('aria-label')).toBeTruthy();
+  });
+
   describe('EventBus emissions', () => {
     let eventBus: EventBusService;
     let emitSpy: jasmine.Spy;
