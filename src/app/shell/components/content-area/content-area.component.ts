@@ -1,6 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { NgIf } from '@angular/common';
 import { TabItem } from '../../models/tab-item.model';
+import { DockZone } from '../../../core/models/dock-zone-assignment.model';
 
 @Component({
   selector: 'app-content-area',
@@ -11,4 +12,6 @@ import { TabItem } from '../../models/tab-item.model';
 })
 export class ContentAreaComponent {
   @Input() activeTab: TabItem | null = null;
+  /** The dock zone this content area is rendering for. Defaults to PrimaryWorkspace. */
+  @Input() zone: DockZone = DockZone.PrimaryWorkspace;
 }

@@ -8,6 +8,7 @@ import { ContentAreaComponent } from './components/content-area/content-area.com
 import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { TabBarComponent } from './components/tab-bar/tab-bar.component';
 import { BottomPanelComponent } from './components/bottom-panel/bottom-panel.component';
+import { SecondaryPanelComponent } from './components/secondary-panel/secondary-panel.component';
 import { PlatformService } from '../core/services/platform.service';
 import { EventBusService } from '../core/services/event-bus.service';
 import { setPlatform, shellReady } from '../core/state/session';
@@ -20,6 +21,8 @@ import {
   setBottomPanelHeight,
   toggleBottomPanel,
   setActiveSidebarItem,
+  toggleSecondaryPanel,
+  setSecondaryPanelWidth,
 } from '../core/state/layout/layout.actions';
 import {
   selectSidebarVisible,
@@ -27,6 +30,8 @@ import {
   selectBottomPanelVisible,
   selectBottomPanelHeight,
   selectActiveSidebarItem,
+  selectSecondaryPanelVisible,
+  selectSecondaryPanelWidth,
 } from '../core/state/layout/layout.selectors';
 
 @Component({
@@ -40,6 +45,7 @@ import {
     SidebarComponent,
     TabBarComponent,
     BottomPanelComponent,
+    SecondaryPanelComponent,
   ],
   templateUrl: './shell.component.html',
   styleUrl: './shell.component.css',
@@ -61,6 +67,10 @@ export class ShellComponent implements OnInit, AfterViewInit {
   readonly bottomPanelHeight$: Observable<number> = this.store.select(selectBottomPanelHeight);
   /** Observable of the active sidebar item ID from the layout state. */
   readonly activeSidebarItem$: Observable<string | null> = this.store.select(selectActiveSidebarItem);
+  /** Observable of the secondary panel visibility flag from the layout state. */
+  readonly secondaryPanelVisible$: Observable<boolean> = this.store.select(selectSecondaryPanelVisible);
+  /** Observable of the secondary panel width in pixels from the layout state. */
+  readonly secondaryPanelWidth$: Observable<number> = this.store.select(selectSecondaryPanelWidth);
 
   /**
    * Adds a platform-specific CSS class to the host element so that
@@ -131,6 +141,14 @@ export class ShellComponent implements OnInit, AfterViewInit {
 
   onBottomPanelHeightChange(height: number): void {
     this.store.dispatch(setBottomPanelHeight({ height }));
+  }
+
+  onSecondaryPanelVisibilityChange(_visible: boolean): void {
+    this.store.dispatch(toggleSecondaryPanel());
+  }
+
+  onSecondaryPanelWidthChange(width: number): void {
+    this.store.dispatch(setSecondaryPanelWidth({ width }));
   }
 }
 

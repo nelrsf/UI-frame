@@ -1,0 +1,56 @@
+@if (visible) {
+  <div
+    class="secondary-panel"
+    data-testid="secondary-panel"
+    role="complementary"
+    aria-label="Secondary panel"
+    [style.width.px]="width"
+  >
+    <header class="secondary-panel__header" data-testid="secondary-panel-header">
+      <div class="secondary-panel__tabs" role="tablist" aria-label="Panel tabs">
+        @for (panel of panels; track panel.id) {
+          <button
+            class="secondary-panel__tab"
+            [class.secondary-panel__tab--active]="panel.id === activePanelId"
+            role="tab"
+            [attr.id]="'secondary-panel-tab-btn-' + panel.id"
+            [attr.aria-selected]="panel.id === activePanelId"
+            aria-controls="secondary-panel-content"
+            [attr.data-testid]="'secondary-panel-tab-' + panel.id"
+            (click)="onPanelSelect(panel.id)"
+          >
+            @if (panel.icon) {
+              <span class="secondary-panel__tab-icon" aria-hidden="true">{{ panel.icon }}</span>
+            }
+            <span class="secondary-panel__tab-label">{{ panel.label }}</span>
+          </button>
+        }
+      </div>
+
+      <div class="secondary-panel__actions" data-testid="secondary-panel-actions">
+        <button
+          class="secondary-panel__action-btn"
+          aria-label="Toggle secondary panel"
+          data-testid="secondary-panel-toggle"
+          (click)="onToggle()"
+        >⌃</button>
+        <button
+          class="secondary-panel__action-btn"
+          aria-label="Close secondary panel"
+          data-testid="secondary-panel-close"
+          (click)="onClose()"
+        >×</button>
+      </div>
+    </header>
+
+    <div
+      class="secondary-panel__content"
+      id="secondary-panel-content"
+      data-testid="secondary-panel-content"
+      role="tabpanel"
+      [attr.aria-labelledby]="activePanelId ? 'secondary-panel-tab-btn-' + activePanelId : null"
+    >
+      <!-- Panel content will be rendered here via panel wiring -->
+    </div>
+  </div>
+}
