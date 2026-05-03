@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, NgZone } from '@angular/core';
 import { ActivityBarComponent } from './activity-bar/activity-bar.component';
 import { SidebarItem } from '../../models/sidebar-item.model';
 import { EventBusService } from '../../../core/services/event-bus.service';
@@ -12,6 +12,7 @@ import { EventBusService } from '../../../core/services/event-bus.service';
 })
 export class SidebarComponent {
   private readonly eventBus = inject(EventBusService);
+  private readonly zone = inject(NgZone);
 
   @Input() items: SidebarItem[] = [];
   @Input() activeItemId: string | null = null;
@@ -21,6 +22,7 @@ export class SidebarComponent {
   @Output() collapsedChange = new EventEmitter<boolean>();
 
   onItemClick(item: SidebarItem): void {
+    performance.mark('sidebar.interaction.start');
     if (item.id === this.activeItemId && !this.collapsed) {
       // Clicking the already-active item while the panel is open collapses it.
       this.collapsedChange.emit(true);
@@ -34,5 +36,17 @@ export class SidebarComponent {
       this.activeItemChange.emit(item.id);
       this.eventBus.emit('sidebar.section.activated.v1', { sectionId: item.id }, 'SidebarComponent');
     }
+    // Measure interaction latency to next paint (NFR-Perf-01: < 100 ms).
+    // Runs outside the Angular zone to avoid triggering a spurious CD cycle.
+    this.zone.runOutsideAngular(() => {
+      requestAnimationFrame(() => {
+        performance.mark('sidebar.interaction.end');
+        try {
+          performance.measure('sidebar.interaction', 'sidebar.interaction.start', 'sidebar.interaction.end');
+        } catch {
+          // Marks may have been cleared externally.
+        }
+      });
+    });
   }
 }

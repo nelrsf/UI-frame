@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, NgZone } from '@angular/core';
 import { NgFor, NgIf } from '@angular/common';
 import { TabItem, TabCloseGuard } from '../../models/tab-item.model';
 import { EventBusService } from '../../../core/services/event-bus.service';
@@ -15,6 +15,7 @@ const CLOSE_GUARD_TIMEOUT_MS = 10_000;
 })
 export class TabBarComponent {
   private readonly eventBus = inject(EventBusService);
+  private readonly zone = inject(NgZone);
 
   @Input() tabs: TabItem[] = [];
   @Input() activeTabId: string = '';
@@ -34,8 +35,21 @@ export class TabBarComponent {
   private readonly _closingTabIds = new Set<string>();
 
   onTabSelect(tabId: string): void {
+    performance.mark('tabs.switch.start');
     this.tabSelected.emit(tabId);
     this.eventBus.emit('tabs.active.changed.v1', { tabId }, 'TabBarComponent');
+    // Measure tab-switch latency to next paint (NFR-Perf-02: < 120 ms).
+    // Runs outside the Angular zone to avoid triggering a spurious CD cycle.
+    this.zone.runOutsideAngular(() => {
+      requestAnimationFrame(() => {
+        performance.mark('tabs.switch.end');
+        try {
+          performance.measure('tabs.switch', 'tabs.switch.start', 'tabs.switch.end');
+        } catch {
+          // Marks may have been cleared externally.
+        }
+      });
+    });
   }
 
   async onTabClose(event: MouseEvent, tabId: string): Promise<void> {
