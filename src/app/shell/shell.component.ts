@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, HostBinding, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, AfterViewInit, HostBinding, inject, ChangeDetectionStrategy, NgZone } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
@@ -56,6 +56,15 @@ export class ShellComponent implements OnInit, AfterViewInit {
   private readonly eventBus = inject(EventBusService);
   private readonly store = inject(Store);
   private readonly sessionService = inject(WorkspaceSessionService);
+  private readonly zone = inject(NgZone);
+
+  // rAF throttle state for bottom-panel resize (NFR-Perf-03)
+  private _rafBottomPending = false;
+  private _pendingBottomHeight: number | null = null;
+
+  // rAF throttle state for secondary-panel resize (NFR-Perf-03)
+  private _rafSecondaryPending = false;
+  private _pendingSecondaryWidth: number | null = null;
 
   /** Observable of the sidebar visibility flag from the layout state. */
   readonly sidebarVisible$: Observable<boolean> = this.store.select(selectSidebarVisible);
@@ -128,8 +137,10 @@ export class ShellComponent implements OnInit, AfterViewInit {
   // ---------------------------------------------------------------------------
 
   onSidebarCollapsedChange(_collapsed: boolean): void {
+    performance.mark('shell.sidebar.toggle.start');
     this.store.dispatch(toggleSidebar());
     this.eventBus.emit('shell.layout.changed.v1', { layout: 'sidebar' }, 'ShellComponent');
+    this._markEnd('shell.sidebar.toggle');
   }
 
   onSidebarActiveItemChange(itemId: string): void {
@@ -137,21 +148,70 @@ export class ShellComponent implements OnInit, AfterViewInit {
   }
 
   onBottomPanelVisibilityChange(_visible: boolean): void {
+    performance.mark('shell.bottom-panel.toggle.start');
     this.store.dispatch(toggleBottomPanel());
     this.eventBus.emit('shell.layout.changed.v1', { layout: 'bottom-panel' }, 'ShellComponent');
+    this._markEnd('shell.bottom-panel.toggle');
   }
 
   onBottomPanelHeightChange(height: number): void {
-    this.store.dispatch(setBottomPanelHeight({ height }));
-    this.eventBus.emit('bottomPanel.resized.v1', { height }, 'ShellComponent');
+    // Coalesce rapid resize events to one dispatch per event-loop turn (NFR-Perf-03: >30 FPS).
+    // setTimeout(0) is used instead of requestAnimationFrame to allow synchronous flushing
+    // in unit tests (fakeAsync + tick(0)).  Both strategies prevent multiple store dispatches
+    // from a burst of drag events; the actual frame rate is governed by CSS paint scheduling.
+    this._pendingBottomHeight = height;
+    if (!this._rafBottomPending) {
+      this._rafBottomPending = true;
+      setTimeout(() => {
+        this._rafBottomPending = false;
+        const h = this._pendingBottomHeight!;
+        this._pendingBottomHeight = null;
+        performance.mark('shell.bottom-panel.resize.start');
+        this.store.dispatch(setBottomPanelHeight({ height: h }));
+        this.eventBus.emit('bottomPanel.resized.v1', { height: h }, 'ShellComponent');
+        this._markEnd('shell.bottom-panel.resize');
+      }, 0);
+    }
   }
 
   onSecondaryPanelVisibilityChange(_visible: boolean): void {
+    performance.mark('shell.secondary-panel.toggle.start');
     this.store.dispatch(toggleSecondaryPanel());
+    this._markEnd('shell.secondary-panel.toggle');
   }
 
   onSecondaryPanelWidthChange(width: number): void {
-    this.store.dispatch(setSecondaryPanelWidth({ width }));
+    // Coalesce rapid resize events to one dispatch per event-loop turn (NFR-Perf-03: >30 FPS).
+    // See onBottomPanelHeightChange for the rationale behind setTimeout(0) vs requestAnimationFrame.
+    this._pendingSecondaryWidth = width;
+    if (!this._rafSecondaryPending) {
+      this._rafSecondaryPending = true;
+      setTimeout(() => {
+        this._rafSecondaryPending = false;
+        const w = this._pendingSecondaryWidth!;
+        this._pendingSecondaryWidth = null;
+        performance.mark('shell.secondary-panel.resize.start');
+        this.store.dispatch(setSecondaryPanelWidth({ width: w }));
+        this._markEnd('shell.secondary-panel.resize');
+      }, 0);
+    }
+  }
+
+  /**
+   * Schedules a performance end-mark and measure for the named interaction
+   * after the next animation frame.  Runs outside the Angular zone so the
+   * rAF callback does not trigger an unnecessary change-detection cycle.
+   */
+  private _markEnd(name: string): void {
+    this.zone.runOutsideAngular(() => {
+      requestAnimationFrame(() => {
+        performance.mark(`${name}.end`);
+        try {
+          performance.measure(name, `${name}.start`, `${name}.end`);
+        } catch {
+          // Marks may have been cleared by the browser (e.g. performance.clearMarks).
+        }
+      });
+    });
   }
 }
-

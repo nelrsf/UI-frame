@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { provideStore } from '@ngrx/store';
 import { ShellComponent } from './shell.component';
 import { PlatformAdapter } from '../core/infrastructure/electron/adapters/platform.adapter';
@@ -121,14 +121,15 @@ describe('ShellComponent', () => {
       expect(emitSpy).toHaveBeenCalledWith('shell.layout.changed.v1', { layout: 'bottom-panel' }, 'ShellComponent');
     });
 
-    it('should emit bottomPanel.resized.v1 when bottom panel height changes', () => {
+    it('should emit bottomPanel.resized.v1 when bottom panel height changes', fakeAsync(() => {
       const fixture = TestBed.createComponent(ShellComponent);
       const eventBus = TestBed.inject(EventBusService);
       const emitSpy = spyOn(eventBus, 'emit').and.callThrough();
 
       fixture.componentInstance.onBottomPanelHeightChange(350);
+      tick(0);
 
       expect(emitSpy).toHaveBeenCalledWith('bottomPanel.resized.v1', { height: 350 }, 'ShellComponent');
-    });
+    }));
   });
 });
