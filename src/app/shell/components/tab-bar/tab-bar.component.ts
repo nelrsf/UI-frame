@@ -1,5 +1,4 @@
 import { Component, Input, Output, EventEmitter, inject, NgZone } from '@angular/core';
-import { NgFor, NgIf } from '@angular/common';
 import { TabItem, TabCloseGuard } from '../../models/tab-item.model';
 import { EventBusService } from '../../../core/services/event-bus.service';
 
@@ -9,7 +8,7 @@ const CLOSE_GUARD_TIMEOUT_MS = 10_000;
 @Component({
   selector: 'app-tab-bar',
   standalone: true,
-  imports: [NgFor, NgIf],
+  imports: [],
   templateUrl: './tab-bar.component.html',
   styleUrl: './tab-bar.component.css',
 })

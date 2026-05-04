@@ -3,6 +3,7 @@ import { LayoutState } from './layout/layout.reducer';
 import { UiContextState } from './ui-context/ui-context.reducer';
 import { PreferencesState } from './preferences/preferences.reducer';
 import { WorkspaceState } from './workspace/workspace.reducer';
+import { ShellContentState } from './shell-content/shell-content.reducer';
 
 /**
  * AppState defines the root NgRx state shape for the Shell v1 application.
@@ -31,4 +32,6 @@ export interface AppState {
   readonly uiContext?: UiContextState;
   // Registered in app.config.ts via provideState('preferences', preferencesReducer).
   readonly preferences?: PreferencesState;
+  // Registered in app.config.ts via provideState('shellContent', shellContentReducer).
+  readonly shellContent?: ShellContentState;
 }

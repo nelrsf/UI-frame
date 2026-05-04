@@ -1,12 +1,11 @@
 import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, inject } from '@angular/core';
-import { NgFor, NgIf } from '@angular/common';
 import { PanelTab } from '../../models/panel-tab.model';
 import { EventBusService } from '../../../core/services/event-bus.service';
 
 @Component({
   selector: 'app-bottom-panel',
   standalone: true,
-  imports: [NgFor, NgIf],
+  imports: [],
   templateUrl: './bottom-panel.component.html',
   styleUrl: './bottom-panel.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

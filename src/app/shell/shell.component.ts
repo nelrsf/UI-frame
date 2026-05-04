@@ -1,7 +1,7 @@
 import { Component, OnInit, AfterViewInit, HostBinding, inject, ChangeDetectionStrategy, NgZone } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
+import { combineLatest, map, Observable } from 'rxjs';
 import { StatusBarComponent } from './components/status-bar/status-bar.component';
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { ContentAreaComponent } from './components/content-area/content-area.component';
@@ -33,6 +33,16 @@ import {
   selectSecondaryPanelVisible,
   selectSecondaryPanelWidth,
 } from '../core/state/layout/layout.selectors';
+import {
+  selectActiveShellComponentType,
+  selectActiveShellTabId,
+  selectShellBottomPanelTabs,
+  selectShellSidebarItems,
+  selectShellTabs,
+  selectShellToolbarActions,
+  setActiveShellTab,
+} from '../core/state/shell-content';
+import { TabItem } from './models/tab-item.model';
 
 @Component({
   selector: 'app-shell',
@@ -80,6 +90,25 @@ export class ShellComponent implements OnInit, AfterViewInit {
   readonly secondaryPanelVisible$: Observable<boolean> = this.store.select(selectSecondaryPanelVisible);
   /** Observable of the secondary panel width in pixels from the layout state. */
   readonly secondaryPanelWidth$: Observable<number> = this.store.select(selectSecondaryPanelWidth);
+  /** Observable of registered sidebar entries from shellContent. */
+  readonly sidebarItems$ = this.store.select(selectShellSidebarItems);
+  /** Observable of registered toolbar actions from shellContent. */
+  readonly toolbarActions$ = this.store.select(selectShellToolbarActions);
+  /** Observable of registered shell tabs from shellContent. */
+  readonly shellTabs$ = this.store.select(selectShellTabs);
+  /** Observable of active shell tab id. */
+  readonly activeShellTabId$ = this.store.select(selectActiveShellTabId);
+  /** Observable of active shell tab component type for dynamic rendering. */
+  readonly activeShellComponentType$ = this.store.select(selectActiveShellComponentType);
+  /** Observable of registered bottom panel tabs. */
+  readonly bottomPanelTabs$ = this.store.select(selectShellBottomPanelTabs);
+  /** Derived observable for the active tab metadata consumed by ContentArea. */
+  readonly activeShellTab$: Observable<TabItem | null> = combineLatest([
+    this.shellTabs$,
+    this.activeShellTabId$,
+  ]).pipe(
+    map(([tabs, activeId]) => tabs.find((tab) => tab.id === activeId) ?? null)
+  );
 
   /**
    * Adds a platform-specific CSS class to the host element so that
@@ -145,6 +174,10 @@ export class ShellComponent implements OnInit, AfterViewInit {
 
   onSidebarActiveItemChange(itemId: string): void {
     this.store.dispatch(setActiveSidebarItem({ itemId }));
+  }
+
+  onShellTabSelected(tabId: string): void {
+    this.store.dispatch(setActiveShellTab({ id: tabId }));
   }
 
   onBottomPanelVisibilityChange(_visible: boolean): void {

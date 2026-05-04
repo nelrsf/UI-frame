@@ -1,7 +1,7 @@
 <div class="content-area" data-testid="content-area" role="main" aria-label="Main content">
   @if (activeTab) {
     <div class="content-area__view" data-testid="content-area-view">
-      <!-- Active view content will be rendered here via tab wiring -->
+      <ng-container *ngComponentOutlet="componentType"></ng-container>
     </div>
   } @else {
     <div class="content-area__empty-state" data-testid="content-area-empty-state" aria-live="polite">

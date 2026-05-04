@@ -12,6 +12,8 @@
 /node_modules
 npm-debug.log
 yarn-error.log
+*.log
+.env*
 
 # IDEs and editors
 .idea/
@@ -42,3 +44,5 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+*.tmp
+*.swp
