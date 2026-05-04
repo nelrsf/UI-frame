@@ -12,7 +12,14 @@
     "electron:dev": "concurrently --kill-others \"ng serve\" \"wait-on http://localhost:4200 && cross-env ELECTRON_ENV=development electron .\"",
     "electron:build": "npm run build && npm run build:electron && cross-env ELECTRON_ENV=production electron .",
     "electron:smoke": "npm run electron:build",
-    "electron:dist": "npm run build && npm run build:electron && electron-builder"
+    "electron:dist": "npm run build && npm run build:electron && electron-builder",
+    "test:shell": "ng test --include='src/app/shell/**/*.spec.ts' --watch=false",
+    "test:smoke": "npm run build && npm run build:electron && node scripts/electron-smoke.mjs",
+    "test:coverage": "ng test --watch=false --code-coverage",
+    "test:coverage:ci": "ng test --watch=false --code-coverage --browsers=ChromeHeadless",
+    "perf:measure": "node scripts/measure-shell-performance.mjs",
+    "validate": "npm run test:coverage:ci && npm run test:smoke",
+    "validate:release": "npm run validate && npm run perf:measure"
   },
   "private": true,
   "build": {
@@ -37,6 +44,8 @@
     }
   },
   "dependencies": {
+    "@ngrx/effects": "^19.2.1",
+    "@ngrx/store": "^19.2.1",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },

@@ -1,0 +1,32 @@
+<div class="toolbar" data-testid="toolbar" role="toolbar" aria-label="Toolbar">
+  <nav class="toolbar__breadcrumbs" aria-label="Breadcrumb" data-testid="toolbar-breadcrumbs">
+    @for (crumb of breadcrumbs; track crumb.label; let last = $last) {
+      <span class="toolbar__breadcrumb-item" [class.toolbar__breadcrumb-item--last]="last">
+        {{ crumb.label }}
+      </span>
+      @if (!last) {
+        <span class="toolbar__breadcrumb-separator" aria-hidden="true">/</span>
+      }
+    }
+  </nav>
+
+  <div class="toolbar__actions" data-testid="toolbar-actions">
+    @for (action of actions; track action.id) {
+      <button
+        class="toolbar__action"
+        [class.toolbar__action--active]="action.active"
+        [class.toolbar__action--disabled]="action.disabled"
+        [attr.data-group]="action.group"
+        [attr.title]="action.tooltip"
+        [attr.aria-label]="action.tooltip"
+        [attr.aria-pressed]="action.active ?? null"
+        [disabled]="action.disabled ?? false"
+        [attr.data-testid]="'toolbar-action-' + action.id"
+        (click)="onActionClick(action)"
+      >
+        <span class="toolbar__action-icon" aria-hidden="true">{{ action.icon }}</span>
+        <span class="toolbar__action-label">{{ action.label }}</span>
+      </button>
+    }
+  </div>
+</div>

@@ -5,6 +5,13 @@ export const PREFERENCES_SCHEMA_VERSION = 1;
 export interface PreferencesEnvelope {
   schemaVersion: number;
   workspaceId: string;
+  /**
+   * The raw workspace root path that was used to derive `workspaceId`.
+   * Stored for traceability; absent for the fallback workspace (`ws-default`).
+   */
+  workspaceRootPath?: string;
+  /** ISO 8601 timestamp recording when this envelope was last saved. */
+  savedAt: string;
   data: Record<string, unknown>;
 }
 

@@ -1,0 +1,56 @@
+@if (visible) {
+  <div
+    class="bottom-panel"
+    data-testid="bottom-panel"
+    role="complementary"
+    aria-label="Bottom panel"
+    [style.height.px]="height"
+  >
+    <header class="bottom-panel__header" data-testid="bottom-panel-header">
+      <div class="bottom-panel__tabs" role="tablist" aria-label="Panel tabs">
+        @for (panel of panels; track panel.id) {
+          <button
+            class="bottom-panel__tab"
+            [class.bottom-panel__tab--active]="panel.id === activePanelId"
+            role="tab"
+            [attr.id]="'panel-tab-btn-' + panel.id"
+            [attr.aria-selected]="panel.id === activePanelId"
+            aria-controls="bottom-panel-content"
+            [attr.data-testid]="'panel-tab-' + panel.id"
+            (click)="onPanelSelect(panel.id)"
+          >
+            @if (panel.icon) {
+              <span class="bottom-panel__tab-icon" aria-hidden="true">{{ panel.icon }}</span>
+            }
+            <span class="bottom-panel__tab-label">{{ panel.label }}</span>
+          </button>
+        }
+      </div>
+
+      <div class="bottom-panel__actions" data-testid="bottom-panel-actions">
+        <button
+          class="bottom-panel__action-btn"
+          aria-label="Toggle bottom panel"
+          data-testid="bottom-panel-toggle"
+          (click)="onToggle()"
+        >⌃</button>
+        <button
+          class="bottom-panel__action-btn"
+          aria-label="Close bottom panel"
+          data-testid="bottom-panel-close"
+          (click)="onClose()"
+        >×</button>
+      </div>
+    </header>
+
+    <div
+      class="bottom-panel__content"
+      id="bottom-panel-content"
+      data-testid="bottom-panel-content"
+      role="tabpanel"
+      [attr.aria-labelledby]="activePanelId ? 'panel-tab-btn-' + activePanelId : null"
+    >
+      <!-- Panel content will be rendered here via panel wiring -->
+    </div>
+  </div>
+}

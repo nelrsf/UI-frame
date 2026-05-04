@@ -168,4 +168,113 @@ describe('UserPreferencesService', () => {
       expect(service.get('hidden', 'fallback')).toBe('fallback');
     });
   });
+
+  describe('set before initWorkspace', () => {
+    it('should not write to localStorage when workspaceId is not yet set', () => {
+      service.set('earlyKey', 'earlyValue');
+      expect(localStorage.length).toBe(0);
+    });
+
+    it('should still update the in-memory value before initWorkspace', () => {
+      service.set('earlyKey', 'earlyValue');
+      expect(service.get('earlyKey', 'missing')).toBe('earlyValue');
+    });
+  });
+
+  describe('re-initialization', () => {
+    it('should reload persisted data when the same workspace is re-initialized', () => {
+      service.initWorkspace('ws-reload');
+      service.set('theme', 'dark');
+
+      service.initWorkspace('ws-reload');
+      expect(service.get('theme', 'light')).toBe('dark');
+    });
+  });
+
+  describe('initWorkspaceFromPath', () => {
+    it('should use ws-default when no path is provided', async () => {
+      await service.initWorkspaceFromPath();
+      expect(service.workspaceId).toBe('ws-default');
+    });
+
+    it('should use ws-default for null path', async () => {
+      await service.initWorkspaceFromPath(null);
+      expect(service.workspaceId).toBe('ws-default');
+    });
+
+    it('should use ws-default for empty string', async () => {
+      await service.initWorkspaceFromPath('');
+      expect(service.workspaceId).toBe('ws-default');
+    });
+
+    it('should derive a ws- prefixed ID from a real path', async () => {
+      await service.initWorkspaceFromPath('/home/user/project');
+      expect(service.workspaceId).toMatch(/^ws-[0-9a-f]{16}$/);
+    });
+
+    it('should produce the known ID for a pinned path (algorithm regression guard)', async () => {
+      await service.initWorkspaceFromPath('/home/user/project');
+      expect(service.workspaceId).toBe('ws-9dad1e4e08b0b11c');
+    });
+
+    it('should normalize the path before deriving the ID', async () => {
+      await service.initWorkspaceFromPath('/home/user/project/');
+      const idWithTrailingSlash = service.workspaceId;
+
+      await service.initWorkspaceFromPath('/home/user/project');
+      const idWithoutTrailingSlash = service.workspaceId;
+
+      expect(idWithTrailingSlash).toBe(idWithoutTrailingSlash);
+    });
+
+    it('should normalize Windows paths before deriving the ID', async () => {
+      await service.initWorkspaceFromPath('C:\\Users\\dev\\project');
+      const idWindows = service.workspaceId;
+
+      await service.initWorkspaceFromPath('c:/Users/dev/project');
+      const idPosix = service.workspaceId;
+
+      expect(idWindows).toBe(idPosix);
+    });
+
+    it('should load persisted preferences scoped to the derived ID', async () => {
+      await service.initWorkspaceFromPath('/home/user/project');
+      service.set('lang', 'fr');
+
+      const service2 = new UserPreferencesService(repository);
+      await service2.initWorkspaceFromPath('/home/user/project');
+      expect(service2.get('lang', 'en')).toBe('fr');
+    });
+
+    it('should store workspaceRootPath in the envelope when a real path is set', async () => {
+      await service.initWorkspaceFromPath('/home/user/project');
+      service.set('lang', 'de');
+
+      const raw = localStorage.getItem(repository.storageKey(service.workspaceId));
+      expect(raw).not.toBeNull();
+      const envelope = JSON.parse(raw!);
+      expect(envelope['workspaceRootPath']).toBe('/home/user/project');
+    });
+
+    it('should not store workspaceRootPath in the envelope for null path', async () => {
+      await service.initWorkspaceFromPath(null);
+      service.set('lang', 'de');
+
+      const raw = localStorage.getItem(repository.storageKey(service.workspaceId));
+      expect(raw).not.toBeNull();
+      const envelope = JSON.parse(raw!);
+      expect(envelope['workspaceRootPath']).toBeUndefined();
+    });
+
+    it('should clear workspaceRootPath when initWorkspace is called directly after initWorkspaceFromPath', async () => {
+      await service.initWorkspaceFromPath('/home/user/project');
+      service.initWorkspace('ws-direct');
+      service.set('x', 1);
+
+      const raw = localStorage.getItem(repository.storageKey('ws-direct'));
+      expect(raw).not.toBeNull();
+      const envelope = JSON.parse(raw!);
+      expect(envelope['workspaceRootPath']).toBeUndefined();
+    });
+  });
 });

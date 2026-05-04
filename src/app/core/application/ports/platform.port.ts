@@ -7,6 +7,8 @@ export interface IPlatformService {
   readonly isWindows: boolean;
   readonly isMac: boolean;
   readonly isLinux: boolean;
+  /** CSS class token derived from the platform (e.g. `platform-win32`). */
+  readonly platformClass: string;
 }
 
 export const PLATFORM_SERVICE = new InjectionToken<IPlatformService>('PLATFORM_SERVICE');

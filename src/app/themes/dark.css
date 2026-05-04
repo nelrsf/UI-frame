@@ -56,6 +56,10 @@
   --color-tab-inactive-bg:  #2d2d2d;
   --color-tab-border:       #007acc;
 
+  /* Panel (bottom panel / dockable panels) */
+  --color-panel-bg:         #1e1e1e;
+  --color-panel-text:       #cccccc;
+
   /* ----------------------------------------------------------
      4.2 Tipografía
      ---------------------------------------------------------- */

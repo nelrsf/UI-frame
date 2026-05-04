@@ -1,0 +1,108 @@
+/* ============================================================
+   toolbar.component.css — Toolbar shell region
+   Height: 40px (--shell-toolbar-height). Contextual action bar.
+   ============================================================ */
+
+:host {
+  display: block;
+  width: 100%;
+  height: var(--shell-toolbar-height, 40px);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-toolbar-bg, #2d2d2d);
+  color: var(--color-toolbar-text, #cccccc);
+  font-family: var(--font-family-ui, "Segoe UI", system-ui, sans-serif);
+  font-size: var(--font-size-sm, 13px);
+  border-bottom: 1px solid var(--color-border-default, #3e3e3e);
+  overflow: hidden;
+  padding: 0 var(--spacing-2, 8px);
+  gap: var(--spacing-2, 8px);
+}
+
+/* Breadcrumb zone */
+.toolbar__breadcrumbs {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: var(--spacing-1, 4px);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.toolbar__breadcrumb-item {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-toolbar-breadcrumb, #cccccc);
+}
+
+.toolbar__breadcrumb-item--last {
+  font-weight: 600;
+  color: var(--color-toolbar-text, #ffffff);
+}
+
+.toolbar__breadcrumb-separator {
+  color: var(--color-toolbar-separator, #858585);
+  flex-shrink: 0;
+}
+
+/* Actions zone */
+.toolbar__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1, 4px);
+  flex-shrink: 0;
+}
+
+/* Individual action button */
+.toolbar__action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-1, 4px);
+  height: 28px;
+  padding: 0 var(--spacing-2, 8px);
+  border: none;
+  border-radius: var(--radius-sm, 3px);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.toolbar__action:hover:not(.toolbar__action--disabled) {
+  background-color: var(--color-toolbar-action-hover, rgba(255, 255, 255, 0.1));
+}
+
+.toolbar__action:focus-visible {
+  outline: 1px solid var(--color-border-focus, #007fd4);
+  outline-offset: -1px;
+}
+
+.toolbar__action--active {
+  background-color: var(--color-toolbar-action-active, rgba(255, 255, 255, 0.15));
+  color: var(--color-toolbar-action-active-text, #ffffff);
+}
+
+.toolbar__action--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.toolbar__action-icon {
+  flex-shrink: 0;
+}
+
+.toolbar__action-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

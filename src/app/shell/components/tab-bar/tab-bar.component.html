@@ -1,0 +1,40 @@
+<div class="tab-bar" data-testid="tab-bar" role="tablist" [attr.aria-label]="'Tab group ' + groupId">
+  @for (tab of tabs; track tab.id) {
+    <div
+      class="tab-bar__tab"
+      [class.tab-bar__tab--active]="tab.id === activeTabId"
+      [class.tab-bar__tab--dirty]="tab.dirty"
+      [class.tab-bar__tab--pinned]="tab.pinned"
+      role="tab"
+      [attr.aria-selected]="tab.id === activeTabId"
+      [attr.tabindex]="tab.id === activeTabId ? 0 : -1"
+      [attr.data-testid]="'tab-' + tab.id"
+      (click)="onTabSelect(tab.id)"
+    >
+      @if (tab.icon) {
+        <span class="tab-bar__tab-icon" aria-hidden="true">{{ tab.icon }}</span>
+      }
+      <span class="tab-bar__tab-label">{{ tab.label }}</span>
+      @if (tab.dirty) {
+        <span class="tab-bar__dirty-indicator" aria-label="Unsaved changes" data-testid="tab-dirty-indicator">·</span>
+      }
+      @if (tab.closable && !tab.pinned) {
+        <button
+          class="tab-bar__close-btn"
+          [class.tab-bar__close-btn--pending]="isClosingGuardPending(tab.id)"
+          [attr.aria-label]="'Close ' + tab.label"
+          [attr.data-testid]="'tab-close-' + tab.id"
+          [disabled]="isClosingGuardPending(tab.id)"
+          (click)="onTabClose($event, tab.id)"
+        >×</button>
+      }
+    </div>
+  }
+
+  <button
+    class="tab-bar__new-tab-btn"
+    aria-label="Open new tab"
+    data-testid="tab-bar-new-tab"
+    (click)="onNewTab()"
+  >+</button>
+</div>

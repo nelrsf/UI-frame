@@ -35,6 +35,10 @@ export class PlatformAdapter implements IPlatformService {
     return this.platform === 'linux';
   }
 
+  get platformClass(): string {
+    return `platform-${this.platform}`;
+  }
+
   private resolvePlatform(): PlatformName {
     const win = window as ElectronBridgeWindow;
     const raw = win.electronAPI?.platform ?? '';

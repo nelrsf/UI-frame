@@ -30,6 +30,11 @@ export class PlatformService implements IPlatformService {
   get isLinux(): boolean {
     return this.adapter.isLinux;
   }
+
+  /** CSS class applied to the shell host element for platform-specific styling. */
+  get platformClass(): string {
+    return `platform-${this.platform}`;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -55,4 +60,5 @@ export class PlatformServiceStub implements IPlatformService {
   get isWindows(): boolean { return this.platform === 'win32'; }
   get isMac(): boolean { return this.platform === 'darwin'; }
   get isLinux(): boolean { return this.platform === 'linux'; }
+  get platformClass(): string { return `platform-${this.platform}`; }
 }

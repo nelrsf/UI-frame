@@ -1,3 +1,40 @@
-/* You can add global styles to this file, and also import other style files */
+/* ============================================================
+   styles.css — Global application styles.
+   Imports the active theme token set via variables.css.
+   ============================================================ */
 
-@import './app/themes/dark.css';
+@import './app/themes/variables.css';
+
+/* ------------------------------------------------------------
+   Universal box-sizing reset — ensures all elements size
+   predictably (border and padding included in declared width).
+   ------------------------------------------------------------ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* ------------------------------------------------------------
+   Root height anchor — html and body must fill the viewport
+   so that the shell's 100vh and 100% heights resolve correctly.
+   ------------------------------------------------------------ */
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* ------------------------------------------------------------
+   Body base — token-driven typography, colours, and overflow.
+   The shell component manages all scroll regions internally,
+   so overflow is hidden at the body level.
+   ------------------------------------------------------------ */
+body {
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-base);
+  background-color: var(--color-bg-base);
+  color: var(--color-text-primary);
+  overflow: hidden;
+}

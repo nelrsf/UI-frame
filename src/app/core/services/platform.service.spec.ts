@@ -106,5 +106,37 @@ describe('PlatformService', () => {
       expect(stub.isMac).toBeFalse();
       expect(stub.isLinux).toBeFalse();
     });
+
+    it('should return correct platformClass for linux', () => {
+      const stub = new PlatformServiceStub('linux');
+      expect(stub.platformClass).toBe('platform-linux');
+    });
+
+    it('should return correct platformClass for win32', () => {
+      const stub = new PlatformServiceStub('win32');
+      expect(stub.platformClass).toBe('platform-win32');
+    });
+
+    it('should return correct platformClass for darwin', () => {
+      const stub = new PlatformServiceStub('darwin');
+      expect(stub.platformClass).toBe('platform-darwin');
+    });
+  });
+
+  describe('platformClass getter', () => {
+    it('should return platform-win32 for win32', () => {
+      const service = setup('win32');
+      expect(service.platformClass).toBe('platform-win32');
+    });
+
+    it('should return platform-darwin for darwin', () => {
+      const service = setup('darwin');
+      expect(service.platformClass).toBe('platform-darwin');
+    });
+
+    it('should return platform-linux for linux', () => {
+      const service = setup('linux');
+      expect(service.platformClass).toBe('platform-linux');
+    });
   });
 });

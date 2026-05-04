@@ -1,0 +1,33 @@
+<ng-template #statusItem let-item>
+  <button
+    class="status-bar__item"
+    [class.status-bar__item--warning]="item.color === 'warning'"
+    [class.status-bar__item--error]="item.color === 'error'"
+    [class.status-bar__item--success]="item.color === 'success'"
+    [class.status-bar__item--clickable]="item.clickable"
+    [attr.title]="item.tooltip ?? null"
+    [attr.aria-label]="item.tooltip ?? item.label"
+    [disabled]="!item.clickable"
+    [attr.data-testid]="'status-bar-item-' + item.id"
+    (click)="onItemClick(item)"
+  >
+    @if (item.icon) {
+      <span class="status-bar__item-icon" aria-hidden="true">{{ item.icon }}</span>
+    }
+    <span class="status-bar__item-label">{{ item.label }}</span>
+  </button>
+</ng-template>
+
+<div class="status-bar" data-testid="status-bar" role="contentinfo" aria-label="Status bar" aria-live="polite">
+  <div class="status-bar__left" data-testid="status-bar-left">
+    @for (item of leftItems; track item.id) {
+      <ng-container *ngTemplateOutlet="statusItem; context: { $implicit: item }"></ng-container>
+    }
+  </div>
+
+  <div class="status-bar__right" data-testid="status-bar-right">
+    @for (item of rightItems; track item.id) {
+      <ng-container *ngTemplateOutlet="statusItem; context: { $implicit: item }"></ng-container>
+    }
+  </div>
+</div>

@@ -55,4 +55,8 @@ export class CommandRegistryService implements ICommandRegistryService {
   list(): ReadonlyArray<CommandRegistration> {
     return Array.from(this._registry.values());
   }
+
+  getById(id: string): CommandRegistration | undefined {
+    return this._registry.get(id);
+  }
 }

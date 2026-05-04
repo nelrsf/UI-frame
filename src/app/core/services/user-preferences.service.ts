@@ -2,9 +2,12 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { PreferencesData } from '../models/preferences.model';
 import { PreferencesRepository } from '../infrastructure/persistence/local-storage/preferences.repository';
+import { resolveWorkspaceId } from '../utils/workspace-id.util';
 
 export interface IUserPreferencesService {
   readonly workspaceId: string;
+  /** Resolves the canonical workspace ID from a raw path and initializes the workspace. */
+  initWorkspaceFromPath(rawPath?: string | null): Promise<void>;
   get<T>(key: string, defaultValue: T): T;
   set<T>(key: string, value: T): void;
   reset(key?: string): void;
@@ -26,6 +29,7 @@ export interface IUserPreferencesService {
 @Injectable({ providedIn: 'root' })
 export class UserPreferencesService implements IUserPreferencesService {
   private _workspaceId = '';
+  private _workspaceRootPath: string | undefined = undefined;
   private _data: PreferencesData = {};
   private readonly _preferences$ = new BehaviorSubject<PreferencesData>({});
 
@@ -42,11 +46,32 @@ export class UserPreferencesService implements IUserPreferencesService {
   /**
    * Loads persisted preferences for `workspaceId` and sets it as the active
    * workspace context.  Call this whenever the active project/workspace changes.
+   * Resets any tracked workspace root path; use `initWorkspaceFromPath` when
+   * path traceability is required.
    */
   initWorkspace(workspaceId: string): void {
     this._workspaceId = workspaceId;
+    this._workspaceRootPath = undefined;
     this._data = this.repository.load(workspaceId);
     this._preferences$.next({ ...this._data });
+  }
+
+  /**
+   * Resolves the canonical workspace ID from `rawPath` using the Shell v1
+   * identity algorithm and then initializes the workspace.
+   *
+   * - When `rawPath` is absent, empty, or `null` the stable fallback identifier
+   *   `ws-default` is used (spec §Workspace Identity closed decision).
+   * - Otherwise the path is normalized and `ws-<16 hex chars>` is derived from
+   *   its SHA-256 hash before initializing.
+   * - The normalized raw path is stored for envelope traceability when persisting.
+   */
+  async initWorkspaceFromPath(rawPath?: string | null): Promise<void> {
+    const workspaceId = await resolveWorkspaceId(rawPath);
+    this.initWorkspace(workspaceId);
+    // Set the root path after initWorkspace (which resets it) for traceability.
+    const trimmed = rawPath?.trim();
+    this._workspaceRootPath = trimmed ? trimmed : undefined;
   }
 
   /**
@@ -92,7 +117,7 @@ export class UserPreferencesService implements IUserPreferencesService {
 
   private persist(): void {
     if (this._workspaceId) {
-      this.repository.save(this._workspaceId, this._data);
+      this.repository.save(this._workspaceId, this._data, this._workspaceRootPath);
     }
     this._preferences$.next({ ...this._data });
   }
