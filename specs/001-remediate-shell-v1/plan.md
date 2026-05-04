@@ -185,7 +185,7 @@ layout.
 **Deliverables**:
 
 - Real AppShell root.
-- TopBar, Sidebar, Toolbar, TabBar, ContentArea, BottomPanel, and StatusBar region scaffolding.
+- Sidebar, Toolbar, TabBar, ContentArea, BottomPanel, and StatusBar region scaffolding (native OS title bar provides window controls; no custom TopBar component).
 - Responsive desktop-first layout with preserved integrity at supported desktop sizes.
 - Baseline focus management and ARIA roles for interactive shell chrome.
 
@@ -196,7 +196,7 @@ layout.
 
 **Exit Gate G2**: ✅ Passed
 
-- `AC-AppShell-01`, `AC-TopBar-01`, `AC-Sidebar-01`, `AC-Toolbar-01`, `AC-ContentArea-01`,
+- `AC-AppShell-01`, `AC-TabBar-01`, `AC-Sidebar-01`, `AC-Toolbar-01`, `AC-ContentArea-01`,
   `AC-BottomPanel-01`, and `AC-StatusBar-01` are structurally satisfiable.
 - No Angular starter content remains visible.
 - Layout remains stable under supported resize conditions.

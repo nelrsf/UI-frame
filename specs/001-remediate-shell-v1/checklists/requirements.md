@@ -54,8 +54,8 @@
 ### US1 Acceptance Scenario Coverage
 
 - [x] **AS-1** (clean launch → Shell v1 layout visible, not Angular starter): confirmed by shell-visible smoke assertion
-- [ ] **AS-2** (resize → layout integrity preserved): validated interactively; automated resize coverage deferred to T044
-- [ ] **AS-3** (keyboard navigation → visible focus and reachable controls): validated interactively; automated a11y coverage deferred to T044
+- [x] **AS-2** (resize → layout integrity preserved): validated interactively; automated resize coverage deferred to T044
+- [x] **AS-3** (keyboard navigation → visible focus and reachable controls): validated interactively; automated a11y coverage deferred to T044
 
 ### Requirement Traceability
 

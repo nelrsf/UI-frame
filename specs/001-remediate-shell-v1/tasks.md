@@ -185,18 +185,18 @@ This sequence covers governance validity, AppShell mounting, Electron bridge cor
 | Requirement | Task Coverage |
 |-------------|---------------|
 | FR-Governance | T001, T046 |
-| FR-AppShell | T012, T013, T014, T015, T023 |
+| FR-AppShell | T002, T008, T012, T013, T014, T015, T023 |
 | FR-ShellComponents | T015, T016, T017, T018, T019, T023 |
 | FR-Layout | T015, T020, T031 |
 | FR-Tabs | T033, T035, T036 |
 | FR-Docking | T030, T031, T033, T037 |
 | FR-Commands | T011, T032, T038 |
 | FR-EventBus | T010, T032, T039 |
-| FR-Preferences | T009, T024, T025, T026, T027, T028, T029, T030, T031 |
+| FR-Preferences | T008, T009, T024, T025, T026, T027, T028, T029, T030, T031 |
 | FR-Platform | T007, T022 |
 | FR-Accessibility | T021, T044 |
 | FR-Security | T004, T005, T006, T028, T034, T040 |
-| FR-Testing | T012, T013, T024, T025, T032, T033, T034, T042, T043, T044, T045 |
+| FR-Testing | T003, T012, T013, T024, T025, T032, T033, T034, T042, T043, T044, T045 |
 | NFR-Perf-01 | T041, T045 |
 | NFR-Perf-02 | T036, T041, T045 |
 | NFR-Perf-03 | T020, T037, T041, T045 |

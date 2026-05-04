@@ -228,7 +228,7 @@ integration, and Electron smoke checks to confirm every requirement maps to an e
 - **NFR-Security-02**: External URL opening MUST enforce a strict allowlist and deny all other
   targets by default.
 - **NFR-Quality-01**: Automated coverage for core shell services and global shell state MUST reach
-  at least 80% statement coverage.
+  at least 80% statement, function, and line coverage, and at least 70% branch coverage.
 
 ### Acceptance Criteria
 
@@ -306,7 +306,7 @@ integration, and Electron smoke checks to confirm every requirement maps to an e
 | FR-Docking | AC-BottomPanel-01, DoD-06 | TS-06 Docking MVP | ✅ Implemented (T030, T031, T037) |
 | FR-Commands | AC-Toolbar-01, User Story 3 Scenario 1 | TS-07 Commands Unification | ✅ Implemented (T011, T038) |
 | FR-EventBus | User Story 3 Scenario 2, DoD-05 | TS-08 Event Bus Hardening | ✅ Implemented (T010, T039) |
-| FR-Preferences | User Story 2 Scenario 1, User Story 2 Scenario 2, DoD-04 | TS-09 Preferences and Workspace Persistence | ✅ Implemented (T026–T029) |
+| FR-Preferences | User Story 2 Scenario 1, User Story 2 Scenario 2, DoD-04 | TS-09 Preferences and Workspace Persistence | ✅ Implemented (T009, T024, T025, T026, T027, T028, T029, T030, T031) |
 | FR-Platform | AC-Sidebar-01, DoD-03 | TS-10 Platform Port Alignment | ✅ Implemented (T007, T022) |
 | FR-Accessibility | User Story 1 Scenario 3, AC-StatusBar-01 | TS-11 Accessibility Baseline | ✅ Implemented (T021, T044) |
 | FR-Security | User Story 2 Scenario 3, NFR-Security-01, NFR-Security-02, DoD-04 | TS-12 IPC and Preload Security | ✅ Implemented (T004–T006, T028, T034, T040) |
