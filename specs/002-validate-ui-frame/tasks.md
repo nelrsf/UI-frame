@@ -1,6 +1,6 @@
 # Tasks: UI Frame Shell OCP — ShellManager & Region Contracts
 
-**Branch**: `002-remediate-shell-v1` | **Date**: 2026-05-04
+**Branch**: `002-validate-ui-frame` | **Date**: 2026-05-04
 **Input**: `specs/002-validate-ui-frame/plan.md`, `spec.md`, `data-model.md`, `research.md`, `quickstart.md`, `contracts/`
 
 ## Format: `[ID] [P?] [Story?] Description with file path`
@@ -64,11 +64,11 @@
 
 > **US2 Goal**: The mock objects in `src/app/shell/mock-ui/` implement the region contracts and are registered via `ShellManager` at bootstrap, proving the contracts are sufficient to populate all four shell regions with visible content.
 >
-> Independent Test: `npx tsc --noEmit` zero errors. Running `npm start` shows: Dashboard tab, Reports tab, 4 toolbar buttons, 1 sidebar entry, 1 Results bottom panel — all rendered in the live shell without `MockUiScreenComponent`.
+> Independent Test: `npx tsc --noEmit` zero errors. Running `npm start` shows: Dashboard tab, Reports tab, 4 toolbar buttons, 2 sidebar entries (Navigation/Tools), and 3 bottom panels (Results/Logs/Warnings) — all rendered in the live shell without `MockUiScreenComponent`.
 
 - [X]  [P] [US2] Create `src/app/shell/mock-ui/components/mock-dashboard/mock-dashboard.component.ts` and `.html` — standalone Angular component that renders labeled fake KPI cards using `dashboard-cards.fixtures.ts` data
 - [X]  [P] [US2] Create `src/app/shell/mock-ui/components/mock-reports/mock-reports.component.ts` and `.html` — standalone Angular component that renders a labeled fake reports table using `report-rows.fixtures.ts` data
-- [X]  [US2] Create `src/app/shell/mock-ui/mock-registrations.ts` — single file exporting 8 typed contract constants: `MOCK_DASHBOARD_TAB: ICentralRegionTab` (component: `MockDashboardComponent`), `MOCK_REPORTS_TAB: ICentralRegionTab` (component: `MockReportsComponent`), `MOCK_ALERT_INFO: IToolbarAction`, `MOCK_ALERT_WARNING: IToolbarAction`, `MOCK_ALERT_ERROR: IToolbarAction`, `MOCK_ALERT_SUCCESS: IToolbarAction` (each handler calls `window.alert` with level + message for dev validation), `MOCK_SIDEBAR_ENTRY: ISidebarEntry`, `MOCK_RESULTS_PANEL: IBottomPanelEntry`
+- [X]  [US2] Create `src/app/shell/mock-ui/mock-registrations.ts` — single file exporting 11 typed contract constants: `MOCK_DASHBOARD_TAB: ICentralRegionTab` (component: `MockDashboardComponent`), `MOCK_REPORTS_TAB: ICentralRegionTab` (component: `MockReportsComponent`), `MOCK_ALERT_INFO: IToolbarAction`, `MOCK_ALERT_WARNING: IToolbarAction`, `MOCK_ALERT_ERROR: IToolbarAction`, `MOCK_ALERT_SUCCESS: IToolbarAction` (each handler calls `window.alert` with level + message for dev validation), `MOCK_NAV_SIDEBAR_ENTRY: ISidebarEntry`, `MOCK_TOOLS_SIDEBAR_ENTRY: ISidebarEntry`, `MOCK_RESULTS_PANEL: IBottomPanelEntry`, `MOCK_LOGS_PANEL: IBottomPanelEntry`, `MOCK_WARNINGS_PANEL: IBottomPanelEntry`
 - [X]  [US2] Create `src/app/shell/mock-ui/mock-content.initializer.ts` — export `registerMockContent(shell: ShellManager): void` that calls `shell.addTab`, `shell.addSidebarEntry`, `shell.addToolbarAction` (×4 alerts), `shell.addBottomPanelEntry` using constants from `mock-registrations.ts`
 - [X]  [US2] Update `src/app/app.config.ts` — add `APP_INITIALIZER` provider after `provideState('shellContent', ...)` that injects `ShellManager` and invokes `registerMockContent(shell)`
 

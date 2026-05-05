@@ -1,6 +1,6 @@
 # Implementation Plan: UI Frame Shell OCP — ShellManager & Region Contracts
 
-**Branch**: `002-remediate-shell-v1` | **Date**: 2026-05-04 | **Spec**: [spec.md](spec.md)
+**Branch**: `002-validate-ui-frame` | **Date**: 2026-05-04 | **Spec**: [spec.md](spec.md)
 **Input**: Feature specification from `specs/002-validate-ui-frame/spec.md`
 
 ---
@@ -32,7 +32,7 @@ its `AppComponent` toggle are deleted.
 | **Project Type** | Desktop shell application |
 | **Performance Goals** | No new performance budgets; existing NFR-Perf-01 (<100ms sidebar interaction) unchanged |
 | **Constraints** | Shell components and `ShellComponent` must not import domain/mock types directly |
-| **Scale/Scope** | 4 new contract interfaces, 1 new service, 1 new NgRx slice, 5 mock implementations, ~6 file deletions/reverts |
+| **Scale/Scope** | 4 new contract interfaces, 1 new service, 1 new NgRx slice, 11 mock registrations (2 tabs, 4 toolbar actions, 2 sidebar entries, 3 bottom-panel entries), ~6 file deletions/reverts |
 
 ---
 
@@ -156,7 +156,7 @@ Resolved unknowns documented in [research.md](research.md):
 
 Artifacts generated:
 
-- **[data-model.md](data-model.md)**: All entities — 4 contract interfaces, `ShellTab` internal type, `shellContent` slice shape, ShellManager API, 5 mock implementations, entities to delete.
+- **[data-model.md](data-model.md)**: All entities — 4 contract interfaces, `ShellTab` internal type, `shellContent` slice shape, ShellManager API, 11 mock registrations, entities to delete.
 - **[contracts/](contracts/)**: TypeScript interface specifications for all 4 region contracts + barrel.
 - **[quickstart.md](quickstart.md)**: ShellManager usage guide with examples for weather, stocks, and reports domains.
 
@@ -205,8 +205,8 @@ When generating tasks, the task agent MUST produce work in this dependency order
 8. **Refactor mock models to implement contracts** (depends on: contracts + mock components):
    - Create `MockDashboardTab`, `MockReportsTab` objects implementing `ICentralRegionTab`
    - Create `MockAlertAction` ×4 implementing `IToolbarAction`
-   - Create `MockSidebarEntry` object implementing `ISidebarEntry`
-   - Create `MockResultsPanel` object implementing `IBottomPanelEntry`
+   - Create `MockSidebarEntry` ×2 (Navigation, Tools) implementing `ISidebarEntry`
+   - Create `MockBottomPanelEntry` ×3 (Results, Logs, Warnings) implementing `IBottomPanelEntry`
 
 9. **Create initializer** (depends on: ShellManager + all mocks):
    - `src/app/shell/mock-ui/mock-content.initializer.ts`

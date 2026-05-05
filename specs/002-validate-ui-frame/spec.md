@@ -1,6 +1,6 @@
 # Feature Specification: UI Frame Shell OCP — ShellManager & Region Contracts
 
-**Feature Branch**: `002-remediate-shell-v1`
+**Feature Branch**: `002-validate-ui-frame`
 **Created**: 2026-05-04
 **Revised**: 2026-05-04
 **Status**: Active
@@ -109,8 +109,8 @@ Como miembro del equipo incorporando una nueva funcionalidad al UI Frame (p.ej. 
 - **FR-003**: El sistema MUST definir la interfaz `ISidebarEntry` con al menos los campos: `id: string`, `label: string`, `icon: string`, `tooltip?: string`.
 - **FR-004**: El sistema MUST definir la interfaz `IToolbarAction` con al menos los campos: `id: string`, `label: string`, `icon: string`, `handler: () => void`, `tooltip?: string`. `ShellManager` MUST registrar automáticamente el `handler` en `CommandRegistry` con `commandId = 'shell.action.' + id` al procesar cada `IToolbarAction`, sin requerir que el consumidor de dominio conozca `CommandRegistry`.
 - **FR-005**: El sistema MUST definir la interfaz `IBottomPanelEntry` con al menos los campos: `id: string`, `label: string`, `icon?: string`.
-- **FR-006**: `ShellManager` MUST traducir cada contrato de región al DTO interno del shell correspondiente (`TabItem`, `SidebarItem`, `ToolbarAction`, `PanelTab`) y MUST despachar las NgRx actions correspondientes en los slices existentes del store (`layout`, `workspace`, o el slice pertinente) sin exponer esos DTOs ni las actions a los consumidores de dominio.
-- **FR-007**: El código fuente bajo `src/app/shell/components/` y `src/app/shell/shell.component.ts` NO MUST referenciar ninguna clase concreta de dominio ni de mock; solo puede conocer sus propios DTOs internos.
+- **FR-006**: `ShellManager` MUST traducir cada contrato de región al DTO interno del shell correspondiente (`TabItem`, `SidebarItem`, `ToolbarAction`, `PanelTab`) y MUST despachar las NgRx actions correspondientes en el slice pertinente del store. Para esta feature, el slice canónico es `shellContent`, sin exponer esos DTOs ni las actions a los consumidores de dominio.
+- **FR-007**: El código fuente bajo `src/app/shell/components/` y `src/app/shell/shell.component.ts` MUST NOT referenciar ninguna clase concreta de dominio ni de mock; solo puede conocer sus propios DTOs internos.
 - **FR-008**: Los componentes mock existentes en `src/app/shell/mock-ui/` MUST ser refactorizados para implementar los contratos de región (`ICentralRegionTab`, `IToolbarAction`, `IBottomPanelEntry`, `ISidebarEntry`) y registrarse en el shell a través de `ShellManager` mediante un `APP_INITIALIZER` declarado en `app.config.ts`, que se ejecuta antes del primer render.
 - **FR-009**: El `MockUiScreenComponent` (pantalla mock separada) MUST ser eliminado; la validación de la UI mock MUST realizarse registrando los mocks directamente en el shell productivo via `ShellManager`.
 - **FR-010**: Los contratos de región MUST residir en `src/app/shell/contracts/` como archivos TypeScript independientes de cualquier implementación.
@@ -136,9 +136,16 @@ Como miembro del equipo incorporando una nueva funcionalidad al UI Frame (p.ej. 
 ### Measurable Outcomes
 
 - **SC-001**: Un desarrollador puede agregar un nuevo `ICentralRegionTab` al shell llamando únicamente a `shellManager.addTab(myTab)` — cero archivos bajo `src/app/shell/components/` o `src/app/shell/shell.component.ts` modificados para ese fin.
-- **SC-002**: Los cinco mock registrados (MockDashboardTab, MockReportsTab, 4 MockAlertActions, MockSidebarEntry, MockResultsPanel) se visualizan correctamente en el shell productivo en una misma sesión sin dependencias externas.
+- **SC-002**: Los 11 mocks registrados (MockDashboardTab, MockReportsTab, 4 MockAlertActions, 2 MockSidebarEntries: Navigation/Tools, y 3 MockBottomPanelEntries: Results/Logs/Warnings) se visualizan correctamente en el shell productivo en una misma sesión sin dependencias externas.
 - **SC-003**: `npx tsc --noEmit` no reporta ningún error de contrato en los archivos bajo `src/app/shell/contracts/` ni en las implementaciones mock.
 - **SC-004**: Un desarrollador nuevo puede seguir el quickstart y registrar un nuevo `ICentralRegionTab` con un componente propio en menos de 15 minutos.
+
+	**Protocolo de medición SC-004**:
+	1. Persona evaluada: desarrollador que no haya contribuido en `src/app/shell/` durante esta feature.
+	2. Inicio de medición: apertura de `quickstart.md`.
+	3. Fin de medición: primer render exitoso del tab nuevo visible en el shell.
+	4. Evidencia mínima: comando ejecutado (`npm start`) + captura del shell mostrando el tab.
+	5. Umbral de aceptación: tiempo total <= 15 minutos en al menos 2 de 3 intentos.
 
 ---
 
