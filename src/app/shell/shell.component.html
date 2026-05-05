@@ -3,11 +3,13 @@
   data-testid="shell-root"
   role="application"
   aria-label="Application shell"
-  [style.--shell-sidebar-width]="((sidebarWidth$ | async) ?? 240) + 'px'"
+  [style.--shell-sidebar-width]="shellSidebarColumnWidth$ | async"
   [style.--shell-secondary-panel-width]="((secondaryPanelVisible$ | async) ? ((secondaryPanelWidth$ | async) ?? 300) : 0) + 'px'"
+  [style.--shell-bottom-panel-height]="((bottomPanelVisible$ | async) ? ((bottomPanelHeight$ | async) ?? 220) : 0) + 'px'"
 >
   <app-sidebar
     class="shell-sidebar"
+    [items]="(sidebarItems$ | async) ?? []"
     [collapsed]="!(sidebarVisible$ | async)"
     [activeItemId]="activeSidebarItem$ | async"
     (collapsedChange)="onSidebarCollapsedChange($event)"
@@ -15,9 +17,18 @@
   ></app-sidebar>
 
   <div class="shell-workspace" role="region" aria-label="Workspace">
-    <app-toolbar class="shell-toolbar"></app-toolbar>
-    <app-tab-bar class="shell-tabbar"></app-tab-bar>
-    <app-content-area class="shell-content-area"></app-content-area>
+    <app-toolbar class="shell-toolbar" [actions]="(toolbarActions$ | async) ?? []"></app-toolbar>
+    <app-tab-bar
+      class="shell-tabbar"
+      [tabs]="(shellTabs$ | async) ?? []"
+      [activeTabId]="(activeShellTabId$ | async) ?? ''"
+      (tabSelected)="onShellTabSelected($event)"
+    ></app-tab-bar>
+    <app-content-area
+      class="shell-content-area"
+      [activeTab]="activeShellTab$ | async"
+      [componentType]="activeShellComponentType$ | async"
+    ></app-content-area>
     <app-secondary-panel
       class="shell-secondary-panel"
       [visible]="(secondaryPanelVisible$ | async) ?? false"
@@ -29,8 +40,11 @@
       class="shell-bottom-panel"
       [visible]="(bottomPanelVisible$ | async) ?? false"
       [height]="(bottomPanelHeight$ | async) ?? 220"
+      [panels]="(bottomPanelTabs$ | async) ?? []"
+      [activePanelId]="activeBottomPanelId"
       (visibilityChange)="onBottomPanelVisibilityChange($event)"
       (heightChange)="onBottomPanelHeightChange($event)"
+      (activePanelChange)="onBottomPanelActivePanelChange($event)"
     ></app-bottom-panel>
   </div>
 

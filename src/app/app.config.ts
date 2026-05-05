@@ -1,11 +1,19 @@
-import { ApplicationConfig } from '@angular/core';
+import { APP_INITIALIZER, ApplicationConfig } from '@angular/core';
 import { provideStore, provideState } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
+import { provideStoreDevtools } from '@ngrx/store-devtools';
 import { sessionReducer } from './core/state/session';
 import { layoutReducer } from './core/state/layout';
 import { uiContextReducer } from './core/state/ui-context';
 import { preferencesReducer, PreferencesEffects } from './core/state/preferences';
 import { workspaceReducer } from './core/state/workspace';
+import { shellContentReducer } from './core/state/shell-content';
+import { ShellManager } from './shell/shell-manager.service';
+import { registerMockContent } from './shell/mock-ui/mock-content.initializer';
+
+function initializeShellContent(shell: ShellManager): () => void {
+  return () => registerMockContent(shell);
+}
 
 /**
  * Root application configuration for the Shell v1 Angular bootstrap.
@@ -23,12 +31,36 @@ import { workspaceReducer } from './core/state/workspace';
  */
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideStore({}),
+    // shellContent stores Angular component types (Type<unknown>) for dynamic rendering.
+    // NgRx dev runtime freeze checks make these constructors non-extensible and break NgComponentOutlet.
+    provideStore({}, {
+      runtimeChecks: {
+        strictStateImmutability: false,
+        strictActionImmutability: false,
+        strictStateSerializability: false,
+        strictActionSerializability: false,
+      },
+    }),
     provideState('session', sessionReducer),
     provideState('layout', layoutReducer),
     provideState('uiContext', uiContextReducer),
     provideState('preferences', preferencesReducer),
     provideState('workspace', workspaceReducer),
+    provideState('shellContent', shellContentReducer),
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initializeShellContent,
+      deps: [ShellManager],
+      multi: true,
+    },
     provideEffects([PreferencesEffects]),
+    provideStoreDevtools({
+      maxAge: 50,
+      logOnly: false,
+      autoPause: true,
+      trace: true,
+      traceLimit: 25,
+      name: 'UI Frame Store',
+    }),
   ],
 };

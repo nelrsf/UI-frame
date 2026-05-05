@@ -1,0 +1,21 @@
+<section aria-label="Mock Dashboard" style="padding: var(--spacing-4); font-family: var(--font-family-ui); color: var(--color-text-primary);">
+  <h2 style="margin: 0 0 var(--spacing-4) 0; font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); color: var(--color-text-primary);">Mock Dashboard</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:var(--spacing-3);">
+    <article *ngFor="let card of cards"
+      style="background: var(--color-bg-elevated);
+             border: 1px solid var(--color-border-default);
+             border-radius: var(--radius-lg);
+             padding: var(--spacing-3) var(--spacing-4);
+             transition: border-color var(--transition-fast);">
+      <p style="margin: 0 0 var(--spacing-1) 0;
+                font-size: var(--font-size-sm);
+                color: var(--color-text-secondary);
+                text-transform: uppercase;
+                letter-spacing: 0.04em;">{{ card.title }}</p>
+      <strong style="display:block; font-size: 22px; font-weight: var(--font-weight-semibold); color: var(--color-text-primary); line-height: var(--line-height-tight);">{{ card.value }}</strong>
+      <p style="margin: var(--spacing-2) 0 0 0;
+                font-size: var(--font-size-sm);
+                color: var(--color-text-secondary);">Trend: {{ card.trend || 'stable' }}</p>
+    </article>
+  </div>
+</section>

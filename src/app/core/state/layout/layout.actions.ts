@@ -51,6 +51,30 @@ export const setSecondaryPanelWidth = createAction(
 );
 
 /**
+ * Sets the sidebar content-panel visibility directly to the given boolean value.
+ */
+export const setSidebarVisible = createAction(
+  '[Layout] Set Sidebar Visible',
+  props<{ visible: boolean }>()
+);
+
+/**
+ * Sets the bottom-panel visibility directly to the given boolean value.
+ */
+export const setBottomPanelVisible = createAction(
+  '[Layout] Set Bottom Panel Visible',
+  props<{ visible: boolean }>()
+);
+
+/**
+ * Sets the secondary panel visibility directly to the given boolean value.
+ */
+export const setSecondaryPanelVisible = createAction(
+  '[Layout] Set Secondary Panel Visible',
+  props<{ visible: boolean }>()
+);
+
+/**
  * Restores the full layout state from a persisted workspace session.
  * All dimension values are clamped to their configured min/max bounds.
  * Dispatched once during shell initialisation when a valid session is found.

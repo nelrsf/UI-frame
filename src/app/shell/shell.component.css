@@ -60,7 +60,7 @@
   display: flex;
   flex-direction: row;
   overflow: hidden;
-  min-width: var(--shell-sidebar-min-width);
+  min-width: var(--shell-activity-bar-width);
   max-width: var(--shell-sidebar-max-width);
 }
 
@@ -96,7 +96,7 @@
     var(--shell-toolbar-height)
     var(--shell-tabbar-height)
     1fr
-    0px; /* bottom panel colapsado por defecto */
+    var(--shell-bottom-panel-height, 0px);
   grid-template-columns: 1fr var(--shell-secondary-panel-width, 0px);
   overflow: hidden;
   min-width: 0;

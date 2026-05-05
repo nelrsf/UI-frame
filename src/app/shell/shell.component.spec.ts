@@ -177,5 +177,24 @@ describe('ShellComponent', () => {
 
       expect(emitSpy).toHaveBeenCalledWith('bottomPanel.resized.v1', { height: 350 }, 'ShellComponent');
     }));
+
+    it('should update the active bottom panel id when a panel tab is selected', () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+
+      fixture.componentInstance.onBottomPanelActivePanelChange('mock-logs');
+
+      expect(fixture.componentInstance.activeBottomPanelId).toBe('mock-logs');
+    });
+  });
+
+  it('should default the active bottom panel id to the first available panel', () => {
+    const fixture = TestBed.createComponent(ShellComponent);
+    fixture.componentInstance.activeBottomPanelId = '';
+
+    (fixture.componentInstance as unknown as {
+      syncActiveBottomPanel: (panels: Array<{ id: string }>) => void;
+    }).syncActiveBottomPanel([{ id: 'mock-results' }, { id: 'mock-logs' }]);
+
+    expect(fixture.componentInstance.activeBottomPanelId).toBe('mock-results');
   });
 });

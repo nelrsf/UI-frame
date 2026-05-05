@@ -1,7 +1,8 @@
-import { Component, OnInit, AfterViewInit, HostBinding, inject, ChangeDetectionStrategy, NgZone } from '@angular/core';
+import { Component, OnInit, AfterViewInit, HostBinding, inject, ChangeDetectionStrategy, NgZone, DestroyRef } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
+import { combineLatest, map, Observable } from 'rxjs';
 import { StatusBarComponent } from './components/status-bar/status-bar.component';
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { ContentAreaComponent } from './components/content-area/content-area.component';
@@ -33,6 +34,16 @@ import {
   selectSecondaryPanelVisible,
   selectSecondaryPanelWidth,
 } from '../core/state/layout/layout.selectors';
+import {
+  selectActiveShellComponentType,
+  selectActiveShellTabId,
+  selectShellBottomPanelTabs,
+  selectShellSidebarItems,
+  selectShellTabs,
+  selectShellToolbarActions,
+  setActiveShellTab,
+} from '../core/state/shell-content';
+import { TabItem } from './models/tab-item.model';
 
 @Component({
   selector: 'app-shell',
@@ -57,6 +68,7 @@ export class ShellComponent implements OnInit, AfterViewInit {
   private readonly store = inject(Store);
   private readonly sessionService = inject(WorkspaceSessionService);
   private readonly zone = inject(NgZone);
+  private readonly destroyRef = inject(DestroyRef);
 
   // rAF throttle state for bottom-panel resize (NFR-Perf-03)
   private _rafBottomPending = false;
@@ -65,6 +77,8 @@ export class ShellComponent implements OnInit, AfterViewInit {
   // rAF throttle state for secondary-panel resize (NFR-Perf-03)
   private _rafSecondaryPending = false;
   private _pendingSecondaryWidth: number | null = null;
+
+  activeBottomPanelId = '';
 
   /** Observable of the sidebar visibility flag from the layout state. */
   readonly sidebarVisible$: Observable<boolean> = this.store.select(selectSidebarVisible);
@@ -80,6 +94,40 @@ export class ShellComponent implements OnInit, AfterViewInit {
   readonly secondaryPanelVisible$: Observable<boolean> = this.store.select(selectSecondaryPanelVisible);
   /** Observable of the secondary panel width in pixels from the layout state. */
   readonly secondaryPanelWidth$: Observable<number> = this.store.select(selectSecondaryPanelWidth);
+  /** Observable of registered sidebar entries from shellContent. */
+  readonly sidebarItems$ = this.store.select(selectShellSidebarItems);
+  /** Observable of registered toolbar actions from shellContent. */
+  readonly toolbarActions$ = this.store.select(selectShellToolbarActions);
+  /** Observable of registered shell tabs from shellContent. */
+  readonly shellTabs$ = this.store.select(selectShellTabs);
+  /** Observable of active shell tab id. */
+  readonly activeShellTabId$ = this.store.select(selectActiveShellTabId);
+  /** Observable of active shell tab component type for dynamic rendering. */
+  readonly activeShellComponentType$ = this.store.select(selectActiveShellComponentType);
+  /** Observable of registered bottom panel tabs. */
+  readonly bottomPanelTabs$ = this.store.select(selectShellBottomPanelTabs);
+  /** Derived observable for the active tab metadata consumed by ContentArea. */
+  readonly activeShellTab$: Observable<TabItem | null> = combineLatest([
+    this.shellTabs$,
+    this.activeShellTabId$,
+  ]).pipe(
+    map(([tabs, activeId]) => tabs.find((tab) => tab.id === activeId) ?? null)
+  );
+
+  /**
+   * Derives the CSS value for --shell-sidebar-width used by the grid column.
+   * When the sidebar panel is collapsed the column shrinks to the activity-bar
+   * width so the workspace region expands to fill the freed space.
+   * Presentation-only derivation — must not live in the layout store slice.
+   */
+  readonly shellSidebarColumnWidth$ = combineLatest([
+    this.sidebarVisible$,
+    this.sidebarWidth$,
+  ]).pipe(
+    map(([visible, width]) =>
+      visible ? `${width ?? 240}px` : 'var(--shell-activity-bar-width)'
+    )
+  );
 
   /**
    * Adds a platform-specific CSS class to the host element so that
@@ -94,6 +142,10 @@ export class ShellComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
+    this.bottomPanelTabs$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((panels) => this.syncActiveBottomPanel(panels));
+
     // Attempt to restore the persisted workspace session for the default workspace.
     // Valid dimension and visibility values are dispatched as a layout restoration;
     // absent or corrupt sessions fall back to the reducer's safe defaults.
@@ -147,6 +199,10 @@ export class ShellComponent implements OnInit, AfterViewInit {
     this.store.dispatch(setActiveSidebarItem({ itemId }));
   }
 
+  onShellTabSelected(tabId: string): void {
+    this.store.dispatch(setActiveShellTab({ id: tabId }));
+  }
+
   onBottomPanelVisibilityChange(_visible: boolean): void {
     performance.mark('shell.bottom-panel.toggle.start');
     this.store.dispatch(toggleBottomPanel());
@@ -171,6 +227,22 @@ export class ShellComponent implements OnInit, AfterViewInit {
         this.eventBus.emit('bottomPanel.resized.v1', { height: h }, 'ShellComponent');
         this._markEnd('shell.bottom-panel.resize');
       }, 0);
+    }
+  }
+
+  onBottomPanelActivePanelChange(panelId: string): void {
+    this.activeBottomPanelId = panelId;
+  }
+
+  private syncActiveBottomPanel(panels: Array<{ id: string }>): void {
+    if (panels.length === 0) {
+      this.activeBottomPanelId = '';
+      return;
+    }
+
+    const hasActivePanel = panels.some((panel) => panel.id === this.activeBottomPanelId);
+    if (!hasActivePanel) {
+      this.activeBottomPanelId = panels[0].id;
     }
   }
 

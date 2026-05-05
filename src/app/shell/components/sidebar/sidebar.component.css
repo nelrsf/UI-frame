@@ -46,6 +46,42 @@
   font-size: var(--font-size-sm, 12px);
 }
 
+.sidebar__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2, 8px);
+  height: 100%;
+}
+
+.sidebar__section-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2, 8px);
+}
+
+.sidebar__section-icon {
+  font-size: var(--font-size-lg, 16px);
+}
+
+.sidebar__section-title {
+  margin: 0;
+  color: var(--color-text-primary, #cccccc);
+  font-size: var(--font-size-md, 14px);
+  font-weight: 600;
+}
+
+.sidebar__component-container {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar__empty {
+  margin: 0;
+  color: var(--color-text-secondary, #a9a9a9);
+}
+
 /* Width constraints for the entire sidebar */
 :host {
   min-width: var(--shell-activity-bar-width, 48px);

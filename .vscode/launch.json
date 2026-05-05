@@ -3,18 +3,80 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "ng serve",
+      // Abre la app Angular en Chrome con HMR desde ng serve.
+      // Angular 19 usa esbuild: los source maps referencian rutas con prefijo /_/
+      "name": "Debug: Angular en Chrome",
       "type": "chrome",
       "request": "launch",
-      "preLaunchTask": "npm: start",
-      "url": "http://localhost:4200/"
+      "preLaunchTask": "Serve: Angular",
+      "url": "http://localhost:4200/",
+      "webRoot": "${workspaceFolder}",
+      "pauseForSourceMap": true,
+      "sourceMapPathOverrides": {
+        "/_/*": "${workspaceFolder}/*",
+        "/src/*": "${workspaceFolder}/src/*",
+        "/*": "${workspaceFolder}/*"
+      }
     },
     {
-      "name": "ng test",
+      // Depura los tests de Karma en Chrome.
+      "name": "Debug: Karma Tests",
       "type": "chrome",
       "request": "launch",
       "preLaunchTask": "npm: test",
-      "url": "http://localhost:9876/debug.html"
+      "url": "http://localhost:9876/debug.html",
+      "webRoot": "${workspaceFolder}",
+      "pauseForSourceMap": true,
+      "sourceMapPathOverrides": {
+        "/_/*": "${workspaceFolder}/*",
+        "/src/*": "${workspaceFolder}/src/*",
+        "/*": "${workspaceFolder}/*"
+      }
+    },
+    {
+      // Depura el proceso principal de Electron (Node.js) con source maps
+      // Requiere que 'ng serve' esté corriendo (preLaunchTask lo inicia)
+      // y que el TypeScript de Electron esté compilado: npm run build:electron
+      "name": "Debug: Electron Main",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron.cmd",
+      "args": [".", "--inspect=9229", "--remote-debugging-port=9222"],
+      "env": {
+        "ELECTRON_ENV": "development"
+      },
+      "preLaunchTask": "Serve: Angular",
+      "outputCapture": "std",
+      "sourceMaps": true,
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/dist-electron/**",
+        "!**/node_modules/**"
+      ]
+    },
+    {
+      // Adjunta el depurador de Chrome al renderer de Electron
+      // Usar junto con 'Debug: Electron Main' (o mediante el compound)
+      "name": "Debug: Electron Renderer",
+      "type": "chrome",
+      "request": "attach",
+      "port": 9222,
+      "webRoot": "${workspaceFolder}",
+      "timeout": 30000,
+      "pauseForSourceMap": true,
+      "sourceMapPathOverrides": {
+        "/_/*": "${workspaceFolder}/*",
+        "/src/*": "${workspaceFolder}/src/*",
+        "/*": "${workspaceFolder}/*"
+      }
+    }
+  ],
+  "compounds": [
+    {
+      // Lanza Electron con depuración del proceso principal Y del renderer simultáneamente
+      "name": "Debug: Electron (Main + Renderer)",
+      "configurations": ["Debug: Electron Main", "Debug: Electron Renderer"],
+      "stopAll": true
     }
   ]
 }

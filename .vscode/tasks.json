@@ -3,6 +3,9 @@
   "version": "2.0.0",
   "tasks": [
     {
+      // Tarea de fondo usada por las configuraciones de depuración de Chrome y Electron.
+      // Espera el mensaje de Angular CLI que confirma que el servidor está listo.
+      "label": "Serve: Angular",
       "type": "npm",
       "script": "start",
       "isBackground": true,
@@ -15,12 +18,21 @@
             "regexp": "(.*?)"
           },
           "endsPattern": {
-            "regexp": "bundle generation complete"
+            "regexp": "Application bundle generation complete|bundle generation complete|Compiled successfully"
           }
         }
       }
     },
     {
+      // Compila el TypeScript del proceso principal de Electron a dist-electron/
+      "label": "Build: Electron TS",
+      "type": "npm",
+      "script": "build:electron",
+      "group": "build",
+      "problemMatcher": "$tsc"
+    },
+    {
+      // Usado internamente por las configuraciones de launch para npm test
       "type": "npm",
       "script": "test",
       "isBackground": true,
@@ -33,7 +45,7 @@
             "regexp": "(.*?)"
           },
           "endsPattern": {
-            "regexp": "bundle generation complete"
+            "regexp": "bundle generation complete|Compiled successfully"
           }
         }
       }

@@ -249,6 +249,14 @@ This is the complete release gate for Shell v1. It runs `validate` (coverage thr
 npm test
 ```
 
+## Mock UI Validation
+
+The repository ships a dedicated **Mock UI screen** to validate the UI Frame's visual layout (sidebar, toolbar alerts, bottom panel, and two tabs) without any production logic or external dependencies.
+
+For a complete guide on how to activate the mock screen, extend it with new fixtures, and safely remove it when no longer needed, see [specs/002-validate-ui-frame/quickstart.md](specs/002-validate-ui-frame/quickstart.md).
+
+---
+
 ## Project structure
 
 ```
