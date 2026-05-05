@@ -1,20 +1,20 @@
-<section aria-label="Mock Reports">
-  <h2>Mock Reports</h2>
-  <table style="width:100%;border-collapse:collapse;">
+<section aria-label="Mock Reports" style="padding: var(--spacing-4); font-family: var(--font-family-ui); color: var(--color-text-primary);">
+  <h2 style="margin: 0 0 var(--spacing-4) 0; font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); color: var(--color-text-primary);">Mock Reports</h2>
+  <table style="width:100%; border-collapse:collapse; font-size: var(--font-size-base);">
     <thead>
-      <tr>
-        <th style="text-align:left;border-bottom:1px solid #d0d7de;padding:8px;">Report</th>
-        <th style="text-align:left;border-bottom:1px solid #d0d7de;padding:8px;">Owner</th>
-        <th style="text-align:left;border-bottom:1px solid #d0d7de;padding:8px;">Last Run</th>
-        <th style="text-align:left;border-bottom:1px solid #d0d7de;padding:8px;">State</th>
+      <tr style="background: var(--color-bg-elevated);">
+        <th style="text-align:left; border-bottom: 1px solid var(--color-border-default); padding: var(--spacing-2) var(--spacing-3); font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.04em;">Report</th>
+        <th style="text-align:left; border-bottom: 1px solid var(--color-border-default); padding: var(--spacing-2) var(--spacing-3); font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.04em;">Owner</th>
+        <th style="text-align:left; border-bottom: 1px solid var(--color-border-default); padding: var(--spacing-2) var(--spacing-3); font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.04em;">Last Run</th>
+        <th style="text-align:left; border-bottom: 1px solid var(--color-border-default); padding: var(--spacing-2) var(--spacing-3); font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.04em;">State</th>
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let row of rows">
-        <td style="padding:8px;border-bottom:1px solid #f0f2f4;">{{ row.reportName }}</td>
-        <td style="padding:8px;border-bottom:1px solid #f0f2f4;">{{ row.owner }}</td>
-        <td style="padding:8px;border-bottom:1px solid #f0f2f4;">{{ row.lastRun ? (row.lastRun | date:'short') : 'N/A' }}</td>
-        <td style="padding:8px;border-bottom:1px solid #f0f2f4;">{{ row.state }}</td>
+      <tr *ngFor="let row of rows" style="transition: background var(--transition-fast);">
+        <td style="padding: var(--spacing-2) var(--spacing-3); border-bottom: 1px solid var(--color-border-subtle); color: var(--color-text-primary);">{{ row.reportName }}</td>
+        <td style="padding: var(--spacing-2) var(--spacing-3); border-bottom: 1px solid var(--color-border-subtle); color: var(--color-text-secondary);">{{ row.owner }}</td>
+        <td style="padding: var(--spacing-2) var(--spacing-3); border-bottom: 1px solid var(--color-border-subtle); color: var(--color-text-secondary); font-family: var(--font-family-mono); font-size: var(--font-size-sm);">{{ row.lastRun ? (row.lastRun | date:'short') : 'N/A' }}</td>
+        <td style="padding: var(--spacing-2) var(--spacing-3); border-bottom: 1px solid var(--color-border-subtle);">{{ row.state }}</td>
       </tr>
     </tbody>
   </table>
