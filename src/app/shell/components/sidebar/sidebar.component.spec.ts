@@ -65,6 +65,56 @@ describe('SidebarComponent', () => {
     expect(activityBarElement).not.toBeNull();
   });
 
+  it('should render active sidebar item content in panel', () => {
+    component.items = [
+      {
+        id: 'explorer',
+        icon: '📁',
+        label: 'Explorer',
+        tooltip: 'Explorer section',
+        position: 'top',
+      },
+      {
+        id: 'search',
+        icon: '🔎',
+        label: 'Search',
+        tooltip: 'Search section',
+        position: 'top',
+      },
+    ];
+    component.activeItemId = 'search';
+    component.collapsed = false;
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const section = compiled.querySelector('[data-testid="sidebar-content-search"]');
+
+    expect(section).not.toBeNull();
+    expect(section?.textContent).toContain('Search');
+    expect(section?.textContent).toContain('Search section');
+  });
+
+  it('should render first item content when active item is missing', () => {
+    component.items = [
+      {
+        id: 'explorer',
+        icon: '📁',
+        label: 'Explorer',
+        tooltip: 'Explorer section',
+        position: 'top',
+      },
+    ];
+    component.activeItemId = 'missing';
+    component.collapsed = false;
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const section = compiled.querySelector('[data-testid="sidebar-content-explorer"]');
+
+    expect(section).not.toBeNull();
+    expect(section?.textContent).toContain('Explorer');
+  });
+
   it('should emit activeItemChange when item is clicked', () => {
     const item: SidebarItem = {
       id: 'explorer',

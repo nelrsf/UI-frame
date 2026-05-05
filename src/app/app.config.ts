@@ -1,6 +1,7 @@
 import { APP_INITIALIZER, ApplicationConfig } from '@angular/core';
 import { provideStore, provideState } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
+import { provideStoreDevtools } from '@ngrx/store-devtools';
 import { sessionReducer } from './core/state/session';
 import { layoutReducer } from './core/state/layout';
 import { uiContextReducer } from './core/state/ui-context';
@@ -53,5 +54,13 @@ export const appConfig: ApplicationConfig = {
       multi: true,
     },
     provideEffects([PreferencesEffects]),
+    provideStoreDevtools({
+      maxAge: 50,
+      logOnly: false,
+      autoPause: true,
+      trace: true,
+      traceLimit: 25,
+      name: 'UI Frame Store',
+    }),
   ],
 };

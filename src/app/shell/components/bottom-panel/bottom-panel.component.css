@@ -134,4 +134,22 @@
   overflow: auto;
   min-height: 0;
   padding: var(--spacing-2, 8px);
+  display: flex;
+  flex-direction: column;
+}
+
+.bottom-panel__component-container {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.bottom-panel__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  color: var(--color-text-secondary, #858585);
+  font-size: var(--font-size-sm, 13px);
 }

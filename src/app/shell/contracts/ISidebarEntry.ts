@@ -1,3 +1,5 @@
+import { Type } from '@angular/core';
+
 /**
  * Public contract for registering an entry in the shell's activity sidebar.
  *
@@ -11,6 +13,7 @@
  *   id: 'reports-nav',
  *   label: 'Reports',
  *   icon: 'description',
+ *   component: MyReportsSidebarComponent,
  *   tooltip: 'Open Reports module',
  * };
  * shellManager.addSidebarEntry(reportsEntry);
@@ -25,6 +28,11 @@ export interface ISidebarEntry {
    * Required because the sidebar activity bar is icon-first.
    */
   readonly icon: string;
+  /**
+   * Standalone Angular component rendered when this sidebar entry is active.
+   * Must be a standalone component (no NgModule required).
+   */
+  readonly component: Type<unknown>;
   /** Optional tooltip shown on hover or keyboard focus. */
   readonly tooltip?: string;
 }

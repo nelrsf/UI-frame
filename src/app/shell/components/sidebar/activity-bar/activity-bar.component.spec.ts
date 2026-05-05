@@ -1,6 +1,15 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Component } from '@angular/core';
 import { ActivityBarComponent } from './activity-bar.component';
 import { SidebarItem } from '../../../models/sidebar-item.model';
+
+// Dummy component for testing
+@Component({
+  selector: 'app-dummy',
+  standalone: true,
+  template: '<div>Dummy</div>',
+})
+class DummyComponent {}
 
 describe('ActivityBarComponent', () => {
   let component: ActivityBarComponent;
@@ -32,6 +41,7 @@ describe('ActivityBarComponent', () => {
       label: 'Explorer',
       tooltip: 'Explorer',
       position: 'top',
+      component: DummyComponent,
     };
     component.items = [topItem];
     fixture.detectChanges();
@@ -49,6 +59,7 @@ describe('ActivityBarComponent', () => {
       label: 'Settings',
       tooltip: 'Settings',
       position: 'bottom',
+      component: DummyComponent,
     };
     component.items = [bottomItem];
     fixture.detectChanges();
@@ -65,6 +76,7 @@ describe('ActivityBarComponent', () => {
       label: 'Explorer',
       tooltip: 'Explorer',
       position: 'top',
+      component: DummyComponent,
     };
     component.items = [item];
     component.activeItemId = 'explorer';
@@ -82,6 +94,7 @@ describe('ActivityBarComponent', () => {
       label: 'Explorer',
       tooltip: 'Explorer',
       position: 'top',
+      component: DummyComponent,
     };
     component.items = [item];
     fixture.detectChanges();
@@ -103,6 +116,7 @@ describe('ActivityBarComponent', () => {
       tooltip: 'Notifications',
       position: 'top',
       badge: 5,
+      component: DummyComponent,
     };
     component.items = [item];
     fixture.detectChanges();
@@ -120,6 +134,7 @@ describe('ActivityBarComponent', () => {
       label: 'Explorer',
       tooltip: 'Explorer',
       position: 'top',
+      component: DummyComponent,
     };
     component.items = [item];
     component.activeItemId = 'explorer';

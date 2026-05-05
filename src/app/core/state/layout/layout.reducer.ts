@@ -71,9 +71,21 @@ export const layoutReducer = createReducer(
     ...state,
     activeSidebarItem: itemId,
   })),
+  on(LayoutActions.setSidebarVisible, (state, { visible }) => ({
+    ...state,
+    sidebarVisible: visible,
+  })),
+  on(LayoutActions.setBottomPanelVisible, (state, { visible }) => ({
+    ...state,
+    bottomPanelVisible: visible,
+  })),
   on(LayoutActions.toggleSecondaryPanel, (state) => ({
     ...state,
     secondaryPanelVisible: !state.secondaryPanelVisible,
+  })),
+  on(LayoutActions.setSecondaryPanelVisible, (state, { visible }) => ({
+    ...state,
+    secondaryPanelVisible: visible,
   })),
   on(LayoutActions.setSecondaryPanelWidth, (state, { width }) => ({
     ...state,

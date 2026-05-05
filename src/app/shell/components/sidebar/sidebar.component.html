@@ -9,8 +9,19 @@
 
   @if (!collapsed) {
     <div class="sidebar__panel" data-testid="sidebar-panel" role="region" [attr.aria-label]="'Sidebar panel'">
-      <div class="sidebar__content">
-        <!-- Future: sidebar panel content will be rendered here based on activeItemId -->
+      <div class="sidebar__content" data-testid="sidebar-content">
+        @if (activeItem; as item) {
+          <section class="sidebar__section" [attr.data-testid]="'sidebar-content-' + item.id">
+            <header class="sidebar__section-header">
+              <h2 class="sidebar__section-title">{{ item.label }}</h2>
+            </header>
+            <div class="sidebar__component-container">
+              <ng-container *ngComponentOutlet="item.component"></ng-container>
+            </div>
+          </section>
+        } @else {
+          <p class="sidebar__empty" data-testid="sidebar-content-empty">No sidebar sections available.</p>
+        }
       </div>
     </div>
   }

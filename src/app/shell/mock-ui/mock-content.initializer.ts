@@ -11,6 +11,7 @@ import {
 } from './mock-registrations';
 
 export function registerMockContent(shell: ShellManager): void {
+
   shell.addTab(MOCK_DASHBOARD_TAB);
   shell.addTab(MOCK_REPORTS_TAB);
 
@@ -22,4 +23,5 @@ export function registerMockContent(shell: ShellManager): void {
   shell.addToolbarAction(MOCK_ALERT_SUCCESS);
 
   shell.addBottomPanelEntry(MOCK_RESULTS_PANEL);
+    shell.setBottomPanelVisible(true);
 }

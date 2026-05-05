@@ -50,7 +50,13 @@
       role="tabpanel"
       [attr.aria-labelledby]="activePanelId ? 'panel-tab-btn-' + activePanelId : null"
     >
-      <!-- Panel content will be rendered here via panel wiring -->
+      @if (activePanel) {
+        <div class="bottom-panel__component-container">
+          <ng-container *ngComponentOutlet="activePanel.component"></ng-container>
+        </div>
+      } @else {
+        <div class="bottom-panel__empty">No panels available.</div>
+      }
     </div>
   </div>
 }

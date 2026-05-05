@@ -1,10 +1,20 @@
 import { TestBed } from '@angular/core/testing';
+import { Component, Type } from '@angular/core';
 import { BottomPanelComponent } from './bottom-panel.component';
 import { PanelTab } from '../../models/panel-tab.model';
 import { EventBusService } from '../../../core/services/event-bus.service';
 
+// Dummy component for testing
+@Component({
+  selector: 'app-dummy',
+  standalone: true,
+  template: '<div>Dummy</div>',
+})
+class DummyComponent {}
+
 const makePanel = (partial: Partial<PanelTab> & { id: string; label: string }): PanelTab => ({
   closable: true,
+  component: partial.component || DummyComponent,
   ...partial,
 });
 

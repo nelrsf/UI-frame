@@ -12,6 +12,8 @@ import {
 } from './fixtures';
 import { MockDashboardComponent } from './components/mock-dashboard/mock-dashboard.component';
 import { MockReportsComponent } from './components/mock-reports/mock-reports.component';
+import { MockSidebarComponent } from './components/mock-sidebar/mock-sidebar.component';
+import { MockBottomPanelComponent } from './components/mock-bottom-panel/mock-bottom-panel.component';
 
 export const MOCK_DASHBOARD_TAB: ICentralRegionTab = {
   id: 'mock-dashboard',
@@ -65,6 +67,7 @@ export const MOCK_SIDEBAR_ENTRY: ISidebarEntry = {
   id: 'mock-nav',
   label: MOCK_SIDEBAR_ITEMS[0].label,
   icon: MOCK_SIDEBAR_ITEMS[0].icon ?? '📁',
+  component: MockSidebarComponent,
   tooltip: 'Mock sidebar entry',
 };
 
@@ -72,4 +75,5 @@ export const MOCK_RESULTS_PANEL: IBottomPanelEntry = {
   id: 'mock-results',
   label: `Results (${MOCK_REPORT_ROWS.length + MOCK_DASHBOARD_CARDS.length})`,
   icon: 'list',
+  component: MockBottomPanelComponent,
 };

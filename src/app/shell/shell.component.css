@@ -96,7 +96,7 @@
     var(--shell-toolbar-height)
     var(--shell-tabbar-height)
     1fr
-    0px; /* bottom panel colapsado por defecto */
+    var(--shell-bottom-panel-height, 0px);
   grid-template-columns: 1fr var(--shell-secondary-panel-width, 0px);
   overflow: hidden;
   min-width: 0;

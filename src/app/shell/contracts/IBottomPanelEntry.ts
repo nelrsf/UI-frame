@@ -1,3 +1,5 @@
+import { Type } from '@angular/core';
+
 /**
  * Public contract for registering a panel tab in the shell's bottom panel.
  *
@@ -10,6 +12,7 @@
  *   id: 'weather-output',
  *   label: 'Weather Output',
  *   icon: 'cloud',
+ *   component: WeatherOutputPanelComponent,
  * };
  * shellManager.addBottomPanelEntry(outputPanel);
  */
@@ -20,4 +23,9 @@ export interface IBottomPanelEntry {
   readonly label: string;
   /** Optional icon shown alongside the label on the panel tab. */
   readonly icon?: string;
+  /**
+   * Standalone Angular component rendered when this bottom panel tab is active.
+   * Must be a standalone component (no NgModule required).
+   */
+  readonly component: Type<unknown>;
 }

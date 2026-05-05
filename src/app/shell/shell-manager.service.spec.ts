@@ -2,6 +2,11 @@ import { TestBed } from '@angular/core/testing';
 import { provideMockStore, MockStore } from '@ngrx/store/testing';
 import { EventBusService } from '../core/services/event-bus.service';
 import { CommandRegistryService } from '../core/services/command-registry.service';
+import {
+  setBottomPanelVisible,
+  setSecondaryPanelVisible,
+  setSidebarVisible,
+} from '../core/state/layout';
 import { addBottomPanelEntry, addShellTab, addSidebarEntry, addToolbarAction } from '../core/state/shell-content';
 import { ShellManager } from './shell-manager.service';
 
@@ -60,11 +65,14 @@ describe('ShellManager', () => {
   });
 
   it('addSidebarEntry dispatches addSidebarEntry', () => {
+    const componentType = class {};
+
     shellManager.addSidebarEntry({
       id: 'reports',
       label: 'Reports',
       icon: 'description',
       tooltip: 'Open reports',
+      component: componentType,
     });
 
     expect(dispatchSpy).toHaveBeenCalledWith(
@@ -74,6 +82,7 @@ describe('ShellManager', () => {
         icon: 'description',
         tooltip: 'Open reports',
         position: 'top',
+        component: componentType,
       })
     );
   });
@@ -107,10 +116,13 @@ describe('ShellManager', () => {
   });
 
   it('addBottomPanelEntry dispatches addBottomPanelEntry', () => {
+    const componentType = class {};
+
     shellManager.addBottomPanelEntry({
       id: 'results',
       label: 'Results',
       icon: 'list',
+      component: componentType,
     });
 
     expect(dispatchSpy).toHaveBeenCalledWith(
@@ -119,6 +131,7 @@ describe('ShellManager', () => {
         label: 'Results',
         icon: 'list',
         closable: false,
+        component: componentType,
       })
     );
   });
@@ -151,5 +164,35 @@ describe('ShellManager', () => {
       jasmine.objectContaining({ commandId: 'shell.action.danger', success: false }),
       'command-registry'
     );
+  });
+
+  it('setSidebarVisible dispatches setSidebarVisible with true', () => {
+    shellManager.setSidebarVisible(true);
+    expect(dispatchSpy).toHaveBeenCalledWith(setSidebarVisible({ visible: true }));
+  });
+
+  it('setSidebarVisible dispatches setSidebarVisible with false', () => {
+    shellManager.setSidebarVisible(false);
+    expect(dispatchSpy).toHaveBeenCalledWith(setSidebarVisible({ visible: false }));
+  });
+
+  it('setBottomPanelVisible dispatches setBottomPanelVisible with true', () => {
+    shellManager.setBottomPanelVisible(true);
+    expect(dispatchSpy).toHaveBeenCalledWith(setBottomPanelVisible({ visible: true }));
+  });
+
+  it('setBottomPanelVisible dispatches setBottomPanelVisible with false', () => {
+    shellManager.setBottomPanelVisible(false);
+    expect(dispatchSpy).toHaveBeenCalledWith(setBottomPanelVisible({ visible: false }));
+  });
+
+  it('setSecondaryPanelVisible dispatches setSecondaryPanelVisible with true', () => {
+    shellManager.setSecondaryPanelVisible(true);
+    expect(dispatchSpy).toHaveBeenCalledWith(setSecondaryPanelVisible({ visible: true }));
+  });
+
+  it('setSecondaryPanelVisible dispatches setSecondaryPanelVisible with false', () => {
+    shellManager.setSecondaryPanelVisible(false);
+    expect(dispatchSpy).toHaveBeenCalledWith(setSecondaryPanelVisible({ visible: false }));
   });
 });

@@ -1,4 +1,5 @@
 import { Component, Input, Output, EventEmitter, inject, NgZone } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { ActivityBarComponent } from './activity-bar/activity-bar.component';
 import { SidebarItem } from '../../models/sidebar-item.model';
 import { EventBusService } from '../../../core/services/event-bus.service';
@@ -6,7 +7,7 @@ import { EventBusService } from '../../../core/services/event-bus.service';
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [ActivityBarComponent],
+  imports: [CommonModule, ActivityBarComponent],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.css',
 })
@@ -20,6 +21,21 @@ export class SidebarComponent {
 
   @Output() activeItemChange = new EventEmitter<string>();
   @Output() collapsedChange = new EventEmitter<boolean>();
+
+  get activeItem(): SidebarItem | null {
+    if (this.items.length === 0) {
+      return null;
+    }
+
+    if (this.activeItemId) {
+      const selected = this.items.find(item => item.id === this.activeItemId);
+      if (selected) {
+        return selected;
+      }
+    }
+
+    return this.items[0];
+  }
 
   onItemClick(item: SidebarItem): void {
     performance.mark('sidebar.interaction.start');

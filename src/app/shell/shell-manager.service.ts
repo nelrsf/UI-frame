@@ -3,6 +3,11 @@ import { Store } from '@ngrx/store';
 import { CommandRegistryService } from '../core/services/command-registry.service';
 import { AppState } from '../core/state/app.state';
 import {
+  setBottomPanelVisible,
+  setSecondaryPanelVisible,
+  setSidebarVisible,
+} from '../core/state/layout';
+import {
   addBottomPanelEntry,
   addShellTab,
   addSidebarEntry,
@@ -69,6 +74,7 @@ export class ShellManager {
       icon: entry.icon,
       tooltip: entry.tooltip ?? entry.label,
       position: 'top',
+      component: entry.component,
     };
 
     this.store.dispatch(addSidebarEntry(sidebarItem));
@@ -114,8 +120,21 @@ export class ShellManager {
       label: panel.label,
       icon: panel.icon,
       closable: false,
+      component: panel.component,
     };
 
     this.store.dispatch(addBottomPanelEntry(panelTab));
+  }
+
+  setSidebarVisible(visible: boolean): void {
+    this.store.dispatch(setSidebarVisible({ visible }));
+  }
+
+  setBottomPanelVisible(visible: boolean): void {
+    this.store.dispatch(setBottomPanelVisible({ visible }));
+  }
+
+  setSecondaryPanelVisible(visible: boolean): void {
+    this.store.dispatch(setSecondaryPanelVisible({ visible }));
   }
 }

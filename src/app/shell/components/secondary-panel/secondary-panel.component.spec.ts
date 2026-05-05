@@ -1,9 +1,19 @@
 import { TestBed } from '@angular/core/testing';
+import { Component } from '@angular/core';
 import { SecondaryPanelComponent } from './secondary-panel.component';
 import { PanelTab } from '../../models/panel-tab.model';
 
+// Dummy component for testing
+@Component({
+  selector: 'app-dummy',
+  standalone: true,
+  template: '<div>Dummy</div>',
+})
+class DummyComponent {}
+
 const makePanel = (partial: Partial<PanelTab> & { id: string; label: string }): PanelTab => ({
   closable: true,
+  component: partial.component || DummyComponent,
   ...partial,
 });
 

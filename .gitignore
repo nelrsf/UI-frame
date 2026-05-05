@@ -46,3 +46,5 @@ testem.log
 Thumbs.db
 *.tmp
 *.swp
+.vscode/launch.json
+.vscode/tasks.json
