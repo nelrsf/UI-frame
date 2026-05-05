@@ -3,165 +3,313 @@
 **Feature**: 002-validate-ui-frame  
 **Date**: 2026-05-04
 
-This guide shows any domain developer how to register content in the UI Frame
-shell without touching the shell source code.
+This guide walks a domain developer through every step required to register
+content in the UI Frame shell. You will never need to modify any file inside
+`src/app/shell/`.
+
+---
+
+## How it works (mental model)
+
+The shell exposes four **regions**. Each region has a contract interface:
+
+| Region | Contract | Shell method |
+|---|---|---|
+| Tab bar (center) | `ICentralRegionTab` | `shell.addTab()` |
+| Activity sidebar | `ISidebarEntry` | `shell.addSidebarEntry()` |
+| Toolbar | `IToolbarAction` | `shell.addToolbarAction()` |
+| Bottom panel | `IBottomPanelEntry` | `shell.addBottomPanelEntry()` |
+
+You create objects that implement these interfaces, then hand them to
+`ShellManager` **before the app renders** via Angular's `APP_INITIALIZER`.
+
+The shell renders your components dynamically with `NgComponentOutlet` — it
+never imports your types directly.
 
 ---
 
 ## Prerequisites
 
-- Angular 19 standalone component
-- Access to `ShellManager` service (auto-provided at root level)
-- Contracts barrel: `src/app/shell/contracts/index.ts`
+- Angular **19** standalone components (no `NgModule` required)
+- Contracts barrel at `src/app/shell/contracts/index.ts`
+- `ShellManager` is `providedIn: 'root'` — no extra module needed
 
 ---
 
-## 1. Add a Tab (Central Region)
+## Files you will create
 
-```typescript
-import { Injectable, Type } from '@angular/core';
-import { ICentralRegionTab } from 'src/app/shell/contracts';
-import { ShellManager } from 'src/app/shell/shell-manager.service';
-import { WeatherDashboardComponent } from './weather-dashboard.component';
+For a domain called `weather`, the recommended layout is:
 
-// Implement the contract
-const weatherTab: ICentralRegionTab = {
-  id: 'weather-main',
-  label: 'Weather',
-  component: WeatherDashboardComponent,
-  closable: false,
-  icon: 'cloud',
-};
-
-// Register via ShellManager (e.g., in APP_INITIALIZER)
-export function registerWeatherContent(shell: ShellManager): void {
-  shell.addTab(weatherTab);
-}
+```
+src/app/weather/
+  weather-dashboard.component.ts      ← tab content component
+  weather-sidebar.component.ts        ← sidebar panel component
+  weather-output-panel.component.ts   ← bottom panel component
+  weather-registrations.ts            ← declares contract objects
+  weather-content.initializer.ts      ← calls shell.add*() methods
 ```
 
-The tab will appear in the shell's tab bar. When the user clicks it, the shell
-renders `WeatherDashboardComponent` using `NgComponentOutlet` — no imports of
-`WeatherDashboardComponent` are needed anywhere in the shell.
+`app.config.ts` already exists — you only add one provider block to it.
 
 ---
 
-## 2. Add a Sidebar Entry
+## Step 1 — Create your standalone components
+
+Each region that renders a component (`ICentralRegionTab`, `ISidebarEntry`,
+`IBottomPanelEntry`) requires an Angular **standalone** component.
 
 ```typescript
-import { ISidebarEntry } from 'src/app/shell/contracts';
+// src/app/weather/weather-dashboard.component.ts
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
 
-const weatherEntry: ISidebarEntry = {
+@Component({
+  selector: 'app-weather-dashboard',
+  standalone: true,
+  imports: [CommonModule],
+  template: `<p>Weather dashboard content here</p>`,
+})
+export class WeatherDashboardComponent {}
+```
+
+Repeat the same pattern for `WeatherSidebarComponent` and
+`WeatherOutputPanelComponent`. The shell does not import these components —
+you only import them in the registrations file (Step 2).
+
+> `IToolbarAction` does **not** require a component — it uses a `handler`
+> callback instead.
+
+---
+
+## Step 2 — Declare your contract objects (registrations file)
+
+Create one file that exports a typed constant for each piece of content.
+Import only contracts from the shell barrel and your own components.
+
+```typescript
+// src/app/weather/weather-registrations.ts
+import {
+  ICentralRegionTab,
+  ISidebarEntry,
+  IToolbarAction,
+  IBottomPanelEntry,
+} from 'src/app/shell/contracts';
+import { WeatherDashboardComponent } from './weather-dashboard.component';
+import { WeatherSidebarComponent } from './weather-sidebar.component';
+import { WeatherOutputPanelComponent } from './weather-output-panel.component';
+
+export const WEATHER_TAB: ICentralRegionTab = {
+  id: 'weather-main',          // must be globally unique
+  label: 'Weather',
+  component: WeatherDashboardComponent,
+  icon: 'cloud',
+  closable: false,
+};
+
+export const WEATHER_SIDEBAR_ENTRY: ISidebarEntry = {
   id: 'weather-nav',
   label: 'Weather',
-  icon: 'cloud',               // Material icon ligature or CSS class
+  icon: 'cloud',               // Material icon ligature or any CSS class
+  component: WeatherSidebarComponent,
   tooltip: 'Open Weather module',
 };
 
-shell.addSidebarEntry(weatherEntry);
-```
-
----
-
-## 3. Add a Toolbar Action
-
-```typescript
-import { IToolbarAction } from 'src/app/shell/contracts';
-
-const refreshAction: IToolbarAction = {
+export const WEATHER_REFRESH_ACTION: IToolbarAction = {
   id: 'weather-refresh',
   label: 'Refresh',
   icon: 'refresh',
-  handler: () => weatherService.refresh(),   // any synchronous () => void
+  handler: () => console.log('refresh triggered'),  // replace with real call
   tooltip: 'Refresh weather data',
 };
 
-shell.addToolbarAction(refreshAction);
-```
-
-When the user clicks "Refresh" in the toolbar, the shell calls
-`CommandRegistry.execute('shell.action.weather-refresh')`, which invokes your
-handler. Exceptions are caught — the shell will not crash.
-
----
-
-## 4. Add a Bottom Panel Entry
-
-```typescript
-import { IBottomPanelEntry } from 'src/app/shell/contracts';
-
-const outputPanel: IBottomPanelEntry = {
+export const WEATHER_OUTPUT_PANEL: IBottomPanelEntry = {
   id: 'weather-output',
   label: 'Weather Output',
-  icon: 'terminal',
+  icon: 'cloud',
+  component: WeatherOutputPanelComponent,
 };
-
-shell.addBottomPanelEntry(outputPanel);
 ```
+
+> **ID uniqueness** — if `shell.addTab({ id: 'weather-main', ... })` is called
+> a second time, the call is silently ignored and a `console.warn` is emitted.
+> Prefix all IDs with your domain name to avoid collisions.
 
 ---
 
-## 5. Bootstrap via `APP_INITIALIZER` (recommended)
+## Step 3 — Create the initializer function
 
-Register your content before the first render by providing an `APP_INITIALIZER`
-in `app.config.ts`:
+This function receives `ShellManager` and calls the registration methods in
+the correct order.
 
 ```typescript
-import { APP_INITIALIZER } from '@angular/core';
+// src/app/weather/weather-content.initializer.ts
 import { ShellManager } from 'src/app/shell/shell-manager.service';
+import {
+  WEATHER_TAB,
+  WEATHER_SIDEBAR_ENTRY,
+  WEATHER_REFRESH_ACTION,
+  WEATHER_OUTPUT_PANEL,
+} from './weather-registrations';
 
-export function myAppInitializer(shell: ShellManager): () => void {
-  return () => {
-    shell.addTab(weatherTab);
-    shell.addSidebarEntry(weatherEntry);
-    shell.addToolbarAction(refreshAction);
-    shell.addBottomPanelEntry(outputPanel);
-  };
-}
+export function registerWeatherContent(shell: ShellManager): void {
+  shell.addTab(WEATHER_TAB);
+  shell.addSidebarEntry(WEATHER_SIDEBAR_ENTRY);
+  shell.addToolbarAction(WEATHER_REFRESH_ACTION);
+  shell.addBottomPanelEntry(WEATHER_OUTPUT_PANEL);
 
-// In app.config.ts providers:
-{
-  provide: APP_INITIALIZER,
-  useFactory: myAppInitializer,
-  deps: [ShellManager],
-  multi: true,
+  // Call this only if you want the bottom panel to be visible on startup.
+  // Remove if another domain or the mock already calls it.
+  shell.setBottomPanelVisible(true);
 }
 ```
 
 ---
 
-## 6. Mock Reference Implementations
+## Step 4 — Write the Angular factory function
 
-The `src/app/shell/mock-ui/` folder contains reference implementations for
-each contract that can be used during development:
+Angular's `APP_INITIALIZER` expects a **factory**: a function that receives
+injected dependencies and returns a zero-argument callback. The factory is
+what Angular DI will call at bootstrap time.
 
-| Mock | Contract | Description |
-|------|----------|-------------|
+```typescript
+// src/app/weather/weather-content.initializer.ts  (add to the same file)
+import { ShellManager } from 'src/app/shell/shell-manager.service';
+
+// Factory consumed by APP_INITIALIZER
+export function weatherContentFactory(shell: ShellManager): () => void {
+  return () => registerWeatherContent(shell);
+  //     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  //     Angular calls the returned () => void at app startup,
+  //     before the first change-detection cycle.
+}
+```
+
+The factory itself takes `ShellManager` as a parameter — Angular's DI
+injects it because you declare it in `deps` (Step 5).
+
+---
+
+## Step 5 — Register the factory in `app.config.ts`
+
+Open `src/app/app.config.ts` and add one provider object inside the
+`providers` array:
+
+```typescript
+// src/app/app.config.ts
+import { APP_INITIALIZER, ApplicationConfig } from '@angular/core';
+import { ShellManager } from './shell/shell-manager.service';
+import { weatherContentFactory } from './weather/weather-content.initializer';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    // ... existing NgRx providers stay untouched ...
+
+    {
+      provide: APP_INITIALIZER,       // Angular's multi-hook for startup work
+      useFactory: weatherContentFactory,  // the factory from Step 4
+      deps: [ShellManager],           // Angular injects ShellManager into the factory
+      multi: true,                    // allows multiple APP_INITIALIZER entries
+    },
+  ],
+};
+```
+
+`multi: true` is required — it tells Angular to append this initializer to
+the list rather than replacing any existing one. Each domain registers its own
+provider block independently.
+
+---
+
+## Step 6 — Verify the registration
+
+Run the dev server and open the browser:
+
+```bash
+npm start
+```
+
+Check that:
+
+1. Your tab label appears in the tab strip and clicking it renders your component.
+2. Your sidebar icon appears in the activity bar.
+3. Your toolbar button appears and triggers the `handler`.
+4. Your bottom panel tab appears in the bottom panel (visible if `setBottomPanelVisible(true)` was called).
+
+Open the browser console — if any ID is duplicated you will see a
+`[ShellManager] Duplicate ... id '...' ignored.` warning.
+
+---
+
+## Reference: Mock implementations
+
+The `src/app/shell/mock-ui/` folder contains working reference implementations
+you can read as a guide. The pattern there mirrors exactly what this quickstart
+describes:
+
+| File | Purpose |
+|---|---|
+| `mock-registrations.ts` | Declares all mock contract objects (Step 2 equivalent) |
+| `mock-content.initializer.ts` | `registerMockContent()` function (Step 3 equivalent) |
+| `app.config.ts` `initializeShellContent` | Factory + provider wiring (Steps 4–5 equivalent) |
+
+| Mock constant | Contract | Description |
+|---|---|---|
 | `MOCK_DASHBOARD_TAB` | `ICentralRegionTab` | Dashboard tab with fake KPI cards |
 | `MOCK_REPORTS_TAB` | `ICentralRegionTab` | Reports tab with fake row data |
-| `MOCK_ALERT_INFO`, `MOCK_ALERT_WARNING`, `MOCK_ALERT_ERROR`, `MOCK_ALERT_SUCCESS` | `IToolbarAction` | Buttons that fire `window.alert` |
-| `MOCK_SIDEBAR_ENTRY` | `ISidebarEntry` | Navigation entry (fake) |
-| `MOCK_RESULTS_PANEL` | `IBottomPanelEntry` | Results panel with fake data |
-
-These are registered via `src/app/shell/mock-ui/mock-content.initializer.ts`,
-which is wired in `app.config.ts` as an `APP_INITIALIZER`.
+| `MOCK_NAV_SIDEBAR_ENTRY`, `MOCK_TOOLS_SIDEBAR_ENTRY` | `ISidebarEntry` | Navigation and tools sidebar panels |
+| `MOCK_ALERT_INFO/WARNING/ERROR/SUCCESS` | `IToolbarAction` | Buttons that fire `window.alert` |
+| `MOCK_RESULTS_PANEL`, `MOCK_LOGS_PANEL`, `MOCK_WARNINGS_PANEL` | `IBottomPanelEntry` | Bottom panel tabs with fake data |
 
 ---
 
-## 7. Duplicate ID Policy
+## Reference: Contract interface summary
 
-If you call `shell.addTab({ id: 'my-tab', ... })` and a tab with `id = 'my-tab'`
-already exists, the second call is **silently ignored**. A `console.warn` is
-emitted in development mode. Ensure IDs are unique across all domain modules.
+```typescript
+// ICentralRegionTab
+interface ICentralRegionTab {
+  id: string;
+  label: string;
+  component: Type<unknown>;   // standalone Angular component
+  icon?: string;
+  closable?: boolean;         // defaults to true
+}
+
+// ISidebarEntry
+interface ISidebarEntry {
+  id: string;
+  label: string;
+  icon: string;               // required — sidebar is icon-first
+  component: Type<unknown>;   // standalone Angular component
+  tooltip?: string;
+}
+
+// IToolbarAction
+interface IToolbarAction {
+  id: string;
+  label: string;
+  icon: string;
+  handler: () => void;        // no component needed; exceptions are caught
+  tooltip?: string;
+}
+
+// IBottomPanelEntry
+interface IBottomPanelEntry {
+  id: string;
+  label: string;
+  icon?: string;
+  component: Type<unknown>;   // standalone Angular component
+}
+```
 
 ---
 
-## Domain Examples
+## Domain ID conventions
 
-| Domain | Tab id | Action id | Notes |
-|--------|--------|-----------|-------|
-| Weather | `'weather-main'` | `'weather-refresh'` | Live data tab |
-| Stock Exchange | `'stocks-main'` | `'stocks-buy'`, `'stocks-sell'` | Multiple actions |
-| Reports | `'reports-main'` | `'reports-export'` | Export to PDF action |
+| Domain | Tab id | Sidebar id | Action id | Panel id |
+|---|---|---|---|---|
+| Weather | `weather-main` | `weather-nav` | `weather-refresh` | `weather-output` |
+| Stock Exchange | `stocks-main` | `stocks-nav` | `stocks-buy`, `stocks-sell` | `stocks-feed` |
+| Reports | `reports-main` | `reports-nav` | `reports-export` | `reports-log` |
 
 All domains use the same `ShellManager` API. The shell source code is never
 modified to accommodate new domains.
