@@ -13,7 +13,6 @@ const TOOL_ITEMS = [
   imports: [CommonModule],
   template: `
     <div class="section">
-      <div class="section-title">Tools</div>
       <div
         class="tool-item"
         *ngFor="let tool of items"

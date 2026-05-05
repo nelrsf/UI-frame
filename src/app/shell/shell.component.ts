@@ -115,6 +115,21 @@ export class ShellComponent implements OnInit, AfterViewInit {
   );
 
   /**
+   * Derives the CSS value for --shell-sidebar-width used by the grid column.
+   * When the sidebar panel is collapsed the column shrinks to the activity-bar
+   * width so the workspace region expands to fill the freed space.
+   * Presentation-only derivation — must not live in the layout store slice.
+   */
+  readonly shellSidebarColumnWidth$ = combineLatest([
+    this.sidebarVisible$,
+    this.sidebarWidth$,
+  ]).pipe(
+    map(([visible, width]) =>
+      visible ? `${width ?? 240}px` : 'var(--shell-activity-bar-width)'
+    )
+  );
+
+  /**
    * Adds a platform-specific CSS class to the host element so that
    * platform-aware styles (e.g. title-bar spacing on macOS) can be applied
    * without querying the DOM directly.

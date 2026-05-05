@@ -14,7 +14,6 @@ const NAV_ITEMS = [
   imports: [CommonModule],
   template: `
     <div class="section">
-      <div class="section-title">Navigation</div>
       <div
         class="nav-item"
         *ngFor="let item of items"
