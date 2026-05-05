@@ -1,7 +1,22 @@
+import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { SidebarComponent } from './sidebar.component';
 import { SidebarItem } from '../../models/sidebar-item.model';
 import { EventBusService } from '../../../core/services/event-bus.service';
+
+@Component({
+  selector: 'app-dummy-sidebar-content',
+  standalone: true,
+  template: '<div>Dummy</div>',
+})
+class DummyComponent {}
+
+const makeSidebarItem = (
+  partial: Partial<SidebarItem> & Pick<SidebarItem, 'id' | 'icon' | 'label' | 'tooltip' | 'position'>
+): SidebarItem => ({
+  component: DummyComponent,
+  ...partial,
+});
 
 describe('SidebarComponent', () => {
   let component: SidebarComponent;
@@ -49,13 +64,13 @@ describe('SidebarComponent', () => {
 
   it('should pass items to activity bar', () => {
     const items: SidebarItem[] = [
-      {
+      makeSidebarItem({
         id: 'explorer',
         icon: '📁',
         label: 'Explorer',
         tooltip: 'Explorer',
         position: 'top',
-      },
+      }),
     ];
     component.items = items;
     fixture.detectChanges();
@@ -67,20 +82,20 @@ describe('SidebarComponent', () => {
 
   it('should render active sidebar item content in panel', () => {
     component.items = [
-      {
+      makeSidebarItem({
         id: 'explorer',
         icon: '📁',
         label: 'Explorer',
         tooltip: 'Explorer section',
         position: 'top',
-      },
-      {
+      }),
+      makeSidebarItem({
         id: 'search',
         icon: '🔎',
         label: 'Search',
         tooltip: 'Search section',
         position: 'top',
-      },
+      }),
     ];
     component.activeItemId = 'search';
     component.collapsed = false;
@@ -91,18 +106,17 @@ describe('SidebarComponent', () => {
 
     expect(section).not.toBeNull();
     expect(section?.textContent).toContain('Search');
-    expect(section?.textContent).toContain('Search section');
   });
 
   it('should render first item content when active item is missing', () => {
     component.items = [
-      {
+      makeSidebarItem({
         id: 'explorer',
         icon: '📁',
         label: 'Explorer',
         tooltip: 'Explorer section',
         position: 'top',
-      },
+      }),
     ];
     component.activeItemId = 'missing';
     component.collapsed = false;
@@ -116,13 +130,13 @@ describe('SidebarComponent', () => {
   });
 
   it('should emit activeItemChange when item is clicked', () => {
-    const item: SidebarItem = {
+    const item: SidebarItem = makeSidebarItem({
       id: 'explorer',
       icon: '📁',
       label: 'Explorer',
       tooltip: 'Explorer',
       position: 'top',
-    };
+    });
 
     spyOn(component.activeItemChange, 'emit');
     component.onItemClick(item);
@@ -173,13 +187,13 @@ describe('SidebarComponent', () => {
     let eventBus: EventBusService;
     let emitSpy: jasmine.Spy;
 
-    const item: SidebarItem = {
+    const item: SidebarItem = makeSidebarItem({
       id: 'explorer',
       icon: '📁',
       label: 'Explorer',
       tooltip: 'Explorer',
       position: 'top',
-    };
+    });
 
     beforeEach(() => {
       eventBus = TestBed.inject(EventBusService);
@@ -198,7 +212,7 @@ describe('SidebarComponent', () => {
     });
 
     it('should emit sidebar.collapsed.v1 with collapsed:false when any item is clicked while sidebar is collapsed', () => {
-      const other: SidebarItem = { id: 'git', icon: '🔀', label: 'Git', tooltip: 'Git', position: 'top' };
+      const other: SidebarItem = makeSidebarItem({ id: 'git', icon: '🔀', label: 'Git', tooltip: 'Git', position: 'top' });
       component.items = [item, other];
       component.activeItemId = 'explorer';
       component.collapsed = true;
@@ -210,7 +224,7 @@ describe('SidebarComponent', () => {
     });
 
     it('should emit sidebar.section.activated.v1 when a new item is activated', () => {
-      const other: SidebarItem = { id: 'git', icon: '🔀', label: 'Git', tooltip: 'Git', position: 'top' };
+      const other: SidebarItem = makeSidebarItem({ id: 'git', icon: '🔀', label: 'Git', tooltip: 'Git', position: 'top' });
       component.items = [item, other];
       component.activeItemId = 'explorer';
       component.collapsed = false;

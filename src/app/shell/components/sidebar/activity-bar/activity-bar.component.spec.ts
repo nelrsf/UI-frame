@@ -11,6 +11,13 @@ import { SidebarItem } from '../../../models/sidebar-item.model';
 })
 class DummyComponent {}
 
+const makeSidebarItem = (
+  partial: Partial<SidebarItem> & Pick<SidebarItem, 'id' | 'icon' | 'label' | 'tooltip' | 'position'>
+): SidebarItem => ({
+  component: DummyComponent,
+  ...partial,
+});
+
 describe('ActivityBarComponent', () => {
   let component: ActivityBarComponent;
   let fixture: ComponentFixture<ActivityBarComponent>;
@@ -163,13 +170,13 @@ describe('ActivityBarComponent', () => {
     });
 
     it('should set aria-label on items matching the tooltip', () => {
-      const item: SidebarItem = {
+      const item: SidebarItem = makeSidebarItem({
         id: 'explorer',
         icon: '📁',
         label: 'Explorer',
         tooltip: 'Explorer',
         position: 'top',
-      };
+      });
       component.items = [item];
       fixture.detectChanges();
 
@@ -179,13 +186,13 @@ describe('ActivityBarComponent', () => {
     });
 
     it('should set aria-pressed="false" on inactive items', () => {
-      const item: SidebarItem = {
+      const item: SidebarItem = makeSidebarItem({
         id: 'explorer',
         icon: '📁',
         label: 'Explorer',
         tooltip: 'Explorer',
         position: 'top',
-      };
+      });
       component.items = [item];
       component.activeItemId = 'other';
       fixture.detectChanges();
