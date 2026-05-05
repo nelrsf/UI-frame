@@ -41,8 +41,10 @@
       [visible]="(bottomPanelVisible$ | async) ?? false"
       [height]="(bottomPanelHeight$ | async) ?? 220"
       [panels]="(bottomPanelTabs$ | async) ?? []"
+      [activePanelId]="activeBottomPanelId"
       (visibilityChange)="onBottomPanelVisibilityChange($event)"
       (heightChange)="onBottomPanelHeightChange($event)"
+      (activePanelChange)="onBottomPanelActivePanelChange($event)"
     ></app-bottom-panel>
   </div>
 

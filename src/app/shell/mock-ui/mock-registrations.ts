@@ -13,7 +13,9 @@ import {
 import { MockDashboardComponent } from './components/mock-dashboard/mock-dashboard.component';
 import { MockReportsComponent } from './components/mock-reports/mock-reports.component';
 import { MockSidebarComponent } from './components/mock-sidebar/mock-sidebar.component';
-import { MockBottomPanelComponent } from './components/mock-bottom-panel/mock-bottom-panel.component';
+import { MockBottomLogsComponent } from './components/mock-bottom-panel/mock-bottom-logs.component';
+import { MockBottomResultsComponent } from './components/mock-bottom-panel/mock-bottom-results.component';
+import { MockBottomWarningsComponent } from './components/mock-bottom-panel/mock-bottom-warnings.component';
 
 export const MOCK_DASHBOARD_TAB: ICentralRegionTab = {
   id: 'mock-dashboard',
@@ -74,6 +76,20 @@ export const MOCK_SIDEBAR_ENTRY: ISidebarEntry = {
 export const MOCK_RESULTS_PANEL: IBottomPanelEntry = {
   id: 'mock-results',
   label: `Results (${MOCK_REPORT_ROWS.length + MOCK_DASHBOARD_CARDS.length})`,
-  icon: 'list',
-  component: MockBottomPanelComponent,
+  icon: '✓',
+  component: MockBottomResultsComponent,
+};
+
+export const MOCK_LOGS_PANEL: IBottomPanelEntry = {
+  id: 'mock-logs',
+  label: 'Logs',
+  icon: '📄',
+  component: MockBottomLogsComponent,
+};
+
+export const MOCK_WARNINGS_PANEL: IBottomPanelEntry = {
+  id: 'mock-warnings',
+  label: 'Warnings',
+  icon: '⚠️',
+  component: MockBottomWarningsComponent,
 };

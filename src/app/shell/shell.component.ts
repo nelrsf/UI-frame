@@ -1,5 +1,6 @@
-import { Component, OnInit, AfterViewInit, HostBinding, inject, ChangeDetectionStrategy, NgZone } from '@angular/core';
+import { Component, OnInit, AfterViewInit, HostBinding, inject, ChangeDetectionStrategy, NgZone, DestroyRef } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Store } from '@ngrx/store';
 import { combineLatest, map, Observable } from 'rxjs';
 import { StatusBarComponent } from './components/status-bar/status-bar.component';
@@ -67,6 +68,7 @@ export class ShellComponent implements OnInit, AfterViewInit {
   private readonly store = inject(Store);
   private readonly sessionService = inject(WorkspaceSessionService);
   private readonly zone = inject(NgZone);
+  private readonly destroyRef = inject(DestroyRef);
 
   // rAF throttle state for bottom-panel resize (NFR-Perf-03)
   private _rafBottomPending = false;
@@ -75,6 +77,8 @@ export class ShellComponent implements OnInit, AfterViewInit {
   // rAF throttle state for secondary-panel resize (NFR-Perf-03)
   private _rafSecondaryPending = false;
   private _pendingSecondaryWidth: number | null = null;
+
+  activeBottomPanelId = '';
 
   /** Observable of the sidebar visibility flag from the layout state. */
   readonly sidebarVisible$: Observable<boolean> = this.store.select(selectSidebarVisible);
@@ -123,6 +127,10 @@ export class ShellComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
+    this.bottomPanelTabs$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((panels) => this.syncActiveBottomPanel(panels));
+
     // Attempt to restore the persisted workspace session for the default workspace.
     // Valid dimension and visibility values are dispatched as a layout restoration;
     // absent or corrupt sessions fall back to the reducer's safe defaults.
@@ -204,6 +212,22 @@ export class ShellComponent implements OnInit, AfterViewInit {
         this.eventBus.emit('bottomPanel.resized.v1', { height: h }, 'ShellComponent');
         this._markEnd('shell.bottom-panel.resize');
       }, 0);
+    }
+  }
+
+  onBottomPanelActivePanelChange(panelId: string): void {
+    this.activeBottomPanelId = panelId;
+  }
+
+  private syncActiveBottomPanel(panels: Array<{ id: string }>): void {
+    if (panels.length === 0) {
+      this.activeBottomPanelId = '';
+      return;
+    }
+
+    const hasActivePanel = panels.some((panel) => panel.id === this.activeBottomPanelId);
+    if (!hasActivePanel) {
+      this.activeBottomPanelId = panels[0].id;
     }
   }
 
