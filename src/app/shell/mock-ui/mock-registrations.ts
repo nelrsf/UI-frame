@@ -7,12 +7,12 @@ import {
 import {
   MOCK_DASHBOARD_CARDS,
   MOCK_REPORT_ROWS,
-  MOCK_SIDEBAR_ITEMS,
   MOCK_TOOLBAR_ALERTS,
 } from './fixtures';
 import { MockDashboardComponent } from './components/mock-dashboard/mock-dashboard.component';
 import { MockReportsComponent } from './components/mock-reports/mock-reports.component';
-import { MockSidebarComponent } from './components/mock-sidebar/mock-sidebar.component';
+import { MockNavSectionComponent } from './components/mock-sidebar/mock-nav-section.component';
+import { MockToolsSectionComponent } from './components/mock-sidebar/mock-tools-section.component';
 import { MockBottomLogsComponent } from './components/mock-bottom-panel/mock-bottom-logs.component';
 import { MockBottomResultsComponent } from './components/mock-bottom-panel/mock-bottom-results.component';
 import { MockBottomWarningsComponent } from './components/mock-bottom-panel/mock-bottom-warnings.component';
@@ -65,12 +65,20 @@ export const MOCK_ALERT_SUCCESS: IToolbarAction = {
   tooltip: 'Show success alert',
 };
 
-export const MOCK_SIDEBAR_ENTRY: ISidebarEntry = {
+export const MOCK_NAV_SIDEBAR_ENTRY: ISidebarEntry = {
   id: 'mock-nav',
-  label: MOCK_SIDEBAR_ITEMS[0].label,
-  icon: MOCK_SIDEBAR_ITEMS[0].icon ?? '📁',
-  component: MockSidebarComponent,
-  tooltip: 'Mock sidebar entry',
+  label: 'Navigation',
+  icon: '🗂️',
+  component: MockNavSectionComponent,
+  tooltip: 'Navigation section',
+};
+
+export const MOCK_TOOLS_SIDEBAR_ENTRY: ISidebarEntry = {
+  id: 'mock-tools',
+  label: 'Tools',
+  icon: '🔧',
+  component: MockToolsSectionComponent,
+  tooltip: 'Tools section',
 };
 
 export const MOCK_RESULTS_PANEL: IBottomPanelEntry = {
