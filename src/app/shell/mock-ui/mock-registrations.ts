@@ -1,6 +1,7 @@
 import {
   IBottomPanelEntry,
   ICentralRegionTab,
+  ISecondaryPanelEntry,
   ISidebarEntry,
   IToolbarAction,
 } from '../contracts';
@@ -16,6 +17,8 @@ import { MockToolsSectionComponent } from './components/mock-sidebar/mock-tools-
 import { MockBottomLogsComponent } from './components/mock-bottom-panel/mock-bottom-logs.component';
 import { MockBottomResultsComponent } from './components/mock-bottom-panel/mock-bottom-results.component';
 import { MockBottomWarningsComponent } from './components/mock-bottom-panel/mock-bottom-warnings.component';
+import { MockSecondaryWeatherComponent } from './components/mock-secondary-panel/mock-secondary-weather.component';
+import { MockSecondaryMarketComponent } from './components/mock-secondary-panel/mock-secondary-market.component';
 
 export const MOCK_DASHBOARD_TAB: ICentralRegionTab = {
   id: 'mock-dashboard',
@@ -100,4 +103,18 @@ export const MOCK_WARNINGS_PANEL: IBottomPanelEntry = {
   label: 'Warnings',
   icon: '⚠️',
   component: MockBottomWarningsComponent,
+};
+
+export const MOCK_SECONDARY_WEATHER_ENTRY: ISecondaryPanelEntry = {
+  id: 'secondary-weather',
+  label: 'Weather',
+  icon: '☀️',
+  component: MockSecondaryWeatherComponent,
+};
+
+export const MOCK_SECONDARY_MARKET_ENTRY: ISecondaryPanelEntry = {
+  id: 'secondary-market',
+  label: 'Market',
+  icon: '📈',
+  component: MockSecondaryMarketComponent,
 };

@@ -98,6 +98,7 @@
     1fr
     var(--shell-bottom-panel-height, 0px);
   grid-template-columns: 1fr var(--shell-secondary-panel-width, 0px);
+  transition: grid-template-columns 120ms ease-out;
   overflow: hidden;
   min-width: 0;
 }

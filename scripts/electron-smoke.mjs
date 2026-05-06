@@ -85,6 +85,13 @@ const KEYBOARD_REACHABLE_PATTERNS = [
   /\[smoke\] keyboard:reachable/i,
 ];
 
+/**
+ * Patterns that confirm the secondary panel mock entries are rendered.
+ */
+const SECONDARY_ENTRIES_OK_PATTERNS = [
+  /\[smoke\] secondary:entries:ok/i,
+];
+
 let passed = 0;
 let failed = 0;
 
@@ -125,6 +132,7 @@ async function runSmoke() {
   let processExitedEarly = false;
   let securityOk = false;
   let keyboardReachable = false;
+  let secondaryEntriesOk = false;
 
   // --no-sandbox is required in headless CI environments (e.g. Linux without SUID sandbox).
   // It is enabled only when the CI environment variable is set so that local runs keep
@@ -179,6 +187,9 @@ async function runSmoke() {
     if (KEYBOARD_REACHABLE_PATTERNS.some((re) => re.test(text))) {
       keyboardReachable = true;
     }
+    if (SECONDARY_ENTRIES_OK_PATTERNS.some((re) => re.test(text))) {
+      secondaryEntriesOk = true;
+    }
   }
 
   child.stdout.on('data', (chunk) => {
@@ -228,6 +239,7 @@ async function runSmoke() {
   assert(blockingError === null, `No blocking errors in startup output (got: ${blockingError ?? 'none'})`);
   assert(securityOk, 'BrowserWindow security settings verified (contextIsolation=true, nodeIntegration=false, sandbox=true)');
   assert(keyboardReachable, 'Shell DOM contains keyboard-reachable interactive elements');
+  assert(secondaryEntriesOk, 'Secondary panel renders both mock entries in smoke mode');
 
   // ── Summary ─────────────────────────────────────────────────
 

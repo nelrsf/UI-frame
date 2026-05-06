@@ -1,9 +1,11 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { Store } from '@ngrx/store';
 import { provideStore } from '@ngrx/store';
 import { ShellComponent } from './shell.component';
 import { PlatformAdapter } from '../core/infrastructure/electron/adapters/platform.adapter';
 import { EventBusService } from '../core/services/event-bus.service';
 import { PlatformName } from '../core/application/ports/platform.port';
+import { setSecondaryPanelWidth, toggleSecondaryPanel } from '../core/state/layout/layout.actions';
 
 function makePlatformAdapter(platform: PlatformName): PlatformAdapter {
   return {
@@ -185,6 +187,27 @@ describe('ShellComponent', () => {
 
       expect(fixture.componentInstance.activeBottomPanelId).toBe('mock-logs');
     });
+
+    it('should dispatch toggleSecondaryPanel when secondary visibility changes', () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      const store = TestBed.inject(Store);
+      const dispatchSpy = spyOn(store, 'dispatch');
+
+      fixture.componentInstance.onSecondaryPanelVisibilityChange(false);
+
+      expect(dispatchSpy).toHaveBeenCalledWith(toggleSecondaryPanel());
+    });
+
+    it('should dispatch setSecondaryPanelWidth when secondary width changes', fakeAsync(() => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      const store = TestBed.inject(Store);
+      const dispatchSpy = spyOn(store, 'dispatch');
+
+      fixture.componentInstance.onSecondaryPanelWidthChange(360);
+      tick(0);
+
+      expect(dispatchSpy).toHaveBeenCalledWith(setSecondaryPanelWidth({ width: 360 }));
+    }));
   });
 
   it('should default the active bottom panel id to the first available panel', () => {

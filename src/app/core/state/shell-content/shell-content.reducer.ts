@@ -4,6 +4,7 @@ import { TabItem } from '../../../shell/models/tab-item.model';
 import { SidebarItem } from '../../../shell/models/sidebar-item.model';
 import { ToolbarAction } from '../../../shell/models/toolbar-action.model';
 import { PanelTab } from '../../../shell/models/panel-tab.model';
+import { SecondaryPanelEntry } from '../../../shell/models/secondary-panel-entry.model';
 import * as ShellContentActions from './shell-content.actions';
 
 /**
@@ -23,6 +24,8 @@ export interface ShellContentState {
   sidebarItems: SidebarItem[];
   toolbarActions: ToolbarAction[];
   bottomPanelTabs: PanelTab[];
+  secondaryPanelEntries: SecondaryPanelEntry[];
+  activeSecondaryPanelEntryId: string | null;
 }
 
 /**
@@ -34,7 +37,18 @@ export const initialShellContentState: ShellContentState = {
   sidebarItems: [],
   toolbarActions: [],
   bottomPanelTabs: [],
+  secondaryPanelEntries: [],
+  activeSecondaryPanelEntryId: null,
 };
+
+function pickSecondaryDefault(entries: SecondaryPanelEntry[]): string | null {
+  if (entries.length === 0) {
+    return null;
+  }
+
+  const weather = entries.find((entry) => entry.id === 'secondary-weather');
+  return weather?.id ?? entries[0].id;
+}
 
 /**
  * Shell content reducer with duplicate ID guards.
@@ -104,6 +118,45 @@ const shellContentReducerFn = createReducer(
     return {
       ...state,
       bottomPanelTabs: [...state.bottomPanelTabs, panelTab],
+    };
+  }),
+
+  on(ShellContentActions.addSecondaryPanelEntry, (state, { entry }) => {
+    const idExists = state.secondaryPanelEntries.some((existing) => existing.id === entry.id);
+    if (idExists) {
+      console.warn(`[ShellContent] Secondary panel entry with id '${entry.id}' already exists. Ignoring.`);
+      return state;
+    }
+
+    const secondaryPanelEntries = [...state.secondaryPanelEntries, entry];
+    const hasCurrentActive =
+      !!state.activeSecondaryPanelEntryId &&
+      secondaryPanelEntries.some((existing) => existing.id === state.activeSecondaryPanelEntryId);
+
+    const activeSecondaryPanelEntryId =
+      entry.id === 'secondary-weather'
+        ? 'secondary-weather'
+        : hasCurrentActive
+          ? state.activeSecondaryPanelEntryId
+          : pickSecondaryDefault(secondaryPanelEntries);
+
+    return {
+      ...state,
+      secondaryPanelEntries,
+      activeSecondaryPanelEntryId,
+    };
+  }),
+
+  on(ShellContentActions.setActiveSecondaryPanelEntry, (state, { id }) => {
+    const exists = state.secondaryPanelEntries.some((entry) => entry.id === id);
+    if (exists) {
+      return { ...state, activeSecondaryPanelEntryId: id };
+    }
+
+    console.warn(`[ShellContent] Secondary panel entry with id '${id}' not found. Applying fallback.`);
+    return {
+      ...state,
+      activeSecondaryPanelEntryId: pickSecondaryDefault(state.secondaryPanelEntries),
     };
   })
 );

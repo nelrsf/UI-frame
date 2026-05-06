@@ -99,13 +99,12 @@ describe('BottomPanelComponent', () => {
     expect(spy).toHaveBeenCalledWith(false);
   });
 
-  it('should emit visibilityChange(false) when toggle button is clicked while visible', () => {
+  it('should emit visibilityChange(false) when onToggle is invoked while visible', () => {
     const fixture = TestBed.createComponent(BottomPanelComponent);
     fixture.componentInstance.visible = true;
     fixture.detectChanges();
     const spy = spyOn(fixture.componentInstance.visibilityChange, 'emit');
-    const compiled = fixture.nativeElement as HTMLElement;
-    (compiled.querySelector('[data-testid="bottom-panel-toggle"]') as HTMLElement).click();
+    fixture.componentInstance.onToggle();
     expect(spy).toHaveBeenCalledWith(false);
   });
 
@@ -164,13 +163,13 @@ describe('BottomPanelComponent', () => {
       expect(tabsContainer?.getAttribute('role')).toBe('tablist');
     });
 
-    it('should have aria-label on the toggle button', () => {
+    it('should not render a toggle button in the panel actions', () => {
       const fixture = TestBed.createComponent(BottomPanelComponent);
       fixture.componentInstance.visible = true;
       fixture.detectChanges();
       const compiled = fixture.nativeElement as HTMLElement;
       const toggleBtn = compiled.querySelector('[data-testid="bottom-panel-toggle"]');
-      expect(toggleBtn?.getAttribute('aria-label')).toBeTruthy();
+      expect(toggleBtn).toBeNull();
     });
 
     it('should have aria-label on the close button', () => {

@@ -37,10 +37,14 @@ import {
 import {
   selectActiveShellComponentType,
   selectActiveShellTabId,
+  selectActiveSecondaryPanelComponentType,
+  selectActiveSecondaryPanelEntryId,
   selectShellBottomPanelTabs,
+  selectShellSecondaryPanelEntries,
   selectShellSidebarItems,
   selectShellTabs,
   selectShellToolbarActions,
+  setActiveSecondaryPanelEntry,
   setActiveShellTab,
 } from '../core/state/shell-content';
 import { TabItem } from './models/tab-item.model';
@@ -106,6 +110,12 @@ export class ShellComponent implements OnInit, AfterViewInit {
   readonly activeShellComponentType$ = this.store.select(selectActiveShellComponentType);
   /** Observable of registered bottom panel tabs. */
   readonly bottomPanelTabs$ = this.store.select(selectShellBottomPanelTabs);
+  /** Observable of secondary panel entries. */
+  readonly secondaryPanelEntries$ = this.store.select(selectShellSecondaryPanelEntries);
+  /** Observable of active secondary panel entry id. */
+  readonly activeSecondaryPanelEntryId$ = this.store.select(selectActiveSecondaryPanelEntryId);
+  /** Observable of active secondary panel component type for dynamic rendering. */
+  readonly activeSecondaryPanelComponentType$ = this.store.select(selectActiveSecondaryPanelComponentType);
   /** Derived observable for the active tab metadata consumed by ContentArea. */
   readonly activeShellTab$: Observable<TabItem | null> = combineLatest([
     this.shellTabs$,
@@ -250,6 +260,10 @@ export class ShellComponent implements OnInit, AfterViewInit {
     performance.mark('shell.secondary-panel.toggle.start');
     this.store.dispatch(toggleSecondaryPanel());
     this._markEnd('shell.secondary-panel.toggle');
+  }
+
+  onSecondaryPanelActiveEntryChange(entryId: string): void {
+    this.store.dispatch(setActiveSecondaryPanelEntry({ id: entryId }));
   }
 
   onSecondaryPanelWidthChange(width: number): void {
