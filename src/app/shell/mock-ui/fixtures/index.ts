@@ -3,3 +3,4 @@ export { MOCK_TOOLBAR_ALERTS } from './toolbar-alerts.fixtures';
 export { MOCK_BOTTOM_RESULTS } from './bottom-results.fixtures';
 export { MOCK_DASHBOARD_CARDS } from './dashboard-cards.fixtures';
 export { MOCK_REPORT_ROWS } from './report-rows.fixtures';
+export { MOCK_WEATHER_METRICS, MOCK_MARKET_TICKERS } from './mock-secondary-panel.fixtures';

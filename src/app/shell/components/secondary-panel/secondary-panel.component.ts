@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
-import { NgFor, NgIf } from '@angular/common';
-import { PanelTab } from '../../models/panel-tab.model';
+import { NgComponentOutlet } from '@angular/common';
+import { Type } from '@angular/core';
+import { SecondaryPanelEntry } from '../../models/secondary-panel-entry.model';
 
 /**
  * SecondaryPanelComponent — right-side collapsible dock zone (SecondaryPanel).
@@ -13,7 +14,7 @@ import { PanelTab } from '../../models/panel-tab.model';
 @Component({
   selector: 'app-secondary-panel',
   standalone: true,
-  imports: [NgFor, NgIf],
+  imports: [NgComponentOutlet],
   templateUrl: './secondary-panel.component.html',
   styleUrl: './secondary-panel.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -23,20 +24,22 @@ export class SecondaryPanelComponent {
   @Input() visible: boolean = false;
   /** Current panel width in pixels. */
   @Input() width: number = 300;
-  /** Tabs hosted in this panel zone. */
-  @Input() panels: PanelTab[] = [];
-  /** Id of the currently active panel tab. */
-  @Input() activePanelId: string = '';
+  /** Entries hosted in this panel zone. */
+  @Input() entries: SecondaryPanelEntry[] = [];
+  /** Id of the currently active entry. */
+  @Input() activeEntryId: string = '';
+  /** Active entry component type rendered in the panel content. */
+  @Input() activeComponentType: Type<unknown> | null = null;
 
   /** Emits the new visibility state when the user toggles or closes the panel. */
   @Output() visibilityChange = new EventEmitter<boolean>();
   /** Reserved for resize-handle drag implementation in a future task. */
   @Output() widthChange = new EventEmitter<number>();
-  /** Emits the selected panel tab id. */
-  @Output() activePanelChange = new EventEmitter<string>();
+  /** Emits the selected secondary entry id. */
+  @Output() activeEntryChange = new EventEmitter<string>();
 
-  onPanelSelect(panelId: string): void {
-    this.activePanelChange.emit(panelId);
+  onEntrySelect(entryId: string): void {
+    this.activeEntryChange.emit(entryId);
   }
 
   onToggle(): void {

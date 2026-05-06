@@ -1,0 +1,14 @@
+<section aria-label="Mock market content" data-testid="mock-secondary-market">
+  <h3 class="market-symbol">Market watch (fake)</h3>
+  <ul class="market-list">
+    @for (t of tickers; track t.symbol) {
+      <li class="market-item">
+        <span class="market-symbol">{{ t.symbol }}</span>
+        <span>{{ t.price | number:'1.2-2' }}</span>
+        <span [class.market-change-up]="t.changePct >= 0" [class.market-change-down]="t.changePct < 0">
+          {{ t.changePct >= 0 ? '+' : '' }}{{ t.changePct }}%
+        </span>
+      </li>
+    }
+  </ul>
+</section>

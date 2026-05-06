@@ -7,7 +7,13 @@ import {
   setSecondaryPanelVisible,
   setSidebarVisible,
 } from '../core/state/layout';
-import { addBottomPanelEntry, addShellTab, addSidebarEntry, addToolbarAction } from '../core/state/shell-content';
+import {
+  addBottomPanelEntry,
+  addSecondaryPanelEntry,
+  addShellTab,
+  addSidebarEntry,
+  addToolbarAction,
+} from '../core/state/shell-content';
 import { ShellManager } from './shell-manager.service';
 
 describe('ShellManager', () => {
@@ -141,6 +147,45 @@ describe('ShellManager', () => {
 
     shellManager.addTab({ id: 'dashboard', label: 'Dashboard', component: componentType });
     shellManager.addTab({ id: 'dashboard', label: 'Dashboard', component: componentType });
+
+    expect(dispatchSpy.calls.count()).toBe(1);
+  });
+
+  it('addSecondaryPanelEntry dispatches addSecondaryPanelEntry', () => {
+    const componentType = class {};
+
+    shellManager.addSecondaryPanelEntry({
+      id: 'secondary-weather',
+      label: 'Weather',
+      icon: 'sun',
+      component: componentType,
+    });
+
+    expect(dispatchSpy).toHaveBeenCalledWith(
+      addSecondaryPanelEntry({
+        entry: {
+          id: 'secondary-weather',
+          label: 'Weather',
+          icon: 'sun',
+          component: componentType,
+        },
+      })
+    );
+  });
+
+  it('duplicate secondary panel entry ids are ignored', () => {
+    const componentType = class {};
+
+    shellManager.addSecondaryPanelEntry({
+      id: 'secondary-weather',
+      label: 'Weather',
+      component: componentType,
+    });
+    shellManager.addSecondaryPanelEntry({
+      id: 'secondary-weather',
+      label: 'Weather 2',
+      component: componentType,
+    });
 
     expect(dispatchSpy.calls.count()).toBe(1);
   });

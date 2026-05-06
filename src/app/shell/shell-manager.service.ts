@@ -10,16 +10,19 @@ import {
 import {
   addBottomPanelEntry,
   addShellTab,
+  addSecondaryPanelEntry,
   addSidebarEntry,
   addToolbarAction,
 } from '../core/state/shell-content';
 import {
   IBottomPanelEntry,
   ICentralRegionTab,
+  ISecondaryPanelEntry,
   ISidebarEntry,
   IToolbarAction,
 } from './contracts';
 import { PanelTab } from './models/panel-tab.model';
+import { SecondaryPanelEntry } from './models/secondary-panel-entry.model';
 import { SidebarItem } from './models/sidebar-item.model';
 import { TabItem } from './models/tab-item.model';
 import { ToolbarAction } from './models/toolbar-action.model';
@@ -33,6 +36,7 @@ export class ShellManager {
   private readonly sidebarIds = new Set<string>();
   private readonly toolbarIds = new Set<string>();
   private readonly bottomPanelIds = new Set<string>();
+  private readonly secondaryPanelIds = new Set<string>();
 
   constructor(
     private readonly store: Store<AppState>,
@@ -124,6 +128,24 @@ export class ShellManager {
     };
 
     this.store.dispatch(addBottomPanelEntry(panelTab));
+  }
+
+  addSecondaryPanelEntry(entry: ISecondaryPanelEntry): void {
+    if (this.secondaryPanelIds.has(entry.id)) {
+      console.warn(`[ShellManager] Duplicate secondary panel entry id '${entry.id}' ignored.`);
+      return;
+    }
+
+    this.secondaryPanelIds.add(entry.id);
+
+    const secondaryEntry: SecondaryPanelEntry = {
+      id: entry.id,
+      label: entry.label,
+      icon: entry.icon,
+      component: entry.component,
+    };
+
+    this.store.dispatch(addSecondaryPanelEntry({ entry: secondaryEntry }));
   }
 
   setSidebarVisible(visible: boolean): void {

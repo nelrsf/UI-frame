@@ -204,6 +204,18 @@ describe('Docking — tab lifecycle within non-primary zones', () => {
 
     expect(state.tabGroups.find((g) => g.groupId === 'grp')?.zone).toBe(DockZone.BottomPanel);
   });
+
+  it('should preserve SecondaryPanel assignment across tab close/open operations', () => {
+    const state = applyActions([
+      openTab({ tab: makeTab({ id: 's1', label: 'S1.ts', groupId: 'secondary-live' }) }),
+      assignGroupToZone({ groupId: 'secondary-live', zone: DockZone.SecondaryPanel }),
+      openTab({ tab: makeTab({ id: 's2', label: 'S2.ts', groupId: 'secondary-live' }) }),
+      closeTab({ tabId: 's1', groupId: 'secondary-live' }),
+    ]);
+
+    expect(state.tabGroups.find((g) => g.groupId === 'secondary-live')?.zone).toBe(DockZone.SecondaryPanel);
+    expect(selectTabsForGroup('secondary-live')(rootState(state)).length).toBe(1);
+  });
 });
 
 describe('Docking — approved zone guard (no out-of-scope zones)', () => {

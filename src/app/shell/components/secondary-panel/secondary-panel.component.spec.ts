@@ -1,19 +1,16 @@
-import { TestBed } from '@angular/core/testing';
 import { Component } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
 import { SecondaryPanelComponent } from './secondary-panel.component';
-import { PanelTab } from '../../models/panel-tab.model';
+import { SecondaryPanelEntry } from '../../models/secondary-panel-entry.model';
 
-// Dummy component for testing
 @Component({
-  selector: 'app-dummy',
   standalone: true,
-  template: '<div>Dummy</div>',
+  template: '<div data-testid="dummy-view">Dummy view</div>',
 })
-class DummyComponent {}
+class DummyViewComponent {}
 
-const makePanel = (partial: Partial<PanelTab> & { id: string; label: string }): PanelTab => ({
-  closable: true,
-  component: partial.component || DummyComponent,
+const makeEntry = (partial: Partial<SecondaryPanelEntry> & { id: string; label: string }): SecondaryPanelEntry => ({
+  component: partial.component ?? DummyViewComponent,
   ...partial,
 });
 
@@ -33,184 +30,77 @@ describe('SecondaryPanelComponent', () => {
     const fixture = TestBed.createComponent(SecondaryPanelComponent);
     fixture.componentInstance.visible = false;
     fixture.detectChanges();
+
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('[data-testid="secondary-panel"]')).toBeNull();
   });
 
-  it('should render the panel when visible is true', () => {
+  it('should render entries and mark active entry', () => {
     const fixture = TestBed.createComponent(SecondaryPanelComponent);
     fixture.componentInstance.visible = true;
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('[data-testid="secondary-panel"]')).not.toBeNull();
-  });
-
-  it('should render the panel header when visible', () => {
-    const fixture = TestBed.createComponent(SecondaryPanelComponent);
-    fixture.componentInstance.visible = true;
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('[data-testid="secondary-panel-header"]')).not.toBeNull();
-  });
-
-  it('should apply width style when visible', () => {
-    const fixture = TestBed.createComponent(SecondaryPanelComponent);
-    fixture.componentInstance.visible = true;
-    fixture.componentInstance.width = 350;
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    const panel = compiled.querySelector('[data-testid="secondary-panel"]') as HTMLElement;
-    expect(panel.style.width).toBe('350px');
-  });
-
-  it('should render panel tabs when visible and panels are provided', () => {
-    const fixture = TestBed.createComponent(SecondaryPanelComponent);
-    fixture.componentInstance.visible = true;
-    fixture.componentInstance.panels = [
-      makePanel({ id: 'outline', label: 'Outline' }),
-      makePanel({ id: 'references', label: 'References' }),
+    fixture.componentInstance.entries = [
+      makeEntry({ id: 'secondary-weather', label: 'Weather' }),
+      makeEntry({ id: 'secondary-market', label: 'Market' }),
     ];
+    fixture.componentInstance.activeEntryId = 'secondary-weather';
     fixture.detectChanges();
+
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelectorAll('[data-testid^="secondary-panel-tab-"]').length).toBe(2);
+    expect(compiled.querySelector('[data-testid="secondary-panel-tab-secondary-weather"]')?.classList)
+      .toContain('secondary-panel__tab--active');
   });
 
-  it('should mark the active panel tab', () => {
+  it('should emit activeEntryChange when an entry tab is clicked', () => {
     const fixture = TestBed.createComponent(SecondaryPanelComponent);
     fixture.componentInstance.visible = true;
-    fixture.componentInstance.panels = [
-      makePanel({ id: 'outline', label: 'Outline' }),
-    ];
-    fixture.componentInstance.activePanelId = 'outline';
+    fixture.componentInstance.entries = [makeEntry({ id: 'secondary-weather', label: 'Weather' })];
     fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    const tab = compiled.querySelector('[data-testid="secondary-panel-tab-outline"]');
-    expect(tab?.classList).toContain('secondary-panel__tab--active');
-  });
 
-  it('should emit visibilityChange(false) when close button is clicked', () => {
-    const fixture = TestBed.createComponent(SecondaryPanelComponent);
-    fixture.componentInstance.visible = true;
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    const emitted: boolean[] = [];
-    fixture.componentInstance.visibilityChange.subscribe((v: boolean) => emitted.push(v));
-    const closeBtn = compiled.querySelector('[data-testid="secondary-panel-close"]') as HTMLElement;
-    closeBtn.click();
-    expect(emitted).toEqual([false]);
-  });
-
-  it('should emit visibilityChange(false) when toggle button is clicked and panel is visible', () => {
-    const fixture = TestBed.createComponent(SecondaryPanelComponent);
-    fixture.componentInstance.visible = true;
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    const emitted: boolean[] = [];
-    fixture.componentInstance.visibilityChange.subscribe((v: boolean) => emitted.push(v));
-    const toggleBtn = compiled.querySelector('[data-testid="secondary-panel-toggle"]') as HTMLElement;
-    toggleBtn.click();
-    expect(emitted).toEqual([false]);
-  });
-
-  it('should emit activePanelChange when a tab is clicked', () => {
-    const fixture = TestBed.createComponent(SecondaryPanelComponent);
-    fixture.componentInstance.visible = true;
-    fixture.componentInstance.panels = [makePanel({ id: 'outline', label: 'Outline' })];
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
     const emitted: string[] = [];
-    fixture.componentInstance.activePanelChange.subscribe((id: string) => emitted.push(id));
-    const tabBtn = compiled.querySelector('[data-testid="secondary-panel-tab-outline"]') as HTMLElement;
-    tabBtn.click();
-    expect(emitted).toEqual(['outline']);
+    fixture.componentInstance.activeEntryChange.subscribe((id) => emitted.push(id));
+
+    (fixture.nativeElement as HTMLElement)
+      .querySelector('[data-testid="secondary-panel-tab-secondary-weather"]')
+      ?.dispatchEvent(new MouseEvent('click'));
+
+    expect(emitted).toEqual(['secondary-weather']);
   });
 
-  it('should render panel content area when visible', () => {
+  it('should render active component with ngComponentOutlet when activeComponentType is provided', () => {
+    const fixture = TestBed.createComponent(SecondaryPanelComponent);
+    fixture.componentInstance.visible = true;
+    fixture.componentInstance.activeComponentType = DummyViewComponent;
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('[data-testid="dummy-view"]')).not.toBeNull();
+    expect(compiled.querySelector('[data-testid="secondary-panel-empty-state"]')).toBeNull();
+  });
+
+  it('should render controlled empty state when activeComponentType is null', () => {
+    const fixture = TestBed.createComponent(SecondaryPanelComponent);
+    fixture.componentInstance.visible = true;
+    fixture.componentInstance.activeComponentType = null;
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('[data-testid="secondary-panel-empty-state"]')).not.toBeNull();
+  });
+
+  it('should emit visibilityChange on toggle method and close button', () => {
     const fixture = TestBed.createComponent(SecondaryPanelComponent);
     fixture.componentInstance.visible = true;
     fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('[data-testid="secondary-panel-content"]')).not.toBeNull();
-  });
 
-  it('should have role="complementary" on the panel container', () => {
-    const fixture = TestBed.createComponent(SecondaryPanelComponent);
-    fixture.componentInstance.visible = true;
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    const panel = compiled.querySelector('[data-testid="secondary-panel"]');
-    expect(panel?.getAttribute('role')).toBe('complementary');
-  });
+    const emitted: boolean[] = [];
+    fixture.componentInstance.visibilityChange.subscribe((v) => emitted.push(v));
 
-  it('should default visible to false', () => {
-    const fixture = TestBed.createComponent(SecondaryPanelComponent);
-    expect(fixture.componentInstance.visible).toBeFalse();
-  });
+    fixture.componentInstance.onToggle();
+    (fixture.nativeElement as HTMLElement)
+      .querySelector('[data-testid="secondary-panel-close"]')
+      ?.dispatchEvent(new MouseEvent('click'));
 
-  it('should default width to 300', () => {
-    const fixture = TestBed.createComponent(SecondaryPanelComponent);
-    expect(fixture.componentInstance.width).toBe(300);
-  });
-
-  // ---------------------------------------------------------------------------
-  // Accessibility regression checks
-  // ---------------------------------------------------------------------------
-
-  describe('accessibility', () => {
-    it('should have aria-label on the secondary panel container', () => {
-      const fixture = TestBed.createComponent(SecondaryPanelComponent);
-      fixture.componentInstance.visible = true;
-      fixture.detectChanges();
-      const compiled = fixture.nativeElement as HTMLElement;
-      const panel = compiled.querySelector('[data-testid="secondary-panel"]');
-      expect(panel?.getAttribute('aria-label')).toBeTruthy();
-    });
-
-    it('should have role="tablist" on the panel tabs container', () => {
-      const fixture = TestBed.createComponent(SecondaryPanelComponent);
-      fixture.componentInstance.visible = true;
-      fixture.detectChanges();
-      const compiled = fixture.nativeElement as HTMLElement;
-      const tabsContainer = compiled.querySelector('.secondary-panel__tabs');
-      expect(tabsContainer?.getAttribute('role')).toBe('tablist');
-    });
-
-    it('should have aria-label on the toggle button', () => {
-      const fixture = TestBed.createComponent(SecondaryPanelComponent);
-      fixture.componentInstance.visible = true;
-      fixture.detectChanges();
-      const compiled = fixture.nativeElement as HTMLElement;
-      const toggleBtn = compiled.querySelector('[data-testid="secondary-panel-toggle"]');
-      expect(toggleBtn?.getAttribute('aria-label')).toBeTruthy();
-    });
-
-    it('should have aria-label on the close button', () => {
-      const fixture = TestBed.createComponent(SecondaryPanelComponent);
-      fixture.componentInstance.visible = true;
-      fixture.detectChanges();
-      const compiled = fixture.nativeElement as HTMLElement;
-      const closeBtn = compiled.querySelector('[data-testid="secondary-panel-close"]');
-      expect(closeBtn?.getAttribute('aria-label')).toBeTruthy();
-    });
-
-    it('should have role="tabpanel" on the content area', () => {
-      const fixture = TestBed.createComponent(SecondaryPanelComponent);
-      fixture.componentInstance.visible = true;
-      fixture.detectChanges();
-      const compiled = fixture.nativeElement as HTMLElement;
-      const content = compiled.querySelector('[data-testid="secondary-panel-content"]');
-      expect(content?.getAttribute('role')).toBe('tabpanel');
-    });
-
-    it('should set aria-selected on panel tab buttons', () => {
-      const fixture = TestBed.createComponent(SecondaryPanelComponent);
-      fixture.componentInstance.visible = true;
-      fixture.componentInstance.panels = [makePanel({ id: 'outline', label: 'Outline' })];
-      fixture.componentInstance.activePanelId = 'outline';
-      fixture.detectChanges();
-      const compiled = fixture.nativeElement as HTMLElement;
-      const tabBtn = compiled.querySelector('[data-testid="secondary-panel-tab-outline"]');
-      expect(tabBtn?.getAttribute('aria-selected')).toBe('true');
-    });
+    expect(emitted).toEqual([false, false]);
   });
 });

@@ -4,6 +4,7 @@ import { TabItem } from '../../../shell/models/tab-item.model';
 import { SidebarItem } from '../../../shell/models/sidebar-item.model';
 import { ToolbarAction } from '../../../shell/models/toolbar-action.model';
 import { PanelTab } from '../../../shell/models/panel-tab.model';
+import { SecondaryPanelEntry } from '../../../shell/models/secondary-panel-entry.model';
 
 /**
  * Add a tab to the shell's central content region.
@@ -44,4 +45,20 @@ export const addToolbarAction = createAction(
 export const addBottomPanelEntry = createAction(
   '[Shell Content] Add Bottom Panel Entry',
   props<PanelTab>()
+);
+
+/**
+ * Add an entry to the shell's secondary panel region.
+ */
+export const addSecondaryPanelEntry = createAction(
+  '[Shell Content] Add Secondary Panel Entry',
+  props<{ entry: SecondaryPanelEntry }>()
+);
+
+/**
+ * Set active secondary panel entry by id.
+ */
+export const setActiveSecondaryPanelEntry = createAction(
+  '[Shell Content] Set Active Secondary Panel Entry',
+  props<{ id: string }>()
 );

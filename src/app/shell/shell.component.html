@@ -33,7 +33,11 @@
       class="shell-secondary-panel"
       [visible]="(secondaryPanelVisible$ | async) ?? false"
       [width]="(secondaryPanelWidth$ | async) ?? 300"
+      [entries]="(secondaryPanelEntries$ | async) ?? []"
+      [activeEntryId]="(activeSecondaryPanelEntryId$ | async) ?? ''"
+      [activeComponentType]="activeSecondaryPanelComponentType$ | async"
       (visibilityChange)="onSecondaryPanelVisibilityChange($event)"
+      (activeEntryChange)="onSecondaryPanelActiveEntryChange($event)"
       (widthChange)="onSecondaryPanelWidthChange($event)"
     ></app-secondary-panel>
     <app-bottom-panel

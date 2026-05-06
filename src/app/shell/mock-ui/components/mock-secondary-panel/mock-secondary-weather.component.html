@@ -1,0 +1,11 @@
+<section aria-label="Mock weather content" data-testid="mock-secondary-weather">
+  <h3 class="weather-title">Weather snapshot (fake)</h3>
+  <div class="weather-grid">
+    @for (m of metrics; track m.city) {
+      <article class="weather-card">
+        <p class="weather-title">{{ m.city }} - {{ m.condition }}</p>
+        <p class="weather-meta">Temp: {{ m.temperatureC }}C | Humidity: {{ m.humidityPct }}%</p>
+      </article>
+    }
+  </div>
+</section>

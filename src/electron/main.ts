@@ -95,6 +95,20 @@ function createWindow(): void {
         .catch(() => {
           // DOM query failed — keyboard:reachable signal will not be emitted.
         });
+
+      // Verify secondary panel mock registration rendered both expected entries.
+      mainWindow!.webContents
+        .executeJavaScript(
+          `document.querySelectorAll('[data-testid^="secondary-panel-tab-"]').length`
+        )
+        .then((count: unknown) => {
+          if (typeof count === 'number' && count >= 2) {
+            process.stdout.write('[smoke] secondary:entries:ok\n');
+          }
+        })
+        .catch(() => {
+          // DOM query failed — secondary entry signal will not be emitted.
+        });
     }
   });
 
