@@ -38,11 +38,11 @@ function registerIpcHandlers(): void {
 
 function createWindow(): void {
   mainWindow = new BrowserWindow({
-    width: 1280,
-    height: 800,
-    minWidth: 800,
-    minHeight: 600,
+    minWidth: 1280,
+    minHeight: 800,
+    darkTheme: true,
     backgroundColor: '#1e1e1e',
+    show: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -63,6 +63,14 @@ function createWindow(): void {
       })
     );
   }
+
+  mainWindow.once('ready-to-show', () => {
+    if (!mainWindow) {
+      return;
+    }
+    mainWindow.maximize();
+    mainWindow.show();
+  });
 
   mainWindow.webContents.on('did-finish-load', () => {
     // Emit a detectable signal so the headless smoke runner can confirm the
