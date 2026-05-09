@@ -1,8 +1,8 @@
-import { Component, OnInit, AfterViewInit, HostBinding, inject, ChangeDetectionStrategy, NgZone, DestroyRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, HostBinding, inject, ChangeDetectionStrategy, NgZone, DestroyRef, ElementRef, ViewChild } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Store } from '@ngrx/store';
-import { combineLatest, map, Observable } from 'rxjs';
+import { combineLatest, map, Observable, BehaviorSubject } from 'rxjs';
 import { StatusBarComponent } from './components/status-bar/status-bar.component';
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { ContentAreaComponent } from './components/content-area/content-area.component';
@@ -34,6 +34,12 @@ import {
   selectSecondaryPanelVisible,
   selectSecondaryPanelWidth,
 } from '../core/state/layout/layout.selectors';
+import {
+  BOTTOM_PANEL_HEIGHT_MIN,
+  BOTTOM_PANEL_HEIGHT_MAX,
+  SECONDARY_PANEL_WIDTH_MIN,
+  SECONDARY_PANEL_WIDTH_MAX,
+} from '../core/state/layout/layout.reducer';
 import {
   selectActiveShellComponentType,
   selectActiveShellTabId,
@@ -73,6 +79,10 @@ export class ShellComponent implements OnInit, AfterViewInit {
   private readonly sessionService = inject(WorkspaceSessionService);
   private readonly zone = inject(NgZone);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly elementRef = inject(ElementRef);
+
+  /** Reference to the shell-root div for direct CSS-var updates during drag. */
+  @ViewChild('shellRoot') private shellRootRef!: ElementRef<HTMLDivElement>;
 
   // rAF throttle state for bottom-panel resize (NFR-Perf-03)
   private _rafBottomPending = false;
@@ -81,6 +91,23 @@ export class ShellComponent implements OnInit, AfterViewInit {
   // rAF throttle state for secondary-panel resize (NFR-Perf-03)
   private _rafSecondaryPending = false;
   private _pendingSecondaryWidth: number | null = null;
+
+  // ── Splitter drag state (local, not committed to NgRx during drag) ──────────
+  _committedBottomHeight = 200;
+  _committedSecondaryWidth = 300;
+
+  private _bottomDragActive = false;
+  private _bottomDragStartY = 0;
+  private _bottomDragStartHeight = 0;
+
+  private _secondaryDragActive = false;
+  private _secondaryDragStartX = 0;
+  private _secondaryDragStartWidth = 0;
+
+  /** Draft height during bottom splitter drag (null = use committed NgRx value). */
+  private readonly _draftBottomHeight$ = new BehaviorSubject<number | null>(null);
+  /** Draft width during secondary splitter drag (null = use committed NgRx value). */
+  private readonly _draftSecondaryWidth$ = new BehaviorSubject<number | null>(null);
 
   activeBottomPanelId = '';
 
@@ -140,6 +167,34 @@ export class ShellComponent implements OnInit, AfterViewInit {
   );
 
   /**
+   * CSS var for --shell-bottom-panel-height.
+   * Reflects draft height during drag; falls back to committed NgRx value.
+   */
+  readonly shellBottomPanelHeightPx$ = combineLatest([
+    this.bottomPanelVisible$,
+    this.bottomPanelHeight$,
+    this._draftBottomHeight$,
+  ]).pipe(
+    map(([visible, committed, draft]) =>
+      visible ? `${draft ?? committed}px` : '0px'
+    )
+  );
+
+  /**
+   * CSS var for --shell-secondary-panel-width.
+   * Reflects draft width during drag; falls back to committed NgRx value.
+   */
+  readonly shellSecondaryPanelWidthPx$ = combineLatest([
+    this.secondaryPanelVisible$,
+    this.secondaryPanelWidth$,
+    this._draftSecondaryWidth$,
+  ]).pipe(
+    map(([visible, committed, draft]) =>
+      visible ? `${draft ?? committed}px` : '0px'
+    )
+  );
+
+  /**
    * Adds a platform-specific CSS class to the host element so that
    * platform-aware styles (e.g. title-bar spacing on macOS) can be applied
    * without querying the DOM directly.
@@ -155,6 +210,14 @@ export class ShellComponent implements OnInit, AfterViewInit {
     this.bottomPanelTabs$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((panels) => this.syncActiveBottomPanel(panels));
+
+    // Track committed dimension values so drag can start from the right baseline.
+    this.bottomPanelHeight$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((h) => { this._committedBottomHeight = h; });
+    this.secondaryPanelWidth$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((w) => { this._committedSecondaryWidth = w; });
 
     // Attempt to restore the persisted workspace session for the default workspace.
     // Valid dimension and visibility values are dispatched as a layout restoration;
@@ -281,6 +344,80 @@ export class ShellComponent implements OnInit, AfterViewInit {
         this._markEnd('shell.secondary-panel.resize');
       }, 0);
     }
+  }
+
+  // ── Bottom splitter pointer events ────────────────────────────────────────
+
+  onBottomSplitterPointerDown(event: PointerEvent): void {
+    (event.target as HTMLElement).setPointerCapture?.(event.pointerId);
+    event.preventDefault?.();
+    this._bottomDragActive = true;
+    this._bottomDragStartY = event.clientY;
+    this._bottomDragStartHeight = this._committedBottomHeight;
+  }
+
+  onBottomSplitterPointerMove(event: PointerEvent): void {
+    if (!this._bottomDragActive) return;
+    const delta = this._bottomDragStartY - event.clientY;
+    const draft = Math.min(BOTTOM_PANEL_HEIGHT_MAX, Math.max(BOTTOM_PANEL_HEIGHT_MIN, Math.round(this._bottomDragStartHeight + delta)));
+    this._draftBottomHeight$.next(draft);
+  }
+
+  onBottomSplitterPointerUp(event: PointerEvent): void {
+    if (!this._bottomDragActive) return;
+    this._bottomDragActive = false;
+    const delta = this._bottomDragStartY - event.clientY;
+    const committed = Math.min(BOTTOM_PANEL_HEIGHT_MAX, Math.max(BOTTOM_PANEL_HEIGHT_MIN, Math.round(this._bottomDragStartHeight + delta)));
+    this._draftBottomHeight$.next(null);
+    this.store.dispatch(setBottomPanelHeight({ height: committed }));
+    this.eventBus.emit(
+      'shell.region.resized.v1',
+      { regionId: 'bottom-panel', widthPx: null, heightPx: committed, source: 'user-drag', committedAt: Date.now() },
+      'ShellComponent'
+    );
+  }
+
+  onBottomSplitterPointerCancel(_event: PointerEvent): void {
+    if (!this._bottomDragActive) return;
+    this._bottomDragActive = false;
+    this._draftBottomHeight$.next(null);
+  }
+
+  // ── Secondary splitter pointer events ─────────────────────────────────────
+
+  onSecondarySplitterPointerDown(event: PointerEvent): void {
+    (event.target as HTMLElement).setPointerCapture?.(event.pointerId);
+    event.preventDefault?.();
+    this._secondaryDragActive = true;
+    this._secondaryDragStartX = event.clientX;
+    this._secondaryDragStartWidth = this._committedSecondaryWidth;
+  }
+
+  onSecondarySplitterPointerMove(event: PointerEvent): void {
+    if (!this._secondaryDragActive) return;
+    const delta = this._secondaryDragStartX - event.clientX;
+    const draft = Math.min(SECONDARY_PANEL_WIDTH_MAX, Math.max(SECONDARY_PANEL_WIDTH_MIN, Math.round(this._secondaryDragStartWidth + delta)));
+    this._draftSecondaryWidth$.next(draft);
+  }
+
+  onSecondarySplitterPointerUp(event: PointerEvent): void {
+    if (!this._secondaryDragActive) return;
+    this._secondaryDragActive = false;
+    const delta = this._secondaryDragStartX - event.clientX;
+    const committed = Math.min(SECONDARY_PANEL_WIDTH_MAX, Math.max(SECONDARY_PANEL_WIDTH_MIN, Math.round(this._secondaryDragStartWidth + delta)));
+    this._draftSecondaryWidth$.next(null);
+    this.store.dispatch(setSecondaryPanelWidth({ width: committed }));
+    this.eventBus.emit(
+      'shell.region.resized.v1',
+      { regionId: 'secondary-panel', widthPx: committed, heightPx: null, source: 'user-drag', committedAt: Date.now() },
+      'ShellComponent'
+    );
+  }
+
+  onSecondarySplitterPointerCancel(_event: PointerEvent): void {
+    if (!this._secondaryDragActive) return;
+    this._secondaryDragActive = false;
+    this._draftSecondaryWidth$.next(null);
   }
 
   /**

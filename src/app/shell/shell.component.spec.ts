@@ -5,7 +5,7 @@ import { ShellComponent } from './shell.component';
 import { PlatformAdapter } from '../core/infrastructure/electron/adapters/platform.adapter';
 import { EventBusService } from '../core/services/event-bus.service';
 import { PlatformName } from '../core/application/ports/platform.port';
-import { setSecondaryPanelWidth, toggleSecondaryPanel } from '../core/state/layout/layout.actions';
+import { setBottomPanelHeight, setSecondaryPanelWidth, toggleSecondaryPanel } from '../core/state/layout/layout.actions';
 
 function makePlatformAdapter(platform: PlatformName): PlatformAdapter {
   return {
@@ -219,5 +219,304 @@ describe('ShellComponent', () => {
     }).syncActiveBottomPanel([{ id: 'mock-results' }, { id: 'mock-logs' }]);
 
     expect(fixture.componentInstance.activeBottomPanelId).toBe('mock-results');
+  });
+
+  // ── US1: Splitter drag commit ────────────────────────────────────────────────
+
+  describe('US1 — bottom splitter drag commit (T011)', () => {
+    function makePointerEvent(clientY: number, pointerId = 1): PointerEvent {
+      return { clientY, pointerId, preventDefault: () => {}, target: { setPointerCapture: () => {} } } as unknown as PointerEvent;
+    }
+
+    it('should dispatch setBottomPanelHeight on bottom splitter pointer-up', () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      const store = TestBed.inject(Store);
+      const dispatchSpy = spyOn(store, 'dispatch');
+
+      const component = fixture.componentInstance as unknown as {
+        _committedBottomHeight: number;
+        onBottomSplitterPointerDown: (e: PointerEvent) => void;
+        onBottomSplitterPointerUp: (e: PointerEvent) => void;
+      };
+
+      component._committedBottomHeight = 200;
+      component.onBottomSplitterPointerDown(makePointerEvent(500));
+      component.onBottomSplitterPointerUp(makePointerEvent(450)); // drag up 50px → height = 250
+
+      expect(dispatchSpy).toHaveBeenCalledWith(setBottomPanelHeight({ height: 250 }));
+    });
+
+    it('should not dispatch setBottomPanelHeight if no drag was started', () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      const store = TestBed.inject(Store);
+      const dispatchSpy = spyOn(store, 'dispatch');
+
+      (fixture.componentInstance as unknown as {
+        onBottomSplitterPointerUp: (e: PointerEvent) => void;
+      }).onBottomSplitterPointerUp(makePointerEvent(450));
+
+      expect(dispatchSpy).not.toHaveBeenCalledWith(jasmine.objectContaining({ type: '[Layout] Set Bottom Panel Height' }));
+    });
+
+    it('should clamp committed height to BOTTOM_PANEL_HEIGHT_MAX on extreme upward drag', () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      const store = TestBed.inject(Store);
+      const dispatchSpy = spyOn(store, 'dispatch');
+
+      const component = fixture.componentInstance as unknown as {
+        _committedBottomHeight: number;
+        onBottomSplitterPointerDown: (e: PointerEvent) => void;
+        onBottomSplitterPointerUp: (e: PointerEvent) => void;
+      };
+
+      component._committedBottomHeight = 200;
+      component.onBottomSplitterPointerDown(makePointerEvent(500));
+      component.onBottomSplitterPointerUp(makePointerEvent(0)); // drag up 500px
+
+      expect(dispatchSpy).toHaveBeenCalledWith(setBottomPanelHeight({ height: 600 })); // clamped to max
+    });
+  });
+
+  describe('US1 — secondary splitter drag commit (T012)', () => {
+    function makePointerEvent(clientX: number, pointerId = 1): PointerEvent {
+      return { clientX, pointerId, preventDefault: () => {}, target: { setPointerCapture: () => {} } } as unknown as PointerEvent;
+    }
+
+    it('should dispatch setSecondaryPanelWidth on secondary splitter pointer-up', () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      const store = TestBed.inject(Store);
+      const dispatchSpy = spyOn(store, 'dispatch');
+
+      const component = fixture.componentInstance as unknown as {
+        _committedSecondaryWidth: number;
+        onSecondarySplitterPointerDown: (e: PointerEvent) => void;
+        onSecondarySplitterPointerUp: (e: PointerEvent) => void;
+      };
+
+      component._committedSecondaryWidth = 300;
+      component.onSecondarySplitterPointerDown(makePointerEvent(800));
+      component.onSecondarySplitterPointerUp(makePointerEvent(750)); // drag left 50px → width = 350
+
+      expect(dispatchSpy).toHaveBeenCalledWith(setSecondaryPanelWidth({ width: 350 }));
+    });
+
+    it('should not dispatch setSecondaryPanelWidth if no drag was started', () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      const store = TestBed.inject(Store);
+      const dispatchSpy = spyOn(store, 'dispatch');
+
+      (fixture.componentInstance as unknown as {
+        onSecondarySplitterPointerUp: (e: PointerEvent) => void;
+      }).onSecondarySplitterPointerUp(makePointerEvent(750));
+
+      expect(dispatchSpy).not.toHaveBeenCalledWith(jasmine.objectContaining({ type: '[Layout] Set Secondary Panel Width' }));
+    });
+
+    it('should clamp committed width to SECONDARY_PANEL_WIDTH_MAX on extreme leftward drag', () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      const store = TestBed.inject(Store);
+      const dispatchSpy = spyOn(store, 'dispatch');
+
+      const component = fixture.componentInstance as unknown as {
+        _committedSecondaryWidth: number;
+        onSecondarySplitterPointerDown: (e: PointerEvent) => void;
+        onSecondarySplitterPointerUp: (e: PointerEvent) => void;
+      };
+
+      component._committedSecondaryWidth = 300;
+      component.onSecondarySplitterPointerDown(makePointerEvent(800));
+      component.onSecondarySplitterPointerUp(makePointerEvent(100)); // drag left 700px
+
+      expect(dispatchSpy).toHaveBeenCalledWith(setSecondaryPanelWidth({ width: 500 })); // clamped to max
+    });
+  });
+
+  describe('US1 — workspace CSS vars wire committed dimensions (T013)', () => {
+    it('should expose bottom splitter handle element in the workspace', () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      fixture.detectChanges();
+      const el = (fixture.nativeElement as HTMLElement).querySelector('[data-testid="bottom-splitter"]');
+      expect(el).not.toBeNull();
+    });
+
+    it('should expose secondary splitter handle element in the workspace', () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      fixture.detectChanges();
+      const el = (fixture.nativeElement as HTMLElement).querySelector('[data-testid="secondary-splitter"]');
+      expect(el).not.toBeNull();
+    });
+  });
+
+  // ── US2: Cursor feedback ────────────────────────────────────────────────────
+
+  describe('US2 — ns-resize cursor on bottom splitter hover (T020)', () => {
+    it('should have ns-resize cursor style on the bottom splitter handle', () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      fixture.detectChanges();
+      const handle = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('[data-testid="bottom-splitter"]');
+      expect(handle).not.toBeNull();
+      const computedCursor = getComputedStyle(handle!).cursor;
+      // In JSDOM getComputedStyle may not fully apply CSS; check the class/attribute instead.
+      expect(handle!.classList.contains('bottom-splitter-handle')).toBeTrue();
+    });
+  });
+
+  describe('US2 — ew-resize cursor on secondary splitter hover (T021)', () => {
+    it('should have ew-resize cursor style on the secondary splitter handle', () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      fixture.detectChanges();
+      const handle = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('[data-testid="secondary-splitter"]');
+      expect(handle).not.toBeNull();
+      expect(handle!.classList.contains('secondary-splitter-handle')).toBeTrue();
+    });
+  });
+
+  describe('US2 — no resize cursor on forbidden regions (T022)', () => {
+    it('should not have a splitter handle inside the toolbar', () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      fixture.detectChanges();
+      const toolbar = (fixture.nativeElement as HTMLElement).querySelector('.shell-toolbar');
+      expect(toolbar?.querySelector('[data-testid="bottom-splitter"]')).toBeNull();
+      expect(toolbar?.querySelector('[data-testid="secondary-splitter"]')).toBeNull();
+    });
+
+    it('should not have a splitter handle inside the sidebar', () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      fixture.detectChanges();
+      const sidebar = (fixture.nativeElement as HTMLElement).querySelector('.shell-sidebar');
+      expect(sidebar?.querySelector('[data-testid="bottom-splitter"]')).toBeNull();
+      expect(sidebar?.querySelector('[data-testid="secondary-splitter"]')).toBeNull();
+    });
+
+    it('should not have a splitter handle inside the status bar', () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      fixture.detectChanges();
+      const statusbar = (fixture.nativeElement as HTMLElement).querySelector('.shell-statusbar');
+      expect(statusbar?.querySelector('[data-testid="bottom-splitter"]')).toBeNull();
+      expect(statusbar?.querySelector('[data-testid="secondary-splitter"]')).toBeNull();
+    });
+  });
+
+  describe('US2 — cursor feedback latency (T037)', () => {
+    it('should render the bottom splitter handle synchronously with detectChanges (< 100 ms)', () => {
+      const start = performance.now();
+      const fixture = TestBed.createComponent(ShellComponent);
+      fixture.detectChanges();
+      const elapsed = performance.now() - start;
+      const handle = (fixture.nativeElement as HTMLElement).querySelector('[data-testid="bottom-splitter"]');
+      expect(handle).not.toBeNull();
+      expect(elapsed).toBeLessThan(100);
+    });
+  });
+
+  // ── US3: EventBus integration ───────────────────────────────────────────────
+
+  describe('US3 — shell.region.resized.v1 on bottom commit (T026)', () => {
+    function makePointerEvent(clientY: number, pointerId = 1): PointerEvent {
+      return { clientY, pointerId, preventDefault: () => {}, target: { setPointerCapture: () => {} } } as unknown as PointerEvent;
+    }
+
+    it('should emit shell.region.resized.v1 exactly once on bottom splitter pointer-up', () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      const eventBus = TestBed.inject(EventBusService);
+      const emitSpy = spyOn(eventBus, 'emit').and.callThrough();
+
+      const component = fixture.componentInstance as unknown as {
+        _committedBottomHeight: number;
+        onBottomSplitterPointerDown: (e: PointerEvent) => void;
+        onBottomSplitterPointerUp: (e: PointerEvent) => void;
+      };
+
+      component._committedBottomHeight = 200;
+      component.onBottomSplitterPointerDown(makePointerEvent(500));
+      component.onBottomSplitterPointerUp(makePointerEvent(450));
+
+      const resizeCalls = emitSpy.calls.all().filter(c => c.args[0] === 'shell.region.resized.v1');
+      expect(resizeCalls.length).toBe(1);
+    });
+  });
+
+  describe('US3 — shell.region.resized.v1 on secondary commit (T027)', () => {
+    function makePointerEvent(clientX: number, pointerId = 1): PointerEvent {
+      return { clientX, pointerId, preventDefault: () => {}, target: { setPointerCapture: () => {} } } as unknown as PointerEvent;
+    }
+
+    it('should emit shell.region.resized.v1 exactly once on secondary splitter pointer-up', () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      const eventBus = TestBed.inject(EventBusService);
+      const emitSpy = spyOn(eventBus, 'emit').and.callThrough();
+
+      const component = fixture.componentInstance as unknown as {
+        _committedSecondaryWidth: number;
+        onSecondarySplitterPointerDown: (e: PointerEvent) => void;
+        onSecondarySplitterPointerUp: (e: PointerEvent) => void;
+      };
+
+      component._committedSecondaryWidth = 300;
+      component.onSecondarySplitterPointerDown(makePointerEvent(800));
+      component.onSecondarySplitterPointerUp(makePointerEvent(750));
+
+      const resizeCalls = emitSpy.calls.all().filter(c => c.args[0] === 'shell.region.resized.v1');
+      expect(resizeCalls.length).toBe(1);
+    });
+  });
+
+  describe('US3 — payload integer pixels and regionId semantics (T028)', () => {
+    it('should emit shell.region.resized.v1 with integer heightPx and regionId=bottom-panel for bottom commit', () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      const eventBus = TestBed.inject(EventBusService);
+      const emitSpy = spyOn(eventBus, 'emit').and.callThrough();
+
+      const component = fixture.componentInstance as unknown as {
+        _committedBottomHeight: number;
+        onBottomSplitterPointerDown: (e: PointerEvent) => void;
+        onBottomSplitterPointerUp: (e: PointerEvent) => void;
+      };
+
+      component._committedBottomHeight = 200;
+      component.onBottomSplitterPointerDown(
+        { clientY: 500, pointerId: 1, preventDefault: () => {}, target: { setPointerCapture: () => {} } } as unknown as PointerEvent
+      );
+      component.onBottomSplitterPointerUp(
+        { clientY: 450, pointerId: 1, preventDefault: () => {}, target: { setPointerCapture: () => {} } } as unknown as PointerEvent
+      );
+
+      const call = emitSpy.calls.all().find(c => c.args[0] === 'shell.region.resized.v1');
+      expect(call).toBeDefined();
+      const payload = call!.args[1] as { regionId: string; widthPx: unknown; heightPx: number; source: string; committedAt: number };
+      expect(payload.regionId).toBe('bottom-panel');
+      expect(payload.widthPx).toBeNull();
+      expect(Number.isInteger(payload.heightPx)).toBeTrue();
+      expect(payload.source).toBe('user-drag');
+      expect(typeof payload.committedAt).toBe('number');
+    });
+
+    it('should emit shell.region.resized.v1 with integer widthPx and regionId=secondary-panel for secondary commit', () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      const eventBus = TestBed.inject(EventBusService);
+      const emitSpy = spyOn(eventBus, 'emit').and.callThrough();
+
+      const component = fixture.componentInstance as unknown as {
+        _committedSecondaryWidth: number;
+        onSecondarySplitterPointerDown: (e: PointerEvent) => void;
+        onSecondarySplitterPointerUp: (e: PointerEvent) => void;
+      };
+
+      component._committedSecondaryWidth = 300;
+      component.onSecondarySplitterPointerDown(
+        { clientX: 800, pointerId: 1, preventDefault: () => {}, target: { setPointerCapture: () => {} } } as unknown as PointerEvent
+      );
+      component.onSecondarySplitterPointerUp(
+        { clientX: 750, pointerId: 1, preventDefault: () => {}, target: { setPointerCapture: () => {} } } as unknown as PointerEvent
+      );
+
+      const call = emitSpy.calls.all().find(c => c.args[0] === 'shell.region.resized.v1');
+      expect(call).toBeDefined();
+      const payload = call!.args[1] as { regionId: string; widthPx: number; heightPx: unknown; source: string; committedAt: number };
+      expect(payload.regionId).toBe('secondary-panel');
+      expect(Number.isInteger(payload.widthPx)).toBeTrue();
+      expect(payload.heightPx).toBeNull();
+      expect(payload.source).toBe('user-drag');
+    });
   });
 });

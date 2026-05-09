@@ -1,10 +1,19 @@
 /**
+ * Identifies a resizable dock region within the shell.
+ * - `bottom-panel`: the horizontal panel below the primary content area.
+ * - `secondary-panel`: the vertical auxiliary panel to the right of the content area.
+ * - `primary-workspace`: the main content region (derived; not directly draggable).
+ */
+export type DockRegionId = 'bottom-panel' | 'secondary-panel' | 'primary-workspace';
+
+/**
  * Catalog of versioned internal event names following the convention:
  * {boundedContext}.{entity}.{action}.v1
  */
 export type AppEventName =
   | 'shell.ready.v1'
   | 'shell.layout.changed.v1'
+  | 'shell.region.resized.v1'
   | 'sidebar.collapsed.v1'
   | 'sidebar.section.activated.v1'
   | 'sidebar.resized.v1'
@@ -18,6 +27,18 @@ export type AppEventName =
 export interface AppEventPayloads {
   'shell.ready.v1': Record<string, never>;
   'shell.layout.changed.v1': { layout: string };
+  /**
+   * Emitted once per committed user-drag resize of a dock region boundary.
+   * All pixel values are integers, clamped to the per-region min/max bounds.
+   * Listener failures are isolated so one broken subscriber cannot block others.
+   */
+  'shell.region.resized.v1': {
+    regionId: DockRegionId;
+    widthPx: number | null;
+    heightPx: number | null;
+    source: 'user-drag';
+    committedAt: number;
+  };
   'sidebar.collapsed.v1': { collapsed: boolean };
   'sidebar.section.activated.v1': { sectionId: string };
   'sidebar.resized.v1': { width: number };

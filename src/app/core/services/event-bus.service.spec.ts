@@ -137,6 +137,30 @@ describe('EventBusService', () => {
         jasmine.any(Error)
       );
     });
+
+    it('should isolate a failing shell.region.resized.v1 listener so later subscribers still receive the event', () => {
+      const received: string[] = [];
+
+      service.on('shell.region.resized.v1').subscribe(() => {
+        throw new Error('resize listener failure');
+      });
+
+      service.on('shell.region.resized.v1').subscribe((e) => {
+        received.push(e.payload.regionId);
+      });
+
+      expect(() =>
+        service.emit('shell.region.resized.v1', {
+          regionId: 'bottom-panel',
+          widthPx: null,
+          heightPx: 300,
+          source: 'user-drag',
+          committedAt: Date.now(),
+        })
+      ).not.toThrow();
+
+      expect(received).toEqual(['bottom-panel']);
+    });
   });
 
   describe('dev-mode traceability', () => {
