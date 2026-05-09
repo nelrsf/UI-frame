@@ -88,16 +88,21 @@
   grid-area: workspace;
   display: grid;
   grid-template-areas:
-    "toolbar       toolbar"
-    "tabbar        tabbar"
-    "content       secondary-panel"
-    "bottom-panel  bottom-panel";
+    "toolbar             toolbar              toolbar"
+    "tabbar              tabbar               tabbar"
+    "content             secondary-splitter   secondary-panel"
+    "bottom-splitter     bottom-splitter      bottom-splitter"
+    "bottom-panel        bottom-panel         bottom-panel";
   grid-template-rows:
     var(--shell-toolbar-height)
     var(--shell-tabbar-height)
     1fr
+    var(--shell-bottom-splitter-height, 0px)
     var(--shell-bottom-panel-height, 0px);
-  grid-template-columns: 1fr var(--shell-secondary-panel-width, 0px);
+  grid-template-columns:
+    1fr
+    var(--shell-secondary-splitter-width, 0px)
+    var(--shell-secondary-panel-width, 0px);
   transition: grid-template-columns 120ms ease-out;
   overflow: hidden;
   min-width: 0;
@@ -132,6 +137,46 @@
   overflow: hidden;
   min-width: 0;
   min-height: 0;
+}
+
+/* ── Resize splitter handles ──────────────────────────────────────────────── */
+
+/* Horizontal splitter between content area and bottom panel */
+.bottom-splitter-handle {
+  grid-area: bottom-splitter;
+  cursor: ns-resize;
+  background-color: var(--color-border-subtle, transparent);
+  transition: background-color 80ms ease;
+  z-index: 10;
+  touch-action: none;
+}
+
+.bottom-splitter-handle:hover,
+.bottom-splitter-handle:active {
+  background-color: var(--color-accent-primary, #0078d4);
+}
+
+/* Vertical splitter between content area and secondary panel */
+.secondary-splitter-handle {
+  grid-area: secondary-splitter;
+  cursor: ew-resize;
+  background-color: var(--color-border-subtle, transparent);
+  transition: background-color 80ms ease;
+  z-index: 10;
+  touch-action: none;
+}
+
+.secondary-splitter-handle:hover,
+.secondary-splitter-handle:active {
+  background-color: var(--color-accent-primary, #0078d4);
+}
+
+/* Ensure non-resizable regions retain the default cursor (T025) */
+.shell-toolbar,
+.shell-tabbar,
+.shell-statusbar,
+.shell-sidebar {
+  cursor: default;
 }
 
 /* Sub-región: Bottom Panel — scroll completo (terminal, logs, output) */

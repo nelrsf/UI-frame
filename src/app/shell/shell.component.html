@@ -1,11 +1,14 @@
 <div
+  #shellRoot
   class="shell-root"
   data-testid="shell-root"
   role="application"
   aria-label="Application shell"
   [style.--shell-sidebar-width]="shellSidebarColumnWidth$ | async"
-  [style.--shell-secondary-panel-width]="((secondaryPanelVisible$ | async) ? ((secondaryPanelWidth$ | async) ?? 300) : 0) + 'px'"
-  [style.--shell-bottom-panel-height]="((bottomPanelVisible$ | async) ? ((bottomPanelHeight$ | async) ?? 220) : 0) + 'px'"
+  [style.--shell-secondary-panel-width]="shellSecondaryPanelWidthPx$ | async"
+  [style.--shell-bottom-panel-height]="shellBottomPanelHeightPx$ | async"
+  [style.--shell-secondary-splitter-width]="((secondaryPanelVisible$ | async) ? '4px' : '0px')"
+  [style.--shell-bottom-splitter-height]="((bottomPanelVisible$ | async) ? '4px' : '0px')"
 >
   <app-sidebar
     class="shell-sidebar"
@@ -29,6 +32,17 @@
       [activeTab]="activeShellTab$ | async"
       [componentType]="activeShellComponentType$ | async"
     ></app-content-area>
+    <div
+      class="secondary-splitter-handle"
+      data-testid="secondary-splitter"
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Resize secondary panel"
+      (pointerdown)="onSecondarySplitterPointerDown($event)"
+      (pointermove)="onSecondarySplitterPointerMove($event)"
+      (pointerup)="onSecondarySplitterPointerUp($event)"
+      (pointercancel)="onSecondarySplitterPointerCancel($event)"
+    ></div>
     <app-secondary-panel
       class="shell-secondary-panel"
       [visible]="(secondaryPanelVisible$ | async) ?? false"
@@ -40,6 +54,17 @@
       (activeEntryChange)="onSecondaryPanelActiveEntryChange($event)"
       (widthChange)="onSecondaryPanelWidthChange($event)"
     ></app-secondary-panel>
+    <div
+      class="bottom-splitter-handle"
+      data-testid="bottom-splitter"
+      role="separator"
+      aria-orientation="horizontal"
+      aria-label="Resize bottom panel"
+      (pointerdown)="onBottomSplitterPointerDown($event)"
+      (pointermove)="onBottomSplitterPointerMove($event)"
+      (pointerup)="onBottomSplitterPointerUp($event)"
+      (pointercancel)="onBottomSplitterPointerCancel($event)"
+    ></div>
     <app-bottom-panel
       class="shell-bottom-panel"
       [visible]="(bottomPanelVisible$ | async) ?? false"

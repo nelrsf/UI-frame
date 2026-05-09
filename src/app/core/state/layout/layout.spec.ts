@@ -210,6 +210,52 @@ describe('layout reducer', () => {
     });
   });
 
+  describe('integer normalization (T006)', () => {
+    describe('setBottomPanelHeight', () => {
+      it('should round a fractional height to the nearest integer', () => {
+        const state = layoutReducer(initialLayoutState, setBottomPanelHeight({ height: 250.7 }));
+        expect(state.bottomPanelHeight).toBe(251);
+      });
+
+      it('should round down a fractional height at .4', () => {
+        const state = layoutReducer(initialLayoutState, setBottomPanelHeight({ height: 250.4 }));
+        expect(state.bottomPanelHeight).toBe(250);
+      });
+
+      it('should clamp a fractional height that rounds below minimum', () => {
+        const state = layoutReducer(initialLayoutState, setBottomPanelHeight({ height: 99.4 }));
+        expect(state.bottomPanelHeight).toBe(BOTTOM_PANEL_HEIGHT_MIN);
+      });
+
+      it('should clamp a fractional height that rounds above maximum', () => {
+        const state = layoutReducer(initialLayoutState, setBottomPanelHeight({ height: 600.6 }));
+        expect(state.bottomPanelHeight).toBe(BOTTOM_PANEL_HEIGHT_MAX);
+      });
+    });
+
+    describe('setSecondaryPanelWidth', () => {
+      it('should round a fractional width to the nearest integer', () => {
+        const state = layoutReducer(initialLayoutState, setSecondaryPanelWidth({ width: 300.7 }));
+        expect(state.secondaryPanelWidth).toBe(301);
+      });
+
+      it('should round down a fractional width at .4', () => {
+        const state = layoutReducer(initialLayoutState, setSecondaryPanelWidth({ width: 300.4 }));
+        expect(state.secondaryPanelWidth).toBe(300);
+      });
+
+      it('should clamp a fractional width that rounds below minimum', () => {
+        const state = layoutReducer(initialLayoutState, setSecondaryPanelWidth({ width: 199.4 }));
+        expect(state.secondaryPanelWidth).toBe(SECONDARY_PANEL_WIDTH_MIN);
+      });
+
+      it('should clamp a fractional width that rounds above maximum', () => {
+        const state = layoutReducer(initialLayoutState, setSecondaryPanelWidth({ width: 500.6 }));
+        expect(state.secondaryPanelWidth).toBe(SECONDARY_PANEL_WIDTH_MAX);
+      });
+    });
+  });
+
   describe('restoreLayout', () => {
     const restorePayload = {
       sidebarVisible: false,

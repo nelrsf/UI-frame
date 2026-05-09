@@ -65,7 +65,7 @@ export const layoutReducer = createReducer(
   })),
   on(LayoutActions.setBottomPanelHeight, (state, { height }) => ({
     ...state,
-    bottomPanelHeight: Math.min(BOTTOM_PANEL_HEIGHT_MAX, Math.max(BOTTOM_PANEL_HEIGHT_MIN, height)),
+    bottomPanelHeight: Math.min(BOTTOM_PANEL_HEIGHT_MAX, Math.max(BOTTOM_PANEL_HEIGHT_MIN, Math.round(height))),
   })),
   on(LayoutActions.setActiveSidebarItem, (state, { itemId }) => ({
     ...state,
@@ -89,7 +89,7 @@ export const layoutReducer = createReducer(
   })),
   on(LayoutActions.setSecondaryPanelWidth, (state, { width }) => ({
     ...state,
-    secondaryPanelWidth: Math.min(SECONDARY_PANEL_WIDTH_MAX, Math.max(SECONDARY_PANEL_WIDTH_MIN, width)),
+    secondaryPanelWidth: Math.min(SECONDARY_PANEL_WIDTH_MAX, Math.max(SECONDARY_PANEL_WIDTH_MIN, Math.round(width))),
   })),
   on(
     LayoutActions.restoreLayout,
