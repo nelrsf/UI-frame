@@ -54,6 +54,8 @@ import {
   setActiveSecondaryPanelEntry,
   setActiveShellTab,
 } from '../core/state/shell-content';
+import { setPreference } from '../core/state/preferences/preferences.actions';
+import { AppTheme, THEME_PREFERENCE_KEY } from '../core/models/theme.model';
 import { TabItem } from './models/tab-item.model';
 
 @Component({
@@ -248,6 +250,7 @@ export class ShellComponent implements OnInit, AfterViewInit {
     const electronAPI = (window as unknown as { electronAPI?: { menu?: {
       onToggleBottomPanel?: (cb: () => void) => void;
       onToggleSecondaryPanel?: (cb: () => void) => void;
+      onThemeChanged?: (cb: (theme: AppTheme) => void) => void;
     }}}).electronAPI;
 
     if (electronAPI?.menu) {
@@ -257,6 +260,10 @@ export class ShellComponent implements OnInit, AfterViewInit {
 
       electronAPI.menu.onToggleSecondaryPanel?.(() => {
         this.zone.run(() => this.commandRegistry.execute('shell.panel.toggleSecondary'));
+      });
+
+      electronAPI.menu.onThemeChanged?.((theme: AppTheme) => {
+        this.zone.run(() => this.store.dispatch(setPreference({ key: THEME_PREFERENCE_KEY, value: theme })));
       });
     }
 

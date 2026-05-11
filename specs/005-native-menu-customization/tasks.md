@@ -67,16 +67,16 @@
 
 ### Implementation for User Story 2
 
-- [ ] T014 [US2] Add theme `click` handlers inside `MenuBuilder.build()` for `temas.oscuro` (and stub for `temas.claro`): on click, set `nativeTheme.themeSource`, write `shell.theme` preference to disk via the existing `writeEnvelope` helper, rebuild and re-apply the menu via `Menu.setApplicationMenu()`, call `mainWindow.webContents.send(MENU.THEME_CHANGED, { theme })`
-- [ ] T015 [P] [US2] Add `selectActiveTheme` selector to `src/app/core/state/preferences/preferences.selectors.ts` reading `preferences.data[THEME_PREFERENCE_KEY]` with fallback to `DEFAULT_THEME`
-- [ ] T016 [US2] Subscribe to `window.electronAPI.menu.onThemeChanged` in `src/app/shell/shell.component.ts` and dispatch `setPreference({ key: THEME_PREFERENCE_KEY, value: theme })`
-- [ ] T017 [US2] On `menu.handlers.ts` startup path, ensure the stored theme is applied via `nativeTheme.themeSource` before the first window frame (verify existing T007 covers this, otherwise add explicit call here)
+- [x] T014 [US2] Add theme `click` handlers inside `MenuBuilder.build()` for `temas.oscuro` (and stub for `temas.claro`): on click, set `nativeTheme.themeSource`, write `shell.theme` preference to disk via the existing `writeEnvelope` helper, rebuild and re-apply the menu via `Menu.setApplicationMenu()`, call `mainWindow.webContents.send(MENU.THEME_CHANGED, { theme })`
+- [x] T015 [P] [US2] Add `selectActiveTheme` selector to `src/app/core/state/preferences/preferences.selectors.ts` reading `preferences.data[THEME_PREFERENCE_KEY]` with fallback to `DEFAULT_THEME`
+- [x] T016 [US2] Subscribe to `window.electronAPI.menu.onThemeChanged` in `src/app/shell/shell.component.ts` and dispatch `setPreference({ key: THEME_PREFERENCE_KEY, value: theme })`
+- [x] T017 [US2] On `menu.handlers.ts` startup path, ensure the stored theme is applied via `nativeTheme.themeSource` before the first window frame (verify existing T007 covers this, otherwise add explicit call here)
 
 **Checkpoint**: US2 fully verifiable — dark menu reflects theme, pref survives restart, renderer store updated on change.
 
 ### Performance Validation for User Story 2 (SC-002 compliance)
 
-- [ ] T027 [US2] Instrument theme change latency: add performance markers in `MenuBuilder.build()` and measure elapsed time from click to visual update in native menu bar; confirm 95%+ of changes complete in < 1 second (test in `menu.builder.spec.ts`)
+- [x] T027 [US2] Instrument theme change latency: add performance markers in `MenuBuilder.build()` and measure elapsed time from click to visual update in native menu bar; confirm 95%+ of changes complete in < 1 second (test in `menu.builder.spec.ts`)
 
 ---
 
@@ -88,9 +88,9 @@
 
 ### Implementation for User Story 3
 
-- [ ] T018 [US3] Validate `MenuBuilder` enforces that `archivo.salir` cannot be hidden (silently ignores `visible: false` override for that slot); add guard in `menu.builder.ts`
-- [ ] T019 [P] [US3] Ensure `extraEntries` from `IMenuConfig` are appended as top-level entries after built-in defaults in `MenuBuilder.build()`; verify ordering
-- [ ] T020 [US3] Write `specs/005-native-menu-customization/quickstart.md` validation: create `src/electron/menu/menu.builder.spec.ts` (Jasmine) covering: default entries present, override label applied, `archivo.salir` hidden-override ignored, `extraEntries` appended, `temas.claro` always disabled
+- [x] T018 [US3] Validate `MenuBuilder` enforces that `archivo.salir` cannot be hidden (silently ignores `visible: false` override for that slot); add guard in `menu.builder.ts`
+- [x] T019 [P] [US3] Ensure `extraEntries` from `IMenuConfig` are appended as top-level entries after built-in defaults in `MenuBuilder.build()`; verify ordering
+- [x] T020 [US3] Write `specs/005-native-menu-customization/quickstart.md` validation: create `src/electron/menu/menu.builder.spec.ts` (Jasmine) covering: default entries present, override label applied, `archivo.salir` hidden-override ignored, `extraEntries` appended, `temas.claro` always disabled
 
 **Checkpoint**: US3 fully verifiable — `MenuBuilder` accepts config, applies overrides, blocks mandatory-entry removal, appends extra entries.
 
@@ -100,10 +100,10 @@
 
 **Purpose**: Documentation inline with code, quick start validation, cleanup.
 
-- [ ] T021 [P] Add JSDoc on `MenuBuilder` class and `build()` method referencing `quickstart.md` steps 3–6
-- [ ] T022 [P] Add inline `// Future: enable when light theme spec ships` comment on the `temas.claro` disabled guard in `menu.builder.ts`
-- [ ] T023 Run `npm test` and confirm the new `menu.builder.spec.ts` suite passes with no regressions in existing shell, preferences, and preload suites
-- [ ] T024 Run the Electron smoke script (`node scripts/electron-smoke.mjs`) and confirm `[smoke] shell:visible` is emitted with the new menu wired
+- [x] T021 [P] Add JSDoc on `MenuBuilder` class and `build()` method referencing `quickstart.md` steps 3–6
+- [x] T022 [P] Add inline `// Future: enable when light theme spec ships` comment on the `temas.claro` disabled guard in `menu.builder.ts`
+- [x] T023 Run `npm test` and confirm the new `menu.builder.spec.ts` suite passes with no regressions in existing shell, preferences, and preload suites
+- [x] T024 Run the Electron smoke script (`node scripts/electron-smoke.mjs`) and confirm `[smoke] shell:visible` is emitted with the new menu wired
 
 ---
 

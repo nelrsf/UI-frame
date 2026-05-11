@@ -123,7 +123,7 @@ async function runSmoke() {
 
   const binName = process.platform === 'win32' ? 'electron.cmd' : 'electron';
   const electronBin = resolve(ROOT, 'node_modules', '.bin', binName);
-  const mainEntry = resolve(ROOT, 'dist-electron', 'main.js');
+  const mainEntry = resolve(ROOT, 'dist-electron', 'electron', 'main.js');
 
   // Validate Electron binary exists
   if (!existsSync(electronBin)) {

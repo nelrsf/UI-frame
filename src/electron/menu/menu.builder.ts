@@ -34,7 +34,9 @@ import {
   nativeTheme,
   BrowserWindow,
 } from 'electron';
-import { IMenuConfig, IMenuBuildContext, AppTheme } from '../../contracts';
+import * as fs from 'fs/promises';
+import * as path from 'path';
+import { IMenuConfig, IMenuBuildContext, AppTheme, THEME_PREFERENCE_KEY } from '../../contracts';
 import { IPC_CHANNELS } from '../ipc/channels';
 import { DEFAULT_MENU_ENTRIES } from './menu.defaults';
 
@@ -73,8 +75,11 @@ export class MenuBuilder {
    * @returns An Electron Menu object ready to pass to Menu.setApplicationMenu().
    */
   build(context: IMenuBuildContext): Menu {
+    performance.mark('menu.build.start');
     const template = this.buildTemplate(context);
-    return Menu.buildFromTemplate(template);
+    const menu = Menu.buildFromTemplate(template);
+    performance.measure('menu.build', 'menu.build.start');
+    return menu;
   }
 
   /**
@@ -244,6 +249,11 @@ export class MenuBuilder {
     // Set the native theme in the OS
     nativeTheme.themeSource = theme === 'dark' ? 'dark' : 'light';
 
+    // Persist the theme preference to disk (fire-and-forget)
+    this.persistTheme(theme).catch(() => {
+      // Swallow write errors — UI must not crash on persistence failure
+    });
+
     // Notify the renderer that the theme has changed
     if (this.mainWindow && !this.mainWindow.isDestroyed()) {
       this.mainWindow.webContents.send(IPC_CHANNELS.MENU.THEME_CHANGED, { theme });
@@ -252,5 +262,33 @@ export class MenuBuilder {
     // Rebuild and re-apply the menu with the new theme context
     const updatedMenu = this.build({ ...context, activeTheme: theme });
     Menu.setApplicationMenu(updatedMenu);
+  }
+
+  /**
+   * Persist the active theme preference to disk.
+   * Reads the existing preferences envelope, updates shell.theme, and writes back.
+   */
+  private async persistTheme(theme: AppTheme): Promise<void> {
+    const storePath = path.join(app.getPath('userData'), 'preferences.json');
+    let envelope: { schemaVersion: 1; data: Record<string, unknown> };
+    try {
+      const raw = await fs.readFile(storePath, 'utf8');
+      const parsed = JSON.parse(raw) as unknown;
+      if (
+        parsed !== null &&
+        typeof parsed === 'object' &&
+        (parsed as { schemaVersion: number }).schemaVersion === 1 &&
+        typeof (parsed as { data: unknown }).data === 'object' &&
+        (parsed as { data: unknown }).data !== null
+      ) {
+        envelope = parsed as typeof envelope;
+      } else {
+        envelope = { schemaVersion: 1, data: {} };
+      }
+    } catch {
+      envelope = { schemaVersion: 1, data: {} };
+    }
+    envelope.data[THEME_PREFERENCE_KEY] = theme;
+    await fs.writeFile(storePath, JSON.stringify(envelope), 'utf8');
   }
 }
