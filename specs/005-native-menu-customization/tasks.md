@@ -11,9 +11,9 @@
 
 **Purpose**: Extend the IPC channel registry and add the `AppTheme` model that all subsequent phases depend on.
 
-- [ ] T001 Add `MENU` channel group to `src/electron/ipc/channels.ts` with constants `TOGGLE_BOTTOM_PANEL`, `TOGGLE_SECONDARY_PANEL`, `THEME_CHANGED`
-- [ ] T002 [P] Create `src/app/core/models/theme.model.ts` with `AppTheme` type, `DEFAULT_THEME` constant and `THEME_PREFERENCE_KEY` constant (mirrors `specs/005-native-menu-customization/contracts/IThemePreference.ts`)
-- [ ] T003 [P] Create `src/app/core/application/ports/theme.port.ts` exposing `IThemeAdapter` interface for future renderer theme engine
+- [x] T001 Add `MENU` channel group to `src/electron/ipc/channels.ts` with constants `TOGGLE_BOTTOM_PANEL`, `TOGGLE_SECONDARY_PANEL`, `THEME_CHANGED`
+- [x] T002 [P] Create `src/app/core/models/theme.model.ts` with `AppTheme` type, `DEFAULT_THEME` constant and `THEME_PREFERENCE_KEY` constant (mirrors `specs/005-native-menu-customization/contracts/IThemePreference.ts`)
+- [x] T003 [P] Create `src/app/core/application/ports/theme.port.ts` exposing `IThemeAdapter` interface for future renderer theme engine
 
 **Checkpoint**: IPC channels declared, `AppTheme` and `IThemeAdapter` available — no compilation errors.
 
@@ -25,11 +25,11 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T004 Create folder `src/electron/menu/` and add `src/electron/menu/menu.defaults.ts` with the default Spanish entries map keyed by slot ID as defined in `data-model.md` (slot map section)
-- [ ] T005 Create `src/electron/menu/menu.builder.ts` implementing `MenuBuilder` class with constructor `(config?: IMenuConfig)` and method `build(ctx: IMenuBuildContext): Menu` — applies overrides, injects `isDev` gate for devtools entry, sets `enabled: false` on `temas.claro`; does NOT call `Menu.setApplicationMenu()` (caller is responsible; see D1)
-- [ ] T006 [P] Create `src/electron/menu/index.ts` re-exporting `MenuBuilder` and config types
-- [ ] T007 Extend `src/electron/main.ts`: read `shell.theme` from `preferences.json` before `createWindow()`, set `nativeTheme.themeSource`, call `MenuBuilder.build()` and `Menu.setApplicationMenu()` at startup (I2 compliance: single owner of theme restoration)
-- [ ] T008 Create `src/electron/ipc/handlers/menu.handlers.ts` registering the `ipcMain` handler for `MENU.THEME_CHANGED` direction (main writes pref to disk when theme changes via menu click callbacks wired in `MenuBuilder`; does not duplicate theme restoration — only handles async IPC side effects)
+- [x] T004 Create folder `src/electron/menu/` and add `src/electron/menu/menu.defaults.ts` with the default Spanish entries map keyed by slot ID as defined in `data-model.md` (slot map section)
+- [x] T005 Create `src/electron/menu/menu.builder.ts` implementing `MenuBuilder` class with constructor `(config?: IMenuConfig)` and method `build(ctx: IMenuBuildContext): Menu` — applies overrides, injects `isDev` gate for devtools entry, sets `enabled: false` on `temas.claro`; does NOT call `Menu.setApplicationMenu()` (caller is responsible; see D1)
+- [x] T006 [P] Create `src/electron/menu/index.ts` re-exporting `MenuBuilder` and config types
+- [x] T007 Extend `src/electron/main.ts`: read `shell.theme` from `preferences.json` before `createWindow()`, set `nativeTheme.themeSource`, call `MenuBuilder.build()` and `Menu.setApplicationMenu()` at startup (I2 compliance: single owner of theme restoration)
+- [x] T008 Create `src/electron/ipc/handlers/menu.handlers.ts` registering the `ipcMain` handler for `MENU.THEME_CHANGED` direction (main writes pref to disk when theme changes via menu click callbacks wired in `MenuBuilder`; does not duplicate theme restoration — only handles async IPC side effects)
 
 **Checkpoint**: App launches, menu bar shows "Archivo / Vista / Temas" in Spanish, devtools hidden in production, "Claro" is greyed out, theme preference is read from disk on startup.
 
@@ -43,17 +43,17 @@
 
 ### Implementation for User Story 1
 
-- [ ] T009 [US1] Wire `app.quit()` as the `click` handler for slot `archivo.salir` in `menu.defaults.ts`
-- [ ] T010 [US1] Wire panel toggle callbacks in `menu.defaults.ts` for `vista.bottomPanel` and `vista.secondaryPanel`: each dispatches a command through the central shell command registry (e.g., `shellCommandRegistry.execute('shell.panel.toggleBottom')`) rather than direct IPC send (C1 compliance: commands through registry, not direct dispatch)
-- [ ] T011 [US1] Add `onCommandExecuted` listener to the `menu` namespace in `src/electron/preload.ts` using `ipcRenderer.on` with typed callbacks for listening to async command completion; expose via `contextBridge`
-- [ ] T012 [US1] Extend `ElectronAPI` interface in `src/electron/preload.ts` with the `menu` namespace matching the contract shape in `quickstart.md` step 8
-- [ ] T013 [US1] Register toggle panel commands (`shell.panel.toggleBottom`, `shell.panel.toggleSecondary`) in the shell command registry; their handlers dispatch NgRx layout actions
+- [x] T009 [US1] Wire `app.quit()` as the `click` handler for slot `archivo.salir` in `menu.defaults.ts`
+- [x] T010 [US1] Wire panel toggle callbacks in `menu.defaults.ts` for `vista.bottomPanel` and `vista.secondaryPanel`: each dispatches a command through the central shell command registry (e.g., `shellCommandRegistry.execute('shell.panel.toggleBottom')`) rather than direct IPC send (C1 compliance: commands through registry, not direct dispatch)
+- [x] T011 [US1] Add `onCommandExecuted` listener to the `menu` namespace in `src/electron/preload.ts` using `ipcRenderer.on` with typed callbacks for listening to async command completion; expose via `contextBridge`
+- [x] T012 [US1] Extend `ElectronAPI` interface in `src/electron/preload.ts` with the `menu` namespace matching the contract shape in `quickstart.md` step 8
+- [x] T013 [US1] Register toggle panel commands (`shell.panel.toggleBottom`, `shell.panel.toggleSecondary`) in the shell command registry; their handlers dispatch NgRx layout actions
 
 **Checkpoint**: US1 fully verifiable — menu shows only Spanish-labelled approved entries, Salir quits, panel toggles via command registry change panel visibility.
 
 ### Tests for User Story 1 (MANDATORY MVP GATE per C2 compliance)
 
-- [ ] T025 [US1] Integration test for panel toggle commands: trigger command, confirm NgRx action dispatched and panel visibility changes in `src/app/shell/shell.component.spec.ts`
+- [x] T025 [US1] Integration test for panel toggle commands: trigger command, confirm NgRx action dispatched and panel visibility changes in `src/app/shell/shell.component.spec.ts`
 
 **MVP Release Gate**: T008 (unit test MenuBuilder) and T025 (integration test panel toggles) MUST pass before moving to Phase 4. Per constitution V (Quality Gates), no MVP release without automated test coverage.
 
