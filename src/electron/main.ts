@@ -1,14 +1,38 @@
-import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, shell, Menu, nativeTheme } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
 import { ALLOWED_EXTERNAL_PROTOCOLS, IPC_CHANNELS } from './ipc/channels';
 import { registerWindowHandlers } from './ipc/handlers/window.handlers';
 import { registerPreferencesHandlers } from './ipc/handlers/preferences.handlers';
+import { MenuBuilder } from './menu';
+import { AppTheme, DEFAULT_THEME, THEME_PREFERENCE_KEY } from '../contracts';
+import * as fs from 'fs';
 
 const isDev = process.env['ELECTRON_ENV'] === 'development';
 const ANGULAR_DEV_URL = 'http://localhost:4200';
 
 let mainWindow: BrowserWindow | null = null;
+
+/**
+ * Read the stored theme preference from preferences.json.
+ * Returns the stored theme or DEFAULT_THEME if not found.
+ */
+function getStoredTheme(): AppTheme {
+  try {
+    const preferencesPath = path.join(app.getPath('userData'), 'preferences.json');
+    if (fs.existsSync(preferencesPath)) {
+      const content = fs.readFileSync(preferencesPath, 'utf-8');
+      const data = JSON.parse(content);
+      const theme = data[THEME_PREFERENCE_KEY];
+      if (theme === 'dark' || theme === 'light') {
+        return theme;
+      }
+    }
+  } catch {
+    // Preference file not found or invalid JSON — use default
+  }
+  return DEFAULT_THEME;
+}
 
 function registerIpcHandlers(): void {
   registerWindowHandlers(() => mainWindow);
@@ -143,8 +167,25 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
+  // Read and apply the stored theme preference before creating the window
+  const storedTheme = getStoredTheme();
+  nativeTheme.themeSource = storedTheme === 'dark' ? 'dark' : 'light';
+
   registerIpcHandlers();
   createWindow();
+
+  // Build and apply the native menu after the window is created
+  if (mainWindow) {
+    const menuBuilder = new MenuBuilder();
+    menuBuilder.setMainWindow(mainWindow);
+    const menu = menuBuilder.build({
+      activeTheme: storedTheme,
+      isDev,
+      bottomPanelVisible: true,
+      secondaryPanelVisible: true,
+    });
+    Menu.setApplicationMenu(menu);
+  }
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
