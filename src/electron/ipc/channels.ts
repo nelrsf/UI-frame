@@ -33,6 +33,7 @@ export const IPC_CHANNELS = {
     TOGGLE_BOTTOM_PANEL: 'menu:toggleBottomPanel',
     TOGGLE_SECONDARY_PANEL: 'menu:toggleSecondaryPanel',
     THEME_CHANGED: 'menu:themeChanged',
+    UPDATE_PANEL_STATE: 'menu:updatePanelState',
   },
 } as const;
 

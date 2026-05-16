@@ -26,6 +26,7 @@ export interface ElectronAPI {
     onToggleBottomPanel(callback: () => void): void;
     onToggleSecondaryPanel(callback: () => void): void;
     onThemeChanged(callback: (theme: AppTheme) => void): void;
+    updatePanelState(bottomPanelVisible: boolean, secondaryPanelVisible: boolean): Promise<void>;
   };
 }
 
@@ -93,6 +94,13 @@ const api: ElectronAPI = {
         if (payload && (payload.theme === 'dark' || payload.theme === 'light')) {
           callback(payload.theme);
         }
+      });
+    },
+
+    updatePanelState: (bottomPanelVisible: boolean, secondaryPanelVisible: boolean): Promise<void> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.MENU.UPDATE_PANEL_STATE, {
+        bottomPanelVisible,
+        secondaryPanelVisible,
       });
     },
   },

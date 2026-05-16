@@ -4,7 +4,7 @@ import * as url from 'url';
 import { ALLOWED_EXTERNAL_PROTOCOLS, IPC_CHANNELS } from './ipc/channels';
 import { registerWindowHandlers } from './ipc/handlers/window.handlers';
 import { registerPreferencesHandlers } from './ipc/handlers/preferences.handlers';
-import { MenuBuilder } from './menu';
+import { MenuBuilder, MenuManager } from './menu';
 import { AppTheme, DEFAULT_THEME, THEME_PREFERENCE_KEY } from '../contracts';
 import * as fs from 'fs';
 
@@ -34,6 +34,22 @@ function getStoredTheme(): AppTheme {
   return DEFAULT_THEME;
 }
 
+/**
+ * Rebuild the application menu with updated panel visibility state.
+ * Called from IPC handler when shell toggles panels.
+ * 
+ * @deprecated Usar MenuManager para actualizaciones parciales.
+ */
+function rebuildMenu(bottomPanelVisible: boolean, secondaryPanelVisible: boolean): void {
+  const manager = MenuManager.getInstance();
+  manager.rebuildFull({
+    activeTheme: getStoredTheme(),
+    isDev,
+    bottomPanelVisible,
+    secondaryPanelVisible,
+  });
+}
+
 function registerIpcHandlers(): void {
   registerWindowHandlers(() => mainWindow);
   // Preferences handlers validate the `key` argument at BOTH the sender
@@ -57,6 +73,24 @@ function registerIpcHandlers(): void {
       // invalid URL — deny silently
     }
     return false;
+  });
+
+  // Handler to update menu checkboxes when panel state changes from shell
+  // Optimización: actualización parcial O(1) en lugar de reconstruir todo el menú O(n)
+  ipcMain.handle(IPC_CHANNELS.MENU.UPDATE_PANEL_STATE, async (_event, payload: unknown): Promise<void> => {
+    if (typeof payload === 'object' && payload !== null) {
+      const { bottomPanelVisible, secondaryPanelVisible } = payload as { bottomPanelVisible?: boolean; secondaryPanelVisible?: boolean };
+      
+      const manager = MenuManager.getInstance();
+      
+      // Actualización parcial - solo actualiza los items específicos
+      if (bottomPanelVisible !== undefined) {
+        manager.updateBottomPanel(bottomPanelVisible);
+      }
+      if (secondaryPanelVisible !== undefined) {
+        manager.updateSecondaryPanel(secondaryPanelVisible);
+      }
+    }
   });
 }
 
@@ -174,18 +208,15 @@ app.whenReady().then(() => {
   registerIpcHandlers();
   createWindow();
 
-  // Build and apply the native menu after the window is created
+  // Inicializar MenuManager con referencia a la ventana
+  // Esto permite actualizaciones parciales O(1) en lugar de reconstruir todo
   if (mainWindow) {
-    const menuBuilder = new MenuBuilder();
-    menuBuilder.setMainWindow(mainWindow);
-    const menu = menuBuilder.build({
-      activeTheme: storedTheme,
-      isDev,
-      bottomPanelVisible: true,
-      secondaryPanelVisible: true,
-    });
-    Menu.setApplicationMenu(menu);
+    MenuManager.getInstance().setMainWindow(mainWindow);
   }
+
+  // Build and apply the native menu after the window is created
+  // Default to true, actual state will sync when shell loads
+  rebuildMenu(true, true);
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

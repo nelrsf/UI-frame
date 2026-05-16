@@ -251,6 +251,7 @@ export class ShellComponent implements OnInit, AfterViewInit {
       onToggleBottomPanel?: (cb: () => void) => void;
       onToggleSecondaryPanel?: (cb: () => void) => void;
       onThemeChanged?: (cb: (theme: AppTheme) => void) => void;
+      updatePanelState?: (bottomPanelVisible: boolean, secondaryPanelVisible: boolean) => Promise<void>;
     }}}).electronAPI;
 
     if (electronAPI?.menu) {
@@ -265,6 +266,16 @@ export class ShellComponent implements OnInit, AfterViewInit {
       electronAPI.menu.onThemeChanged?.((theme: AppTheme) => {
         this.zone.run(() => this.store.dispatch(setPreference({ key: THEME_PREFERENCE_KEY, value: theme })));
       });
+
+      // Sync panel state to menu when state changes in store
+      combineLatest([
+        this.store.select(selectBottomPanelVisible),
+        this.store.select(selectSecondaryPanelVisible),
+      ])
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(([bottomVisible, secondaryVisible]) => {
+          electronAPI.menu?.updatePanelState?.(bottomVisible, secondaryVisible);
+        });
     }
 
     // Attempt to restore the persisted workspace session for the default workspace.

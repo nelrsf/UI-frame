@@ -67,6 +67,16 @@ export class MenuBuilder {
   }
 
   /**
+   * Establece referencia a la ventana para uso del MenuManager.
+   * No construye el menú, solo guarda la referencia para los handlers del menú.
+   * 
+   * @param windowRef Referencia simple con método send
+   */
+  setMainWindowRef(windowRef: { send: (channel: string, ...args: unknown[]) => void }): void {
+    this.mainWindow = windowRef as unknown as BrowserWindow;
+  }
+
+  /**
    * Build the native menu from configuration and context.
    *
    * Applies all overrides, injects runtime context (theme, isDev), and wires click handlers.
