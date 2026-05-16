@@ -16,26 +16,26 @@ import { MenuItemConstructorOptions } from 'electron';
  * Note: `click` handlers are set at build time in menu.builder.ts based on context (isDev, activeTheme, etc.).
  */
 export const DEFAULT_MENU_ENTRIES: Record<string, MenuItemConstructorOptions> = {
-  // Top-level "Archivo" menu
-  archivo: {
-    id: 'archivo',
+  // Top-level "File" menu
+  file: {
+    id: 'file',
     label: 'Archivo',
     submenu: [
       {
-        id: 'archivo.salir',
+        id: 'file.exit',
         label: 'Salir',
         accelerator: 'CmdOrCtrl+Q',
       },
     ],
   },
 
-  // Top-level "Vista" menu
-  vista: {
-    id: 'vista',
+  // Top-level "View" menu
+  view: {
+    id: 'view',
     label: 'Vista',
     submenu: [
       {
-        id: 'vista.devtools',
+        id: 'view.devtools',
         label: 'Mostrar DevTools',
         accelerator: 'CmdOrCtrl+Shift+I',
         visible: false, // Set at build time based on isDev
@@ -44,13 +44,13 @@ export const DEFAULT_MENU_ENTRIES: Record<string, MenuItemConstructorOptions> = 
         type: 'separator',
       },
       {
-        id: 'vista.bottomPanel',
+        id: 'view.bottomPanel',
         label: 'Panel inferior',
         type: 'checkbox',
         checked: true, // Default visibility state
       },
       {
-        id: 'vista.secondaryPanel',
+        id: 'view.secondaryPanel',
         label: 'Panel secundario',
         type: 'checkbox',
         checked: true, // Default visibility state
@@ -58,19 +58,19 @@ export const DEFAULT_MENU_ENTRIES: Record<string, MenuItemConstructorOptions> = 
     ],
   },
 
-  // Top-level "Temas" menu
-  temas: {
-    id: 'temas',
+  // Top-level "Themes" menu
+  themes: {
+    id: 'themes',
     label: 'Temas',
     submenu: [
       {
-        id: 'temas.oscuro',
+        id: 'themes.dark',
         label: 'Oscuro',
         type: 'radio',
         checked: true, // Default theme is dark
       },
       {
-        id: 'temas.claro',
+        id: 'themes.light',
         label: 'Claro',
         type: 'radio',
         checked: false,

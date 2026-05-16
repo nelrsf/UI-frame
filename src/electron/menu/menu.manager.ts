@@ -40,7 +40,7 @@ export class MenuManager {
    */
   updateBottomPanel(visible: boolean): void {
     this.bottomPanelVisible = visible;
-    this.updateCheckbox('vista.bottomPanel', visible);
+    this.updateCheckbox('view.bottomPanel', visible);
   }
 
   /**
@@ -49,7 +49,7 @@ export class MenuManager {
    */
   updateSecondaryPanel(visible: boolean): void {
     this.secondaryPanelVisible = visible;
-    this.updateCheckbox('vista.secondaryPanel', visible);
+    this.updateCheckbox('view.secondaryPanel', visible);
   }
 
   /**

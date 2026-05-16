@@ -4,9 +4,9 @@
  * Validates:
  *   - Default Spanish entries are present in the menu template
  *   - Override labels are applied to menu entries
- *   - archivo.salir cannot be hidden (visible: false is silently ignored)
+ *   - file.exit cannot be hidden (visible: false is silently ignored)
  *   - extraEntries are appended as top-level entries after built-in defaults
- *   - temas.claro is always disabled regardless of context
+ *   - themes.light is always disabled regardless of context
  *
  * No real Electron runtime is required: the construction logic is exercised
  * through pure helper functions that mirror the MenuBuilder implementation.
@@ -43,55 +43,55 @@ interface MenuBuildContext {
 }
 
 // ---------------------------------------------------------------------------
-// Pure helper — mirrors MenuBuilder.buildArchivoMenu()
+// Pure helper — mirrors MenuBuilder.buildFileMenu()
 // ---------------------------------------------------------------------------
 
-function buildArchivoMenu(config: MenuConfig): MenuItemOptions {
-  const salirEntry: MenuItemOptions = {
-    id: 'archivo.salir',
+function buildFileMenu(config: MenuConfig): MenuItemOptions {
+  const exitEntry: MenuItemOptions = {
+    id: 'file.exit',
     label: 'Salir',
     accelerator: 'CmdOrCtrl+Q',
   };
 
-  const salirOverride = config.overrides?.['archivo.salir'];
-  if (salirOverride) {
-    const merged = { ...salirEntry, ...salirOverride };
-    if (salirOverride.visible === false) {
+  const exitOverride = config.overrides?.['file.exit'];
+  if (exitOverride) {
+    const merged = { ...exitEntry, ...exitOverride };
+    if (exitOverride.visible === false) {
       merged.visible = true; // silently ignore hide attempt
     }
-    Object.assign(salirEntry, merged);
+    Object.assign(exitEntry, merged);
   }
 
-  return { label: 'Archivo', submenu: [salirEntry] };
+  return { label: 'Archivo', submenu: [exitEntry] };
 }
 
 // ---------------------------------------------------------------------------
-// Pure helper — mirrors MenuBuilder.buildVistaMenu()
+// Pure helper — mirrors MenuBuilder.buildViewMenu()
 // ---------------------------------------------------------------------------
 
-function buildVistaMenu(config: MenuConfig, context: MenuBuildContext): MenuItemOptions {
+function buildViewMenu(config: MenuConfig, context: MenuBuildContext): MenuItemOptions {
   const submenu: MenuItemOptions[] = [];
 
   if (context.isDev) {
-    submenu.push({ id: 'vista.devtools', label: 'Mostrar DevTools' });
+    submenu.push({ id: 'view.devtools', label: 'Mostrar DevTools' });
     submenu.push({ type: 'separator' });
   }
 
   submenu.push({
-    id: 'vista.bottomPanel',
+    id: 'view.bottomPanel',
     label: 'Panel inferior',
     type: 'checkbox',
     checked: context.bottomPanelVisible ?? true,
   });
 
   submenu.push({
-    id: 'vista.secondaryPanel',
+    id: 'view.secondaryPanel',
     label: 'Panel secundario',
     type: 'checkbox',
     checked: context.secondaryPanelVisible ?? true,
   });
 
-  for (const slotId of ['vista.bottomPanel', 'vista.secondaryPanel', 'vista.devtools']) {
+  for (const slotId of ['view.bottomPanel', 'view.secondaryPanel', 'view.devtools']) {
     if (config.overrides?.[slotId]) {
       const idx = submenu.findIndex((item) => item.id === slotId);
       if (idx >= 0) {
@@ -104,19 +104,19 @@ function buildVistaMenu(config: MenuConfig, context: MenuBuildContext): MenuItem
 }
 
 // ---------------------------------------------------------------------------
-// Pure helper — mirrors MenuBuilder.buildTemasMenu()
+// Pure helper — mirrors MenuBuilder.buildThemesMenu()
 // ---------------------------------------------------------------------------
 
-function buildTemasMenu(config: MenuConfig, context: MenuBuildContext): MenuItemOptions {
+function buildThemesMenu(config: MenuConfig, context: MenuBuildContext): MenuItemOptions {
   const submenu: MenuItemOptions[] = [
     {
-      id: 'temas.oscuro',
+      id: 'themes.dark',
       label: 'Oscuro',
       type: 'radio',
       checked: context.activeTheme === 'dark',
     },
     {
-      id: 'temas.claro',
+      id: 'themes.light',
       label: 'Claro',
       type: 'radio',
       checked: context.activeTheme === 'light',
@@ -124,13 +124,13 @@ function buildTemasMenu(config: MenuConfig, context: MenuBuildContext): MenuItem
     },
   ];
 
-  for (const slotId of ['temas.oscuro', 'temas.claro']) {
+  for (const slotId of ['themes.dark', 'themes.light']) {
     if (config.overrides?.[slotId]) {
       const idx = submenu.findIndex((item) => item.id === slotId);
       if (idx >= 0) {
         const merged = { ...submenu[idx], ...config.overrides[slotId] };
-        // Re-enforce temas.claro always disabled
-        if (slotId === 'temas.claro') {
+        // Re-enforce themes.light always disabled
+        if (slotId === 'themes.light') {
           merged.enabled = false;
         }
         submenu[idx] = merged;
@@ -150,9 +150,9 @@ function buildTemplate(
   context: MenuBuildContext
 ): MenuItemOptions[] {
   const topLevel: MenuItemOptions[] = [
-    buildArchivoMenu(config),
-    buildVistaMenu(config, context),
-    buildTemasMenu(config, context),
+    buildFileMenu(config),
+    buildViewMenu(config, context),
+    buildThemesMenu(config, context),
   ];
 
   if (config.extraEntries) {
@@ -188,100 +188,100 @@ describe('MenuBuilder — default Spanish entries', () => {
     expect(template[2].label).toBe('Temas');
   });
 
-  it('should include archivo.salir under Archivo', () => {
+  it('should include file.exit under Archivo', () => {
     const template = buildTemplate({}, DEFAULT_CTX);
-    const salir = template[0].submenu?.find((item) => item.id === 'archivo.salir');
+    const salir = template[0].submenu?.find((item) => item.id === 'file.exit');
     expect(salir).toBeDefined();
     expect(salir?.label).toBe('Salir');
   });
 
-  it('should include vista.bottomPanel under Vista', () => {
+  it('should include view.bottomPanel under Vista', () => {
     const template = buildTemplate({}, DEFAULT_CTX);
-    const entry = template[1].submenu?.find((item) => item.id === 'vista.bottomPanel');
+    const entry = template[1].submenu?.find((item) => item.id === 'view.bottomPanel');
     expect(entry).toBeDefined();
     expect(entry?.label).toBe('Panel inferior');
   });
 
-  it('should include vista.secondaryPanel under Vista', () => {
+  it('should include view.secondaryPanel under Vista', () => {
     const template = buildTemplate({}, DEFAULT_CTX);
-    const entry = template[1].submenu?.find((item) => item.id === 'vista.secondaryPanel');
+    const entry = template[1].submenu?.find((item) => item.id === 'view.secondaryPanel');
     expect(entry).toBeDefined();
     expect(entry?.label).toBe('Panel secundario');
   });
 
-  it('should include temas.oscuro under Temas', () => {
+  it('should include themes.dark under Temas', () => {
     const template = buildTemplate({}, DEFAULT_CTX);
-    const entry = template[2].submenu?.find((item) => item.id === 'temas.oscuro');
+    const entry = template[2].submenu?.find((item) => item.id === 'themes.dark');
     expect(entry).toBeDefined();
     expect(entry?.label).toBe('Oscuro');
   });
 
-  it('should include temas.claro under Temas', () => {
+  it('should include themes.light under Temas', () => {
     const template = buildTemplate({}, DEFAULT_CTX);
-    const entry = template[2].submenu?.find((item) => item.id === 'temas.claro');
+    const entry = template[2].submenu?.find((item) => item.id === 'themes.light');
     expect(entry).toBeDefined();
     expect(entry?.label).toBe('Claro');
   });
 
-  it('should hide vista.devtools when isDev is false', () => {
+  it('should hide view.devtools when isDev is false', () => {
     const template = buildTemplate({}, DEFAULT_CTX);
-    const devtools = template[1].submenu?.find((item) => item.id === 'vista.devtools');
+    const devtools = template[1].submenu?.find((item) => item.id === 'view.devtools');
     expect(devtools).toBeUndefined();
   });
 
-  it('should show vista.devtools when isDev is true', () => {
+  it('should show view.devtools when isDev is true', () => {
     const template = buildTemplate({}, { ...DEFAULT_CTX, isDev: true });
-    const devtools = template[1].submenu?.find((item) => item.id === 'vista.devtools');
+    const devtools = template[1].submenu?.find((item) => item.id === 'view.devtools');
     expect(devtools).toBeDefined();
   });
 });
 
 describe('MenuBuilder — override label applied', () => {
-  it('should apply a label override to archivo.salir', () => {
+  it('should apply a label override to file.exit', () => {
     const config: MenuConfig = {
-      overrides: { 'archivo.salir': { label: 'Exit' } },
+      overrides: { 'file.exit': { label: 'Exit' } },
     };
     const template = buildTemplate(config, DEFAULT_CTX);
-    const salir = template[0].submenu?.find((item) => item.id === 'archivo.salir');
+    const salir = template[0].submenu?.find((item) => item.id === 'file.exit');
     expect(salir?.label).toBe('Exit');
   });
 
-  it('should apply a label override to vista.bottomPanel', () => {
+  it('should apply a label override to view.bottomPanel', () => {
     const config: MenuConfig = {
-      overrides: { 'vista.bottomPanel': { label: 'Console' } },
+      overrides: { 'view.bottomPanel': { label: 'Console' } },
     };
     const template = buildTemplate(config, DEFAULT_CTX);
-    const entry = template[1].submenu?.find((item) => item.id === 'vista.bottomPanel');
+    const entry = template[1].submenu?.find((item) => item.id === 'view.bottomPanel');
     expect(entry?.label).toBe('Console');
   });
 
-  it('should apply a label override to temas.oscuro', () => {
+  it('should apply a label override to themes.dark', () => {
     const config: MenuConfig = {
-      overrides: { 'temas.oscuro': { label: 'Dark Mode' } },
+      overrides: { 'themes.dark': { label: 'Dark Mode' } },
     };
     const template = buildTemplate(config, DEFAULT_CTX);
-    const entry = template[2].submenu?.find((item) => item.id === 'temas.oscuro');
+    const entry = template[2].submenu?.find((item) => item.id === 'themes.dark');
     expect(entry?.label).toBe('Dark Mode');
   });
 });
 
-describe('MenuBuilder — archivo.salir cannot be hidden (D1 guard)', () => {
-  it('should silently ignore visible: false override for archivo.salir', () => {
+describe('MenuBuilder — file.exit cannot be hidden (D1 guard)', () => {
+  it('should silently ignore visible: false override for file.exit', () => {
     const config: MenuConfig = {
-      overrides: { 'archivo.salir': { visible: false } },
+      overrides: { 'file.exit': { visible: false } },
     };
     const template = buildTemplate(config, DEFAULT_CTX);
-    const salir = template[0].submenu?.find((item) => item.id === 'archivo.salir');
+    const salir = template[0].submenu?.find((item) => item.id === 'file.exit');
     expect(salir).toBeDefined();
     expect(salir?.visible).not.toBe(false);
   });
 
   it('should still apply other properties when visible: false is also supplied', () => {
     const config: MenuConfig = {
-      overrides: { 'archivo.salir': { visible: false, label: 'Quit' } },
+      overrides: { 'file.exit': { visible: false, label: 'Quit' } },
     };
     const template = buildTemplate(config, DEFAULT_CTX);
-    const salir = template[0].submenu?.find((item) => item.id === 'archivo.salir');
+    const salir = template[0].submenu?.find((item) => item.id === 'file.exit');
     expect(salir?.label).toBe('Quit');
     expect(salir?.visible).not.toBe(false);
   });
@@ -313,25 +313,25 @@ describe('MenuBuilder — extraEntries appended after built-in defaults', () => 
   });
 });
 
-describe('MenuBuilder — temas.claro always disabled', () => {
-  it('should have temas.claro enabled: false by default', () => {
+describe('MenuBuilder — themes.light always disabled', () => {
+  it('should have themes.light enabled: false by default', () => {
     const template = buildTemplate({}, DEFAULT_CTX);
-    const claro = template[2].submenu?.find((item) => item.id === 'temas.claro');
+    const claro = template[2].submenu?.find((item) => item.id === 'themes.light');
     expect(claro?.enabled).toBeFalse();
   });
 
-  it('should keep temas.claro enabled: false even when override tries to enable it', () => {
+  it('should keep themes.light enabled: false even when override tries to enable it', () => {
     const config: MenuConfig = {
-      overrides: { 'temas.claro': { enabled: true } },
+      overrides: { 'themes.light': { enabled: true } },
     };
     const template = buildTemplate(config, DEFAULT_CTX);
-    const claro = template[2].submenu?.find((item) => item.id === 'temas.claro');
+    const claro = template[2].submenu?.find((item) => item.id === 'themes.light');
     expect(claro?.enabled).toBeFalse();
   });
 
-  it('should keep temas.claro disabled in light-theme context', () => {
+  it('should keep themes.light disabled in light-theme context', () => {
     const template = buildTemplate({}, { ...DEFAULT_CTX, activeTheme: 'light' });
-    const claro = template[2].submenu?.find((item) => item.id === 'temas.claro');
+    const claro = template[2].submenu?.find((item) => item.id === 'themes.light');
     expect(claro?.enabled).toBeFalse();
   });
 });

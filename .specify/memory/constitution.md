@@ -82,6 +82,30 @@ resolved before adjacent feature expansion.
 - A feature is not ready for `/speckit.implement` until its spec is unambiguous, its plan is
   aligned to this constitution, and its tasks provide full requirement coverage.
 
+## Language and Code Conventions
+
+### Code Language (Mandatory)
+- ALL source code, variable names, function names, class names, method names, comments in code,
+  and internal identifiers MUST use English.
+- NO mixing of languages in code (e.g., variable named "panelInferior" is forbidden; use "bottomPanel").
+
+### User-Facing Text (Allowed in Spanish)
+- Menu labels, button text, alerts, error messages, success notifications, and any text visible
+  to the end user MAY use Spanish (or the target language of the application).
+- This includes: menu item labels, dialog titles, toast messages, validation errors.
+
+### ID and Key Conventions
+- Menu IDs and configuration keys MUST use English (e.g., "view.bottomPanel", NOT "vista.bottomPanel").
+- Configuration overrides and slot identifiers MUST follow the same rule.
+
+### Examples
+
+| Allowed (Spanish) | Forbidden | Correct (English) |
+|-------------------|-----------|-------------------|
+| Menu label "Panel inferior" | variable "panelInferior" | variable "bottomPanel" |
+| Alert "Error al guardar" | function "guardarDatos()" | function "saveData()" |
+| Button "Cerrar" | id "vista.devtools" | id "view.devtools" |
+
 ## Governance
 
 This constitution is the canonical source of truth for UI Frame delivery. It supersedes legacy

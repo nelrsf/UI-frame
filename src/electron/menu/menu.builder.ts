@@ -12,18 +12,18 @@
  *
  * // In main.ts at startup:
  * const builder = new MenuBuilder({
- *   overrides: { 'archivo.salir': { label: 'Exit' } },
- * });
- * const menu = builder.build({ activeTheme: 'dark', isDev: false });
- * Menu.setApplicationMenu(menu);
- * ```
- *
- * ## Customization Rules
- *
- * - `archivo.salir` cannot be hidden (attempts to set `visible: false` are silently ignored).
- * - `temas.claro` is always disabled until a future spec enables light theme support.
- * - `vista.devtools` is visible only when `isDev === true`.
- * - Extra entries are appended after the built-in entries.
+*   overrides: { 'file.exit': { label: 'Exit' } },
+   * });
+   * const menu = builder.build({ activeTheme: 'dark', isDev: false });
+   * Menu.setApplicationMenu(menu);
+   * ```
+   *
+   * ## Customization Rules
+   *
+   * - `file.exit` cannot be hidden (attempts to set `visible: false` are silently ignored).
+   * - `themes.light` is always disabled until a future spec enables light theme support.
+   * - `view.devtools` is visible only when `isDev === true`.
+   * - Extra entries are appended after the built-in entries.
  */
 
 import {
@@ -97,9 +97,9 @@ export class MenuBuilder {
    */
   private buildTemplate(context: IMenuBuildContext): MenuItemConstructorOptions[] {
     const topLevelMenus: MenuItemConstructorOptions[] = [
-      this.buildArchivoMenu(context),
-      this.buildVistaMenu(context),
-      this.buildTemasMenu(context),
+      this.buildFileMenu(context),
+      this.buildViewMenu(context),
+      this.buildThemesMenu(context),
     ];
 
     // Append any extra entries supplied by the integrator
@@ -113,9 +113,9 @@ export class MenuBuilder {
   /**
    * Build the "Archivo" (File) menu.
    */
-  private buildArchivoMenu(context: IMenuBuildContext): MenuItemConstructorOptions {
-    const salirEntry: MenuItemConstructorOptions = {
-      id: 'archivo.salir',
+  private buildFileMenu(context: IMenuBuildContext): MenuItemConstructorOptions {
+    const exitEntry: MenuItemConstructorOptions = {
+      id: 'file.exit',
       label: 'Salir',
       accelerator: 'CmdOrCtrl+Q',
       click: () => {
@@ -123,20 +123,20 @@ export class MenuBuilder {
       },
     };
 
-    // Apply any overrides to the Salir entry
-    const salirOverride = this.config.overrides?.['archivo.salir'];
-    if (salirOverride) {
+    // Apply any overrides to the Exit entry
+    const exitOverride = this.config.overrides?.['file.exit'];
+    if (exitOverride) {
       // Merge override but ensure visible: false is ignored (mandatory entry)
-      const merged = { ...salirEntry, ...salirOverride };
-      if (salirOverride.visible === false) {
+      const merged = { ...exitEntry, ...exitOverride };
+      if (exitOverride.visible === false) {
         merged.visible = true; // Silently ignore hide attempt
       }
-      Object.assign(salirEntry, merged);
+      Object.assign(exitEntry, merged);
     }
 
     const menu: MenuItemConstructorOptions = {
       label: 'Archivo',
-      submenu: [salirEntry],
+      submenu: [exitEntry],
     };
 
     return menu;
@@ -145,13 +145,13 @@ export class MenuBuilder {
   /**
    * Build the "Vista" (View) menu with panel toggles and devtools.
    */
-  private buildVistaMenu(context: IMenuBuildContext): MenuItemConstructorOptions {
+  private buildViewMenu(context: IMenuBuildContext): MenuItemConstructorOptions {
     const submenu: MenuItemConstructorOptions[] = [];
 
     // DevTools entry (visible only in development)
     if (context.isDev) {
       submenu.push({
-        id: 'vista.devtools',
+        id: 'view.devtools',
         label: 'Mostrar DevTools',
         accelerator: 'CmdOrCtrl+Shift+I',
         click: () => {
@@ -163,7 +163,7 @@ export class MenuBuilder {
 
     // Panel toggle entries
     submenu.push({
-      id: 'vista.bottomPanel',
+      id: 'view.bottomPanel',
       label: 'Panel inferior',
       type: 'checkbox',
       checked: context.bottomPanelVisible ?? true,
@@ -175,7 +175,7 @@ export class MenuBuilder {
     });
 
     submenu.push({
-      id: 'vista.secondaryPanel',
+      id: 'view.secondaryPanel',
       label: 'Panel secundario',
       type: 'checkbox',
       checked: context.secondaryPanelVisible ?? true,
@@ -187,22 +187,22 @@ export class MenuBuilder {
     });
 
     // Apply overrides to Vista menu entries
-    if (this.config.overrides?.['vista.bottomPanel']) {
-      const idx = submenu.findIndex((item) => item.id === 'vista.bottomPanel');
+    if (this.config.overrides?.['view.bottomPanel']) {
+      const idx = submenu.findIndex((item) => item.id === 'view.bottomPanel');
       if (idx >= 0) {
-        submenu[idx] = { ...submenu[idx], ...this.config.overrides['vista.bottomPanel'] };
+        submenu[idx] = { ...submenu[idx], ...this.config.overrides['view.bottomPanel'] };
       }
     }
-    if (this.config.overrides?.['vista.secondaryPanel']) {
-      const idx = submenu.findIndex((item) => item.id === 'vista.secondaryPanel');
+    if (this.config.overrides?.['view.secondaryPanel']) {
+      const idx = submenu.findIndex((item) => item.id === 'view.secondaryPanel');
       if (idx >= 0) {
-        submenu[idx] = { ...submenu[idx], ...this.config.overrides['vista.secondaryPanel'] };
+        submenu[idx] = { ...submenu[idx], ...this.config.overrides['view.secondaryPanel'] };
       }
     }
-    if (this.config.overrides?.['vista.devtools']) {
-      const idx = submenu.findIndex((item) => item.id === 'vista.devtools');
+    if (this.config.overrides?.['view.devtools']) {
+      const idx = submenu.findIndex((item) => item.id === 'view.devtools');
       if (idx >= 0) {
-        submenu[idx] = { ...submenu[idx], ...this.config.overrides['vista.devtools'] };
+        submenu[idx] = { ...submenu[idx], ...this.config.overrides['view.devtools'] };
       }
     }
 
@@ -212,10 +212,10 @@ export class MenuBuilder {
   /**
    * Build the "Temas" (Themes) menu with dark/light radio options.
    */
-  private buildTemasMenu(context: IMenuBuildContext): MenuItemConstructorOptions {
+  private buildThemesMenu(context: IMenuBuildContext): MenuItemConstructorOptions {
     const submenu: MenuItemConstructorOptions[] = [
       {
-        id: 'temas.oscuro',
+        id: 'themes.dark',
         label: 'Oscuro',
         type: 'radio',
         checked: context.activeTheme === 'dark',
@@ -224,7 +224,7 @@ export class MenuBuilder {
         },
       },
       {
-        id: 'temas.claro',
+        id: 'themes.light',
         label: 'Claro',
         type: 'radio',
         checked: context.activeTheme === 'light',
@@ -236,16 +236,16 @@ export class MenuBuilder {
     ];
 
     // Apply overrides to theme entries
-    if (this.config.overrides?.['temas.oscuro']) {
-      const idx = submenu.findIndex((item) => item.id === 'temas.oscuro');
+    if (this.config.overrides?.['themes.dark']) {
+      const idx = submenu.findIndex((item) => item.id === 'themes.dark');
       if (idx >= 0) {
-        submenu[idx] = { ...submenu[idx], ...this.config.overrides['temas.oscuro'] };
+        submenu[idx] = { ...submenu[idx], ...this.config.overrides['themes.dark'] };
       }
     }
-    if (this.config.overrides?.['temas.claro']) {
-      const idx = submenu.findIndex((item) => item.id === 'temas.claro');
+    if (this.config.overrides?.['themes.light']) {
+      const idx = submenu.findIndex((item) => item.id === 'themes.light');
       if (idx >= 0) {
-        submenu[idx] = { ...submenu[idx], ...this.config.overrides['temas.claro'] };
+        submenu[idx] = { ...submenu[idx], ...this.config.overrides['themes.light'] };
       }
     }
 
