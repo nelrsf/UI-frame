@@ -71,7 +71,7 @@ function createWindow(): void {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: true,
+      sandbox: isDev ? false : true, // sandbox requiere preload bundlado
     },
   });
 
