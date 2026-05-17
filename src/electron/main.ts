@@ -22,8 +22,17 @@ function getStoredTheme(): AppTheme {
     const preferencesPath = path.join(app.getPath('userData'), 'preferences.json');
     if (fs.existsSync(preferencesPath)) {
       const content = fs.readFileSync(preferencesPath, 'utf-8');
-      const data = JSON.parse(content);
-      const theme = data[THEME_PREFERENCE_KEY];
+      const parsed = JSON.parse(content) as unknown;
+      if (
+        parsed === null ||
+        typeof parsed !== 'object' ||
+        (parsed as { schemaVersion?: unknown }).schemaVersion !== 1 ||
+        typeof (parsed as { data?: unknown }).data !== 'object' ||
+        (parsed as { data?: unknown }).data === null
+      ) {
+        return DEFAULT_THEME;
+      }
+      const theme = (parsed as { data: Record<string, unknown> }).data[THEME_PREFERENCE_KEY];
       if (theme === 'dark' || theme === 'light') {
         return theme;
       }
@@ -75,15 +84,15 @@ function registerIpcHandlers(): void {
     return false;
   });
 
-  // Handler to update menu checkboxes when panel state changes from shell
-  // Optimización: actualización parcial O(1) en lugar de reconstruir todo el menú O(n)
+  // Handler to update menu checkboxes when panel state changes from the shell.
+  // Optimizes common panel sync with a targeted update instead of a full menu rebuild.
   ipcMain.handle(IPC_CHANNELS.MENU.UPDATE_PANEL_STATE, async (_event, payload: unknown): Promise<void> => {
     if (typeof payload === 'object' && payload !== null) {
       const { bottomPanelVisible, secondaryPanelVisible } = payload as { bottomPanelVisible?: boolean; secondaryPanelVisible?: boolean };
       
       const manager = MenuManager.getInstance();
       
-      // Actualización parcial - solo actualiza los items específicos
+      // Update only the affected checkbox items.
       if (bottomPanelVisible !== undefined) {
         manager.updateBottomPanel(bottomPanelVisible);
       }
@@ -208,8 +217,8 @@ app.whenReady().then(() => {
   registerIpcHandlers();
   createWindow();
 
-  // Inicializar MenuManager con referencia a la ventana
-  // Esto permite actualizaciones parciales O(1) en lugar de reconstruir todo
+  // Initialize MenuManager with the window reference so panel state can update
+  // menu checkboxes without rebuilding the full menu.
   if (mainWindow) {
     MenuManager.getInstance().setMainWindow(mainWindow);
   }

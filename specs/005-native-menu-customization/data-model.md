@@ -1,7 +1,7 @@
 # Data Model: Native Menu Customization
 
-**Phase**: 1 — Design  
-**Date**: 2026-05-11  
+**Phase**: 1 - Design
+**Date**: 2026-05-11
 **Feature**: [spec.md](spec.md) | [plan.md](plan.md) | [research.md](research.md)
 
 ---
@@ -16,8 +16,8 @@ The active visual theme for the application. Only `'dark'` is fully implemented 
 |-------|------|-------|
 | value | `'dark' \| 'light'` | Persisted under preference key `shell.theme` |
 
-**Default**: `'dark'`  
-**Persistence key**: `shell.theme`  
+**Default**: `'dark'`
+**Persistence key**: `shell.theme`
 **State location**: NgRx `preferences.data['shell.theme']` in renderer; `nativeTheme.themeSource` in main process.
 
 ---
@@ -28,7 +28,7 @@ A single interactive item within the native application menu.
 
 | Field | Type | Required | Notes |
 |-------|------|----------|-------|
-| id | `string` | Yes | Unique slot identifier (e.g., `'archivo.salir'`). Used to address an entry in `MenuConfig`. |
+| id | `string` | Yes | Unique slot identifier (e.g., `'file.exit'`). Used to address an entry in `MenuConfig`. |
 | label | `string` | Yes | Display text shown to the user. |
 | type | `'normal' \| 'separator' \| 'submenu' \| 'checkbox' \| 'radio'` | Yes | Maps to Electron `MenuItemConstructorOptions.type`. |
 | enabled | `boolean` | No | `true` by default. Set to `false` to render disabled (greyed-out) without hiding. |
@@ -60,11 +60,11 @@ to produce or override the default menu.
 
 ```
 Default config (built-in)
-  → apply integrator overrides (merged by id)
-  → apply runtime context (isDev flag, active theme)
-  → Electron MenuTemplate[]
-  → Menu.buildFromTemplate()
-  → Menu.setApplicationMenu()
+  -> apply integrator overrides (merged by id)
+  -> apply runtime context (isDev flag, active theme)
+  -> Electron MenuTemplate[]
+  -> Menu.buildFromTemplate()
+  -> Menu.setApplicationMenu()
 ```
 
 ---
@@ -98,15 +98,15 @@ The built-in default menu uses the following named slots, all addressable via `M
 
 | Slot ID | Label (default) | Type | Notes |
 |---------|----------------|------|-------|
-| `archivo` | Archivo | submenu | |
-| `archivo.salir` | Salir | normal | Calls `app.quit()`. Mandatory; cannot be removed. |
-| `vista` | Vista | submenu | |
-| `vista.devtools` | Mostrar DevTools | normal | Visible only when `isDev === true`. |
-| `vista.bottomPanel` | Panel inferior | checkbox | Dispatches `MENU.TOGGLE_BOTTOM_PANEL` to renderer. |
-| `vista.secondaryPanel` | Panel secundario | checkbox | Dispatches `MENU.TOGGLE_SECONDARY_PANEL` to renderer. |
-| `temas` | Temas | submenu | |
-| `temas.oscuro` | Oscuro | radio | Active in this delivery. Sets theme to `'dark'`. |
-| `temas.claro` | Claro | radio | Visible but `enabled: false` until future spec. |
+| `file` | Archivo | submenu | |
+| `file.exit` | Salir | normal | Calls `app.quit()`. Mandatory; cannot be removed. |
+| `view` | Vista | submenu | |
+| `view.devtools` | Mostrar DevTools | normal | Visible only when `isDev === true`. |
+| `view.bottomPanel` | Panel inferior | checkbox | Dispatches `MENU.TOGGLE_BOTTOM_PANEL` to renderer. |
+| `view.secondaryPanel` | Panel secundario | checkbox | Dispatches `MENU.TOGGLE_SECONDARY_PANEL` to renderer. |
+| `themes` | Temas | submenu | |
+| `themes.dark` | Oscuro | radio | Active in this delivery. Sets theme to `'dark'`. |
+| `themes.light` | Claro | radio | Visible but `enabled: false` until future spec. |
 
 ---
 
@@ -115,30 +115,30 @@ The built-in default menu uses the following named slots, all addressable via `M
 ### Theme selection
 ```
 User clicks "Oscuro" in menu
-  → menu.builder click handler
-  → nativeTheme.themeSource = 'dark'
-  → write preference: preferences.json { shell.theme: 'dark' }
-  → Menu.setApplicationMenu(rebuild with checked='dark')
-  → mainWindow.webContents.send(MENU.THEME_CHANGED, { theme: 'dark' })
-  → renderer: dispatch setPreference({ key: 'shell.theme', value: 'dark' })
-  → NgRx preferences slice updated
+  -> menu.builder click handler
+  -> nativeTheme.themeSource = 'dark'
+  -> write preference: preferences.json { shell.theme: 'dark' }
+  -> Menu.setApplicationMenu(rebuild with checked='dark')
+  -> mainWindow.webContents.send(MENU.THEME_CHANGED, { theme: 'dark' })
+  -> renderer: dispatch setPreference({ key: 'shell.theme', value: 'dark' })
+  -> NgRx preferences slice updated
 ```
 
 ### App startup
 ```
 main.ts createWindow()
-  → read preferences.json → shell.theme (default: 'dark')
-  → nativeTheme.themeSource = storedTheme
-  → MenuBuilder.build(config, { activeTheme: storedTheme, isDev })
-  → Menu.setApplicationMenu(menu)
+  -> read preferences.json -> shell.theme (default: 'dark')
+  -> nativeTheme.themeSource = storedTheme
+  -> MenuBuilder.build(config, { activeTheme: storedTheme, isDev })
+  -> Menu.setApplicationMenu(menu)
 ```
 
 ### Panel toggle
 ```
 User clicks "Panel inferior" in menu
-  → menu.builder click handler
-  → mainWindow.webContents.send(MENU.TOGGLE_BOTTOM_PANEL)
-  → renderer (via preload listener): store.dispatch(toggleBottomPanel())
+  -> menu.builder click handler
+  -> mainWindow.webContents.send(MENU.TOGGLE_BOTTOM_PANEL)
+  -> renderer (via preload listener): store.dispatch(toggleBottomPanel())
 ```
 
 ---
@@ -147,9 +147,10 @@ User clicks "Panel inferior" in menu
 
 | Constant | Direction | Payload | Purpose |
 |----------|-----------|---------|---------|
-| `MENU.TOGGLE_BOTTOM_PANEL` | main → renderer | none | Request renderer to toggle bottom panel |
-| `MENU.TOGGLE_SECONDARY_PANEL` | main → renderer | none | Request renderer to toggle secondary panel |
-| `MENU.THEME_CHANGED` | main → renderer | `{ theme: AppTheme }` | Notify renderer of new active theme |
+| `MENU.TOGGLE_BOTTOM_PANEL` | main -> renderer | none | Request renderer to toggle bottom panel |
+| `MENU.TOGGLE_SECONDARY_PANEL` | main -> renderer | none | Request renderer to toggle secondary panel |
+| `MENU.THEME_CHANGED` | main -> renderer | `{ theme: AppTheme }` | Notify renderer of new active theme |
+| `MENU.UPDATE_PANEL_STATE` | renderer -> main | `{ bottomPanelVisible: boolean; secondaryPanelVisible: boolean }` | Keep native menu checkbox state synchronized with NgRx layout state |
 
 ---
 
@@ -157,7 +158,7 @@ User clicks "Panel inferior" in menu
 
 The following contracts are produced now but left unimplemented until a future spec:
 
-- `IThemeAdapter` port in `src/app/core/application/ports/theme.port.ts` — interface for applying a theme to the Angular shell.
-- `selectActiveTheme` selector — reads `preferences.data['shell.theme']` from NgRx store.
-- `MENU.THEME_CHANGED` listener in the shell component — dispatches theme preference update to NgRx.
-- `temas.claro` menu entry — slot ID exists in `MenuConfig.overrides`; enabling it requires only flipping `enabled: true` and providing a light theme implementation.
+- `IThemeAdapter` port in `src/app/core/application/ports/theme.port.ts` - interface for applying a theme to the Angular shell.
+- `selectActiveTheme` selector - reads `preferences.data['shell.theme']` from NgRx store.
+- `MENU.THEME_CHANGED` listener in the shell component - dispatches theme preference update to NgRx.
+- `themes.light` menu entry - slot ID exists in `MenuConfig.overrides`; enabling it requires only flipping `enabled: true` and providing a light theme implementation.

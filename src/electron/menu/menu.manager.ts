@@ -3,13 +3,13 @@ import { MenuBuilder } from './menu.builder';
 import type { IMenuBuildContext } from '../../contracts';
 
 /**
- * Gestor de actualizaciones parciales del menú.
- * Permite actualizar items individuales sin reconstruir todo el menú.
- * 
- * Uso:
- * - Inicializar con setMainWindow() durante el startup
- * - Usar updateBottomPanel() / updateSecondaryPanel() para cambios parciales
- * - Usar rebuildFull() solo para inicialización o cambios mayores
+ * Manager for targeted menu updates.
+ * Allows individual items to be updated without rebuilding the full menu.
+ *
+ * Usage:
+ * - Initialize with setMainWindow() during startup
+ * - Use updateBottomPanel() / updateSecondaryPanel() for targeted updates
+ * - Use rebuildFull() only for initialization or major changes
  */
 export class MenuManager {
   private static instance: MenuManager | null = null;
@@ -27,16 +27,16 @@ export class MenuManager {
   }
 
   /**
-   * Inicializa el gestor con referencia a la ventana principal.
-   * No construye el menú, solo guarda la referencia.
+   * Initializes the manager with the main window reference.
+   * This does not build the menu; it only stores the reference.
    */
   setMainWindow(windowRef: BrowserWindow): void {
     this.mainWindowRef = windowRef;
   }
 
   /**
-   * Actualiza el estado del panel inferior.
-   * Complejidad: O(1) - solo actualiza un item, no reconstruye todo.
+   * Updates the bottom panel state.
+   * Complexity: O(1) - updates one item without rebuilding the full menu.
    */
   updateBottomPanel(visible: boolean): void {
     this.bottomPanelVisible = visible;
@@ -44,8 +44,8 @@ export class MenuManager {
   }
 
   /**
-   * Actualiza el estado del panel secundario.
-   * Complejidad: O(1) - solo actualiza un item, no reconstruye todo.
+   * Updates the secondary panel state.
+   * Complexity: O(1) - updates one item without rebuilding the full menu.
    */
   updateSecondaryPanel(visible: boolean): void {
     this.secondaryPanelVisible = visible;
@@ -53,7 +53,7 @@ export class MenuManager {
   }
 
   /**
-   * Obtiene el estado actual de los paneles.
+   * Gets the current panel state.
    */
   getPanelState(): { bottomPanelVisible: boolean; secondaryPanelVisible: boolean } {
     return {
@@ -63,12 +63,12 @@ export class MenuManager {
   }
 
   /**
-   * Reconstruye el menú completo (para cambios mayores o inicialización).
+   * Rebuilds the full menu for initialization or major changes.
    */
   rebuildFull(context: IMenuBuildContext): void {
     this.bottomPanelVisible = context.bottomPanelVisible ?? true;
     this.secondaryPanelVisible = context.secondaryPanelVisible ?? true;
-    
+
     const builder = new MenuBuilder();
     builder.setMainWindow(this.mainWindowRef!);
     const menu = builder.build(context);
@@ -76,8 +76,8 @@ export class MenuManager {
   }
 
   /**
-   * Actualiza un checkbox específico por su ID.
-   * Complejidad: O(1) - busca por ID y actualiza.
+   * Updates a specific checkbox by ID.
+   * Complexity: O(1) - looks up one item and updates it.
    */
   private updateCheckbox(itemId: string, checked: boolean): void {
     const menu = Menu.getApplicationMenu();

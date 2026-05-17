@@ -1,6 +1,6 @@
 # Menu Customization Contract
 
-**Spec**: [spec.md](../spec.md) | **Plan**: [plan.md](../plan.md)  
+**Spec**: [spec.md](../spec.md) | **Plan**: [plan.md](../plan.md)
 **Date**: 2026-05-11
 
 ---
@@ -27,7 +27,7 @@ integrators who want to:
 | `IMenuBuildContext` | `IMenuEntry.ts` | Runtime context (theme, isDev, panel states) injected at build time |
 | `MENU_SLOT_IDS` | `IMenuEntry.ts` | Enumeration of all built-in slot IDs |
 | `AppTheme` | `IThemePreference.ts` | `'dark' \| 'light'` |
-| `THEME_PREFERENCE_KEY` | `IThemePreference.ts` | `'shell.theme'` — the NgRx/IPC preference key |
+| `THEME_PREFERENCE_KEY` | `IThemePreference.ts` | `'shell.theme'` - the NgRx/IPC preference key |
 | `IThemeChangedPayload` | `IThemePreference.ts` | IPC payload sent from main to renderer on theme change |
 
 ---
@@ -36,23 +36,23 @@ integrators who want to:
 
 ```
 Archivo
-  └─ Salir                   (archivo.salir)
+  `- Salir                   (file.exit)
 
 Vista
-  ├─ Mostrar DevTools        (vista.devtools)        — dev mode only
-  ├─ Panel inferior          (vista.bottomPanel)      — checkbox
-  └─ Panel secundario        (vista.secondaryPanel)   — checkbox
+  |- Mostrar DevTools        (view.devtools)        - dev mode only
+  |- Panel inferior          (view.bottomPanel)      - checkbox
+  `- Panel secundario        (view.secondaryPanel)   - checkbox
 
 Temas
-  ├─ Oscuro ✓                (temas.oscuro)           — radio, active
-  └─ Claro  (disabled)       (temas.claro)            — radio, disabled until future spec
+  |- Oscuro checked                (themes.dark)           - radio, active
+  `- Claro  (disabled)       (themes.light)            - radio, disabled until future spec
 ```
 
 ---
 
 ## What you can customize via `IMenuConfig`
 
-### `overrides` — change individual entries
+### `overrides` - change individual entries
 
 Provide a partial `IMenuEntry` keyed by the slot ID.
 Only the fields you specify are changed; everything else keeps its default.
@@ -63,21 +63,21 @@ import { IMenuConfig, MENU_SLOT_IDS } from 'specs/005-native-menu-customization/
 const myConfig: IMenuConfig = {
   overrides: {
     // Translate labels to English
-    [MENU_SLOT_IDS.ARCHIVO_SALIR]: { label: 'Exit' },
-    [MENU_SLOT_IDS.VISTA_BOTTOM_PANEL]: { label: 'Toggle Bottom Panel' },
-    [MENU_SLOT_IDS.VISTA_SECONDARY_PANEL]: { label: 'Toggle Secondary Panel' },
-    [MENU_SLOT_IDS.TEMAS_OSCURO]: { label: 'Dark' },
-    [MENU_SLOT_IDS.TEMAS_CLARO]: { label: 'Light' },
+    [MENU_SLOT_IDS.FILE_EXIT]: { label: 'Exit' },
+    [MENU_SLOT_IDS.VIEW_BOTTOM_PANEL]: { label: 'Toggle Bottom Panel' },
+    [MENU_SLOT_IDS.VIEW_SECONDARY_PANEL]: { label: 'Toggle Secondary Panel' },
+    [MENU_SLOT_IDS.THEMES_DARK]: { label: 'Dark' },
+    [MENU_SLOT_IDS.THEMES_LIGHT]: { label: 'Light' },
   },
 };
 ```
 
-### `overrides` — attach a custom click handler
+### `overrides` - attach a custom click handler
 
 ```ts
 const myConfig: IMenuConfig = {
   overrides: {
-    [MENU_SLOT_IDS.ARCHIVO_SALIR]: {
+    [MENU_SLOT_IDS.FILE_EXIT]: {
       click: () => {
         // do cleanup before quitting
         myService.shutdown().then(() => app.quit());
@@ -87,17 +87,17 @@ const myConfig: IMenuConfig = {
 };
 ```
 
-### `overrides` — hide an optional entry
+### `overrides` - hide an optional entry
 
 ```ts
 const myConfig: IMenuConfig = {
   overrides: {
-    [MENU_SLOT_IDS.VISTA_DEVTOOLS]: { visible: false },
+    [MENU_SLOT_IDS.VIEW_DEVTOOLS]: { visible: false },
   },
 };
 ```
 
-### `extraEntries` — add a new top-level submenu
+### `extraEntries` - add a new top-level submenu
 
 ```ts
 const myConfig: IMenuConfig = {
@@ -109,7 +109,7 @@ const myConfig: IMenuConfig = {
       submenu: [
         {
           id: 'ayuda.acerca',
-          label: 'Acerca de UI Frame…',
+          label: 'Acerca de UI Frame...',
           type: 'normal',
           click: () => showAboutDialog(),
         },
@@ -123,9 +123,9 @@ const myConfig: IMenuConfig = {
 
 ## What cannot be overridden
 
-- **`archivo.salir`** — its `visible` field cannot be set to `false`. The exit action is mandatory per spec FR-002. Attempting to set `visible: false` on this slot is silently ignored by `MenuBuilder`.
-- **Entry `id` fields** — IDs are immutable slot identifiers; they cannot be changed via `overrides`.
-- **`temas.claro` enabled state** — this remains `false` until a future spec enables full light-theme support. Setting `enabled: true` in overrides will be honoured only after that spec ships the underlying implementation.
+- **`file.exit`** - its `visible` field cannot be set to `false`. The exit action is mandatory per spec FR-002. Attempting to set `visible: false` on this slot is silently ignored by `MenuBuilder`.
+- **Entry `id` fields** - IDs are immutable slot identifiers; they cannot be changed via `overrides`.
+- **`themes.light` enabled state** - this remains `false` until a future spec enables full light-theme support. Setting `enabled: true` in overrides will be honoured only after that spec ships the underlying implementation.
 
 ---
 
@@ -163,7 +163,7 @@ window.electronAPI.menu.onThemeChanged((theme) => {
 
 When a future spec implements the full light theme:
 
-1. Flip `enabled: true` on the `temas.claro` entry (via `overrides` or by default in `MenuBuilder`).
+1. Flip `enabled: true` on the `themes.light` entry (via `overrides` or by default in `MenuBuilder`).
 2. Implement `IThemeAdapter` (defined in `src/app/core/application/ports/theme.port.ts`) to apply the theme to the Angular shell.
 3. Connect the `selectActiveTheme` NgRx selector to the shell component and forward it to `IThemeAdapter`.
 

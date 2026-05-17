@@ -11,7 +11,7 @@ export interface IMenuEntry {
    * Unique slot identifier.
    *
    * Used as the key in `IMenuConfig.overrides` to target this entry.
-   * Dot-notation convention: `'<topMenu>.<item>'` (e.g., `'archivo.salir'`).
+   * Dot-notation convention: `'<topMenu>.<item>'` (e.g., `'file.exit'`).
    */
   readonly id: string;
 
@@ -51,7 +51,7 @@ export interface IMenuEntry {
   click?: () => void;
 
   /**
-   * Child entries — required when `type === 'submenu'`, ignored otherwise.
+   * Child entries - required when `type === 'submenu'`, ignored otherwise.
    */
   submenu?: IMenuEntry[];
 }
@@ -67,22 +67,22 @@ export type PanelToggleTarget = 'bottomPanel' | 'secondaryPanel';
  * Use these as keys in `IMenuConfig.overrides`.
  */
 export const MENU_SLOT_IDS = {
-  ARCHIVO: 'archivo',
-  ARCHIVO_SALIR: 'archivo.salir',
-  VISTA: 'vista',
-  VISTA_DEVTOOLS: 'vista.devtools',
-  VISTA_BOTTOM_PANEL: 'vista.bottomPanel',
-  VISTA_SECONDARY_PANEL: 'vista.secondaryPanel',
-  TEMAS: 'temas',
-  TEMAS_OSCURO: 'temas.oscuro',
-  TEMAS_CLARO: 'temas.claro',
+  FILE: 'file',
+  FILE_EXIT: 'file.exit',
+  VIEW: 'view',
+  VIEW_DEVTOOLS: 'view.devtools',
+  VIEW_BOTTOM_PANEL: 'view.bottomPanel',
+  VIEW_SECONDARY_PANEL: 'view.secondaryPanel',
+  THEMES: 'themes',
+  THEMES_DARK: 'themes.dark',
+  THEMES_LIGHT: 'themes.light',
 } as const;
 
 export type MenuSlotId = (typeof MENU_SLOT_IDS)[keyof typeof MENU_SLOT_IDS];
 
 /**
  * Context injected by the MenuBuilder at build time.
- * Not part of the config — resolved automatically from the runtime environment.
+ * Not part of the config - resolved automatically from the runtime environment.
  */
 export interface IMenuBuildContext {
   readonly activeTheme: AppTheme;

@@ -25,7 +25,7 @@ shown only in development mode.
 | **Project Type** | Desktop shell application |
 | **Performance Goals** | Menu rebuild completes in < 50ms on theme change; no perceptible flash or delay to user |
 | **Constraints** | contextIsolation=true, nodeIntegration=false, sandbox=true must remain unchanged; no new external packages; preload must only expose explicitly approved capabilities; all IPC channels must be declared in `channels.ts` |
-| **Scale/Scope** | 1 menu builder class, 3 new IPC channels (TOGGLE_BOTTOM_PANEL, TOGGLE_SECONDARY_PANEL, THEME_CHANGED), 1 new preference key, menu command dispatch via shell registry, 1 theme port for future renderer integration |
+| **Scale/Scope** | 1 menu builder class, 4 new IPC channels (TOGGLE_BOTTOM_PANEL, TOGGLE_SECONDARY_PANEL, THEME_CHANGED, UPDATE_PANEL_STATE), 1 new preference key, menu command dispatch via shell registry, 1 theme port for future renderer integration |
 
 ## Constitution Check
 
@@ -69,7 +69,7 @@ src/electron/
 │   ├── menu.defaults.ts         # Default Spanish menu entries + theme map
 │   └── index.ts                 # re-export MenuBuilder + config types
 ├── ipc/
-│   ├── channels.ts              # + MENU.TOGGLE_BOTTOM_PANEL, MENU.TOGGLE_SECONDARY_PANEL, MENU.THEME_CHANGED
+│   ├── channels.ts              # + MENU.TOGGLE_BOTTOM_PANEL, MENU.TOGGLE_SECONDARY_PANEL, MENU.THEME_CHANGED, MENU.UPDATE_PANEL_STATE
 │   └── handlers/
 │       └── menu.handlers.ts     # registers theme-set IPC handler, reads theme from prefs at startup
 └── main.ts                      # wire MenuBuilder at startup, restore theme from prefs

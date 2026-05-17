@@ -13,7 +13,7 @@ import { IMenuEntry, MenuSlotId } from './IMenuEntry';
  * ```ts
  * const config: IMenuConfig = {
  *   overrides: {
- *     'archivo.salir': { label: 'Exit' },
+ *     'file.exit': { label: 'Exit' },
  *   },
  * };
  * ```
@@ -27,7 +27,7 @@ import { IMenuEntry, MenuSlotId } from './IMenuEntry';
  *       label: 'Ayuda',
  *       type: 'submenu',
  *       submenu: [
- *         { id: 'ayuda.acerca', label: 'Acerca de…', type: 'normal', click: () => showAbout() },
+ *         { id: 'ayuda.acerca', label: 'Acerca de...', type: 'normal', click: () => showAbout() },
  *       ],
  *     },
  *   ],
@@ -37,7 +37,7 @@ import { IMenuEntry, MenuSlotId } from './IMenuEntry';
  * ### Disable a built-in entry
  * ```ts
  * const config: IMenuConfig = {
- *   overrides: { 'vista.devtools': { visible: false } },
+ *   overrides: { 'view.devtools': { visible: false } },
  * };
  * ```
  */
@@ -46,7 +46,7 @@ export interface IMenuConfig {
    * Shallow-merged overrides applied to matching entries by `IMenuEntry.id`.
    *
    * Only the fields you specify are changed; all other fields keep their
-   * default values. You cannot add new entries here — use `extraEntries`.
+   * default values. You cannot add new entries here - use `extraEntries`.
    */
   overrides?: Partial<Record<MenuSlotId | string, Partial<Omit<IMenuEntry, 'id'>>>>;
 

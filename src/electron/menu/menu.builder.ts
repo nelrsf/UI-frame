@@ -1,5 +1,5 @@
 /**
- * MenuBuilder — Constructs and customizes the native application menu.
+ * MenuBuilder - Constructs and customizes the native application menu.
  *
  * This class is the primary entry point for integrators who need to customize
  * menu entries, labels, or callbacks. The default Spanish menu is applied
@@ -67,10 +67,10 @@ export class MenuBuilder {
   }
 
   /**
-   * Establece referencia a la ventana para uso del MenuManager.
-   * No construye el menú, solo guarda la referencia para los handlers del menú.
-   * 
-   * @param windowRef Referencia simple con método send
+   * Sets the window reference used by MenuManager.
+   * This does not build the menu; it only stores the reference for menu handlers.
+   *
+   * @param windowRef Minimal reference with a send method
    */
   setMainWindowRef(windowRef: { send: (channel: string, ...args: unknown[]) => void }): void {
     this.mainWindow = windowRef as unknown as BrowserWindow;
@@ -261,7 +261,7 @@ export class MenuBuilder {
 
     // Persist the theme preference to disk (fire-and-forget)
     this.persistTheme(theme).catch(() => {
-      // Swallow write errors — UI must not crash on persistence failure
+      // Swallow write errors - UI must not crash on persistence failure
     });
 
     // Notify the renderer that the theme has changed

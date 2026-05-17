@@ -16,7 +16,7 @@ export interface IMenuEntry extends MenuItemConstructorOptions {
    * Unique slot identifier.
    *
    * Used as the key in `IMenuConfig.overrides` to target this entry.
-   * Dot-notation convention: `'<topMenu>.<item>'` (e.g., `'archivo.salir'`).
+   * Dot-notation convention: `'<topMenu>.<item>'` (e.g., `'file.exit'`).
    */
   readonly id: string;
 }
@@ -47,7 +47,7 @@ export type MenuSlotId = (typeof MENU_SLOT_IDS)[keyof typeof MENU_SLOT_IDS];
 
 /**
  * Context injected by the MenuBuilder at build time.
- * Not part of the config — resolved automatically from the runtime environment.
+ * Not part of the config - resolved automatically from the runtime environment.
  */
 export interface IMenuBuildContext {
   readonly activeTheme: AppTheme;
@@ -70,7 +70,7 @@ export interface IMenuConfig {
    * Shallow-merged overrides applied to matching entries by `IMenuEntry.id`.
    *
    * Only the fields you specify are changed; all other fields keep their
-   * default values. You cannot add new entries here — use `extraEntries`.
+   * default values. You cannot add new entries here - use `extraEntries`.
    */
   readonly overrides?: Record<string, Partial<MenuItemConstructorOptions>>;
 

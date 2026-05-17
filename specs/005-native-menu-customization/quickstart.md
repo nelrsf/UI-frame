@@ -1,6 +1,6 @@
 # Quick Start: Native Menu Customization
 
-**Spec**: [spec.md](spec.md) | **Contract reference**: [contracts/menu-customization.contract.md](contracts/menu-customization.contract.md)  
+**Spec**: [spec.md](spec.md) | **Contract reference**: [contracts/menu-customization.contract.md](contracts/menu-customization.contract.md)
 **Date**: 2026-05-11
 
 ---
@@ -23,10 +23,10 @@ Open the menu bar. You should see:
 Archivo  Vista  Temas
 ```
 
-- **Archivo → Salir** — closes the application.
-- **Vista → Panel inferior / Panel secundario** — toggles each panel.
-- **Vista → Mostrar DevTools** — visible only when `ELECTRON_ENV=development`.
-- **Temas → Oscuro** — selected (active). **Claro** — visible but greyed out.
+- **Archivo -> Salir** - closes the application.
+- **Vista -> Panel inferior / Panel secundario** - toggles each panel.
+- **Vista -> Mostrar DevTools** - visible only when `ELECTRON_ENV=development`.
+- **Temas -> Oscuro** - selected (active). **Claro** - visible but greyed out.
 
 ---
 
@@ -60,15 +60,15 @@ import { IMenuConfig, MENU_SLOT_IDS } from '../../specs/005-native-menu-customiz
 
 export const englishMenuConfig: IMenuConfig = {
   overrides: {
-    [MENU_SLOT_IDS.ARCHIVO]:               { label: 'File' },
-    [MENU_SLOT_IDS.ARCHIVO_SALIR]:         { label: 'Exit' },
-    [MENU_SLOT_IDS.VISTA]:                 { label: 'View' },
-    [MENU_SLOT_IDS.VISTA_DEVTOOLS]:        { label: 'Toggle DevTools' },
-    [MENU_SLOT_IDS.VISTA_BOTTOM_PANEL]:    { label: 'Toggle Bottom Panel' },
-    [MENU_SLOT_IDS.VISTA_SECONDARY_PANEL]: { label: 'Toggle Secondary Panel' },
-    [MENU_SLOT_IDS.TEMAS]:                 { label: 'Theme' },
-    [MENU_SLOT_IDS.TEMAS_OSCURO]:          { label: 'Dark' },
-    [MENU_SLOT_IDS.TEMAS_CLARO]:           { label: 'Light' },
+    [MENU_SLOT_IDS.FILE]:               { label: 'File' },
+    [MENU_SLOT_IDS.FILE_EXIT]:         { label: 'Exit' },
+    [MENU_SLOT_IDS.VIEW]:                 { label: 'View' },
+    [MENU_SLOT_IDS.VIEW_DEVTOOLS]:        { label: 'Toggle DevTools' },
+    [MENU_SLOT_IDS.VIEW_BOTTOM_PANEL]:    { label: 'Toggle Bottom Panel' },
+    [MENU_SLOT_IDS.VIEW_SECONDARY_PANEL]: { label: 'Toggle Secondary Panel' },
+    [MENU_SLOT_IDS.THEMES]:                 { label: 'Theme' },
+    [MENU_SLOT_IDS.THEMES_DARK]:          { label: 'Dark' },
+    [MENU_SLOT_IDS.THEMES_LIGHT]:           { label: 'Light' },
   },
 };
 ```
@@ -100,7 +100,7 @@ const myConfig: IMenuConfig = {
       submenu: [
         {
           id: 'ayuda.docs',
-          label: 'Documentación',
+          label: 'Documentacion',
           type: 'normal',
           accelerator: 'F1',
           click: () => shell.openExternal('https://example.com/docs'),
@@ -118,12 +118,12 @@ const myConfig: IMenuConfig = {
 ```ts
 const myConfig: IMenuConfig = {
   overrides: {
-    'vista.devtools': { visible: false },
+    'view.devtools': { visible: false },
   },
 };
 ```
 
-> **Note**: `archivo.salir` cannot be hidden — it is a mandatory shell action.
+> **Note**: `file.exit` cannot be hidden - it is a mandatory shell action.
 
 ---
 
@@ -132,7 +132,7 @@ const myConfig: IMenuConfig = {
 ```ts
 const myConfig: IMenuConfig = {
   overrides: {
-    'archivo.salir': {
+    'file.exit': {
       click: () => {
         myApp.onBeforeQuit().then(() => app.quit());
       },
@@ -143,11 +143,11 @@ const myConfig: IMenuConfig = {
 
 ---
 
-## 7. Theme changes — what happens automatically
+## 7. Theme changes - what happens automatically
 
-When the user selects **Temas → Oscuro**:
+When the user selects **Temas -> Oscuro**:
 
-1. `nativeTheme.themeSource` is set to `'dark'` — the native menu bar and OS chrome update immediately.
+1. `nativeTheme.themeSource` is set to `'dark'` - the native menu bar and OS chrome update immediately.
 2. The preference is written to disk (`shell.theme = 'dark'`).
 3. The menu rebuilds with the correct radio `checked` state.
 4. The main process sends `MENU.THEME_CHANGED` to the renderer.
@@ -195,11 +195,11 @@ When a future spec enables full light-theme support:
 
 | File | Role |
 |------|------|
-| `src/electron/menu/menu.builder.ts` | `MenuBuilder` class — the customization entry point |
+| `src/electron/menu/menu.builder.ts` | `MenuBuilder` class - the customization entry point |
 | `src/electron/menu/menu.defaults.ts` | Default Spanish menu entries and theme colour map |
 | `src/electron/ipc/channels.ts` | `MENU.*` IPC channel constants |
 | `src/electron/main.ts` | Wires `MenuBuilder` at startup; restores theme from prefs |
 | `src/app/core/models/theme.model.ts` | `AppTheme` type and `THEME_PREFERENCE_KEY` constant |
-| `src/app/core/application/ports/theme.port.ts` | `IThemeAdapter` — future renderer theme integration point |
+| `src/app/core/application/ports/theme.port.ts` | `IThemeAdapter` - future renderer theme integration point |
 | `src/app/core/state/preferences/preferences.selectors.ts` | `selectActiveTheme` selector |
 | `specs/005-native-menu-customization/contracts/` | Full contract types for this feature |
