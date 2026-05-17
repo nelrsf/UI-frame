@@ -1,6 +1,6 @@
 import { Menu, BrowserWindow } from 'electron';
 import { MenuBuilder } from './menu.builder';
-import type { IMenuBuildContext } from '../../contracts';
+import type { IMenuConfig, IMenuBuildContext } from '../../contracts';
 
 /**
  * Manager for targeted menu updates.
@@ -10,12 +10,15 @@ import type { IMenuBuildContext } from '../../contracts';
  * - Initialize with setMainWindow() during startup
  * - Use updateBottomPanel() / updateSecondaryPanel() for targeted updates
  * - Use rebuildFull() only for initialization or major changes
+ *
+ * Supports injected configuration via setConfig() for OCP compliance.
  */
 export class MenuManager {
   private static instance: MenuManager | null = null;
   private mainWindowRef?: BrowserWindow;
   private bottomPanelVisible = true;
   private secondaryPanelVisible = true;
+  private config: IMenuConfig = {};
 
   private constructor() {}
 
@@ -24,6 +27,14 @@ export class MenuManager {
       MenuManager.instance = new MenuManager();
     }
     return MenuManager.instance;
+  }
+
+  /**
+   * Sets the menu configuration for OCP compliance.
+   * Allows injecting custom configuration without modifying constructor.
+   */
+  setConfig(config: IMenuConfig): void {
+    this.config = config;
   }
 
   /**
@@ -64,12 +75,13 @@ export class MenuManager {
 
   /**
    * Rebuilds the full menu for initialization or major changes.
+   * Uses injected configuration if available.
    */
   rebuildFull(context: IMenuBuildContext): void {
     this.bottomPanelVisible = context.bottomPanelVisible ?? true;
     this.secondaryPanelVisible = context.secondaryPanelVisible ?? true;
 
-    const builder = new MenuBuilder();
+    const builder = new MenuBuilder(this.config);
     builder.setMainWindow(this.mainWindowRef!);
     const menu = builder.build(context);
     Menu.setApplicationMenu(menu);

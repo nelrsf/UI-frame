@@ -1,106 +1,25 @@
-import { app, BrowserWindow, ipcMain, shell, Menu, nativeTheme } from 'electron';
+import { app, BrowserWindow } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
-import { ALLOWED_EXTERNAL_PROTOCOLS, IPC_CHANNELS } from './ipc/channels';
 import { registerWindowHandlers } from './ipc/handlers/window.handlers';
 import { registerPreferencesHandlers } from './ipc/handlers/preferences.handlers';
-import { MenuBuilder, MenuManager } from './menu';
-import { AppTheme, DEFAULT_THEME, THEME_PREFERENCE_KEY } from '../contracts';
-import * as fs from 'fs';
+import { registerShellHandlers } from './ipc/handlers/shell.handlers';
+import { registerMenuHandlers } from './ipc/handlers/menu.handlers';
+import { ThemeInitializer } from './theme/theme-initializer';
+import { MenuInitializer } from './menu/menu.initializer';
+import { emitShellSignals } from './lifecycle/signals';
+import { menuConfig } from './menu/menu.config';
 
 const isDev = process.env['ELECTRON_ENV'] === 'development';
 const ANGULAR_DEV_URL = 'http://localhost:4200';
 
 let mainWindow: BrowserWindow | null = null;
 
-/**
- * Read the stored theme preference from preferences.json.
- * Returns the stored theme or DEFAULT_THEME if not found.
- */
-function getStoredTheme(): AppTheme {
-  try {
-    const preferencesPath = path.join(app.getPath('userData'), 'preferences.json');
-    if (fs.existsSync(preferencesPath)) {
-      const content = fs.readFileSync(preferencesPath, 'utf-8');
-      const parsed = JSON.parse(content) as unknown;
-      if (
-        parsed === null ||
-        typeof parsed !== 'object' ||
-        (parsed as { schemaVersion?: unknown }).schemaVersion !== 1 ||
-        typeof (parsed as { data?: unknown }).data !== 'object' ||
-        (parsed as { data?: unknown }).data === null
-      ) {
-        return DEFAULT_THEME;
-      }
-      const theme = (parsed as { data: Record<string, unknown> }).data[THEME_PREFERENCE_KEY];
-      if (theme === 'dark' || theme === 'light') {
-        return theme;
-      }
-    }
-  } catch {
-    // Preference file not found or invalid JSON — use default
-  }
-  return DEFAULT_THEME;
-}
-
-/**
- * Rebuild the application menu with updated panel visibility state.
- * Called from IPC handler when shell toggles panels.
- * 
- * @deprecated Usar MenuManager para actualizaciones parciales.
- */
-function rebuildMenu(bottomPanelVisible: boolean, secondaryPanelVisible: boolean): void {
-  const manager = MenuManager.getInstance();
-  manager.rebuildFull({
-    activeTheme: getStoredTheme(),
-    isDev,
-    bottomPanelVisible,
-    secondaryPanelVisible,
-  });
-}
-
 function registerIpcHandlers(): void {
   registerWindowHandlers(() => mainWindow);
-  // Preferences handlers validate the `key` argument at BOTH the sender
-  // (preload) and receiver (main) boundary — same dual-validation strategy
-  // as the shell:openExternal handler below.
   registerPreferencesHandlers();
-
-  // Handler-side validation: re-validate the URL even though the preload also
-  // validates, enforcing the "both sender and receiver" IPC security policy.
-  ipcMain.handle(IPC_CHANNELS.SHELL.OPEN_EXTERNAL, async (_event, targetUrl: unknown): Promise<boolean> => {
-    if (typeof targetUrl !== 'string') {
-      return false;
-    }
-    try {
-      const parsed = new URL(targetUrl);
-      if (ALLOWED_EXTERNAL_PROTOCOLS.includes(parsed.protocol)) {
-        await shell.openExternal(targetUrl);
-        return true;
-      }
-    } catch {
-      // invalid URL — deny silently
-    }
-    return false;
-  });
-
-  // Handler to update menu checkboxes when panel state changes from the shell.
-  // Optimizes common panel sync with a targeted update instead of a full menu rebuild.
-  ipcMain.handle(IPC_CHANNELS.MENU.UPDATE_PANEL_STATE, async (_event, payload: unknown): Promise<void> => {
-    if (typeof payload === 'object' && payload !== null) {
-      const { bottomPanelVisible, secondaryPanelVisible } = payload as { bottomPanelVisible?: boolean; secondaryPanelVisible?: boolean };
-      
-      const manager = MenuManager.getInstance();
-      
-      // Update only the affected checkbox items.
-      if (bottomPanelVisible !== undefined) {
-        manager.updateBottomPanel(bottomPanelVisible);
-      }
-      if (secondaryPanelVisible !== undefined) {
-        manager.updateSecondaryPanel(secondaryPanelVisible);
-      }
-    }
-  });
+  registerShellHandlers();
+  registerMenuHandlers();
 }
 
 function createWindow(): void {
@@ -114,7 +33,7 @@ function createWindow(): void {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: isDev ? false : true, // sandbox requiere preload bundlado
+      sandbox: isDev ? false : true,
     },
   });
 
@@ -140,66 +59,21 @@ function createWindow(): void {
   });
 
   mainWindow.webContents.on('did-finish-load', () => {
-    // Emit a detectable signal so the headless smoke runner can confirm the
-    // shell became visible.  The prefix keeps it distinguishable from normal
-    // application output.
-    process.stdout.write('[smoke] shell:visible\n');
-
-    // In smoke mode, confirm that the BrowserWindow reached did-finish-load
-    // with the required security settings (NFR-Security-01).  The settings are
-    // hardcoded in createWindow() above; if they are ever changed the unit
-    // tests in main.spec.ts will catch the regression before this path runs.
-    if (process.env['ELECTRON_ENV'] === 'smoke') {
-      process.stdout.write('[smoke] security:ok\n');
-
-      // Verify keyboard reachability: query the rendered shell DOM for at least
-      // one non-disabled interactive element reachable via the Tab key.
-      // The tab bar's new-tab button is always rendered even with no open tabs,
-      // guaranteeing a minimum of one focusable target on a fresh shell load.
-      // Failure to find any focusable element indicates an accessibility regression
-      // (e.g. all buttons mistakenly disabled or given tabindex="-1").
-      mainWindow!.webContents
-        .executeJavaScript(
-          `document.querySelectorAll('button:not([disabled]),[tabindex="0"]').length`
-        )
-        .then((count: unknown) => {
-          if (typeof count === 'number' && count >= 1) {
-            process.stdout.write('[smoke] keyboard:reachable\n');
-          }
-        })
-        .catch(() => {
-          // DOM query failed — keyboard:reachable signal will not be emitted.
-        });
-
-      // Verify secondary panel mock registration rendered both expected entries.
-      mainWindow!.webContents
-        .executeJavaScript(
-          `document.querySelectorAll('[data-testid^="secondary-panel-tab-"]').length`
-        )
-        .then((count: unknown) => {
-          if (typeof count === 'number' && count >= 2) {
-            process.stdout.write('[smoke] secondary:entries:ok\n');
-          }
-        })
-        .catch(() => {
-          // DOM query failed — secondary entry signal will not be emitted.
-        });
+    if (mainWindow) {
+      emitShellSignals(mainWindow);
     }
   });
 
   mainWindow.webContents.setWindowOpenHandler(({ url: targetUrl }) => {
-    // Validate before delegating to the OS — deny all non-allowlisted protocols.
+    const { shell } = require('electron');
+    const { ALLOWED_EXTERNAL_PROTOCOLS } = require('./ipc/channels');
     try {
       const parsed = new URL(targetUrl);
       if (ALLOWED_EXTERNAL_PROTOCOLS.includes(parsed.protocol)) {
-        // setWindowOpenHandler must return synchronously; fire-and-forget with
-        // explicit rejection handling to avoid unhandled-promise-rejection warnings.
         shell.openExternal(targetUrl).catch(() => {
-          // OS failed to open the URL — swallow the error, window open is still denied.
         });
       }
     } catch {
-      // invalid URL — deny silently
     }
     return { action: 'deny' };
   });
@@ -209,23 +83,17 @@ function createWindow(): void {
   });
 }
 
-app.whenReady().then(() => {
-  // Read and apply the stored theme preference before creating the window
-  const storedTheme = getStoredTheme();
-  nativeTheme.themeSource = storedTheme === 'dark' ? 'dark' : 'light';
+app.whenReady().then(async () => {
+  const themeInitializer = new ThemeInitializer();
+  const storedTheme = await themeInitializer.initialize();
 
   registerIpcHandlers();
   createWindow();
 
-  // Initialize MenuManager with the window reference so panel state can update
-  // menu checkboxes without rebuilding the full menu.
   if (mainWindow) {
-    MenuManager.getInstance().setMainWindow(mainWindow);
+    const menuInitializer = new MenuInitializer(menuConfig);
+    menuInitializer.initialize(mainWindow, storedTheme, isDev);
   }
-
-  // Build and apply the native menu after the window is created
-  // Default to true, actual state will sync when shell loads
-  rebuildMenu(true, true);
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

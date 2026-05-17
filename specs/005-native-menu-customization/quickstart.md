@@ -32,33 +32,24 @@ Archivo  Vista  Temas
 
 ## 2. How the menu is built
 
-The entry point is `MenuBuilder` in `src/electron/menu/menu.builder.ts`.
+The menu is built by `MenuBuilder` in `src/electron/menu/menu.builder.ts`, orchestrated by `MenuInitializer` at startup. The customization configuration is read from `menu.config.ts`.
 
-```ts
-// src/electron/main.ts (simplified)
-import { MenuBuilder } from './menu';
-
-const menu = new MenuBuilder().build({
-  activeTheme: storedTheme,   // 'dark' | 'light'
-  isDev,                      // from process.env['ELECTRON_ENV']
-});
-Menu.setApplicationMenu(menu);
-```
-
-`MenuBuilder` reads the current build context and the optional `IMenuConfig` you supply,
-then returns a native Electron `Menu` object.
+> **Important**: DO NOT edit `main.ts` to customize the menu. Use `menu.config.ts` instead.
 
 ---
 
 ## 3. Customize labels (e.g., switch to English)
 
-Create a config object and pass it to `MenuBuilder`:
+The **extension point** for menu customization is `src/electron/menu/menu.config.ts`.
+DO NOT edit `main.ts` to customize the menu - use the menu config file instead.
+
+Edit `menu.config.ts`:
 
 ```ts
-// src/electron/my-menu.config.ts
-import { IMenuConfig, MENU_SLOT_IDS } from '../../specs/005-native-menu-customization/contracts';
+// src/electron/menu/menu.config.ts
+import { IMenuConfig, MENU_SLOT_IDS } from '../../contracts';
 
-export const englishMenuConfig: IMenuConfig = {
+export const menuConfig: IMenuConfig = {
   overrides: {
     [MENU_SLOT_IDS.FILE]:               { label: 'File' },
     [MENU_SLOT_IDS.FILE_EXIT]:         { label: 'Exit' },
@@ -73,25 +64,15 @@ export const englishMenuConfig: IMenuConfig = {
 };
 ```
 
-Then wire it up in `main.ts`:
-
-```ts
-import { englishMenuConfig } from './my-menu.config';
-
-const menu = new MenuBuilder(englishMenuConfig).build(buildContext);
-Menu.setApplicationMenu(menu);
-```
-
 ---
 
 ## 4. Add a custom submenu
 
-Use the `extraEntries` field to append new top-level items:
+Use the `extraEntries` field in `menu.config.ts` to append new top-level items:
 
 ```ts
-import { IMenuConfig } from '../../specs/005-native-menu-customization/contracts';
-
-const myConfig: IMenuConfig = {
+// In src/electron/menu/menu.config.ts
+export const menuConfig: IMenuConfig = {
   extraEntries: [
     {
       id: 'ayuda',
@@ -115,8 +96,10 @@ const myConfig: IMenuConfig = {
 
 ## 5. Hide an optional built-in entry
 
+Add overrides to `menu.config.ts`:
+
 ```ts
-const myConfig: IMenuConfig = {
+export const menuConfig: IMenuConfig = {
   overrides: {
     'view.devtools': { visible: false },
   },
@@ -129,8 +112,10 @@ const myConfig: IMenuConfig = {
 
 ## 6. Connect a custom action to an existing entry
 
+Add overrides to `menu.config.ts`:
+
 ```ts
-const myConfig: IMenuConfig = {
+export const menuConfig: IMenuConfig = {
   overrides: {
     'file.exit': {
       click: () => {
@@ -195,11 +180,15 @@ When a future spec enables full light-theme support:
 
 | File | Role |
 |------|------|
-| `src/electron/menu/menu.builder.ts` | `MenuBuilder` class - the customization entry point |
+| `src/electron/menu/menu.config.ts` | **Extension point** - customize menu here (DO NOT edit main.ts) |
+| `src/electron/menu/menu.builder.ts` | `MenuBuilder` class - core stable menu construction |
+| `src/electron/menu/menu.initializer.ts` | Menu setup orchestration |
+| `src/electron/menu/menu.manager.ts` | Menu state and updates |
+| `src/electron/main.ts` | **Bootstrap/composition root** - orchestrates modules, do not modify for customization |
 | `src/electron/menu/menu.defaults.ts` | Default Spanish menu entries and theme colour map |
 | `src/electron/ipc/channels.ts` | `MENU.*` IPC channel constants |
-| `src/electron/main.ts` | Wires `MenuBuilder` at startup; restores theme from prefs |
 | `src/app/core/models/theme.model.ts` | `AppTheme` type and `THEME_PREFERENCE_KEY` constant |
 | `src/app/core/application/ports/theme.port.ts` | `IThemeAdapter` - future renderer theme integration point |
 | `src/app/core/state/preferences/preferences.selectors.ts` | `selectActiveTheme` selector |
 | `specs/005-native-menu-customization/contracts/` | Full contract types for this feature |
+| `specs/006-refactor-native-menu/quickstart.md` | Refactored architecture overview and OCP guidance |
