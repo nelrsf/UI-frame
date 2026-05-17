@@ -4,8 +4,9 @@ import { provideStore } from '@ngrx/store';
 import { ShellComponent } from './shell.component';
 import { PlatformAdapter } from '../core/infrastructure/electron/adapters/platform.adapter';
 import { EventBusService } from '../core/services/event-bus.service';
+import { CommandRegistryService } from '../core/services/command-registry.service';
 import { PlatformName } from '../core/application/ports/platform.port';
-import { setBottomPanelHeight, setSecondaryPanelWidth, toggleSecondaryPanel } from '../core/state/layout/layout.actions';
+import { setBottomPanelHeight, setSecondaryPanelWidth, toggleSecondaryPanel, toggleBottomPanel } from '../core/state/layout/layout.actions';
 
 function makePlatformAdapter(platform: PlatformName): PlatformAdapter {
   return {
@@ -517,6 +518,86 @@ describe('ShellComponent', () => {
       expect(Number.isInteger(payload.widthPx)).toBeTrue();
       expect(payload.heightPx).toBeNull();
       expect(payload.source).toBe('user-drag');
+    });
+  });
+
+  // ── T025: Native menu panel toggle commands (MVP Gate) ─────────────────────
+
+  describe('T025 — native menu panel toggle commands via CommandRegistry', () => {
+    it('should register shell.panel.toggleBottom command on init', () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      const commandRegistry = TestBed.inject(CommandRegistryService);
+
+      fixture.detectChanges();
+
+      const cmd = commandRegistry.getById('shell.panel.toggleBottom');
+      expect(cmd).toBeDefined();
+      expect(cmd?.label).toBe('Panel inferior');
+    });
+
+    it('should register shell.panel.toggleSecondary command on init', () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      const commandRegistry = TestBed.inject(CommandRegistryService);
+
+      fixture.detectChanges();
+
+      const cmd = commandRegistry.getById('shell.panel.toggleSecondary');
+      expect(cmd).toBeDefined();
+      expect(cmd?.label).toBe('Panel secundario');
+    });
+
+    it('should dispatch toggleBottomPanel when shell.panel.toggleBottom is executed', async () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      const commandRegistry = TestBed.inject(CommandRegistryService);
+      const store = TestBed.inject(Store);
+      const dispatchSpy = spyOn(store, 'dispatch');
+
+      fixture.detectChanges();
+
+      await commandRegistry.execute('shell.panel.toggleBottom');
+
+      expect(dispatchSpy).toHaveBeenCalledWith(toggleBottomPanel());
+    });
+
+    it('should dispatch toggleSecondaryPanel when shell.panel.toggleSecondary is executed', async () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      const commandRegistry = TestBed.inject(CommandRegistryService);
+      const store = TestBed.inject(Store);
+      const dispatchSpy = spyOn(store, 'dispatch');
+
+      fixture.detectChanges();
+
+      await commandRegistry.execute('shell.panel.toggleSecondary');
+
+      expect(dispatchSpy).toHaveBeenCalledWith(toggleSecondaryPanel());
+    });
+
+    it('should emit shell.layout.changed.v1 when shell.panel.toggleBottom is executed', async () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      const commandRegistry = TestBed.inject(CommandRegistryService);
+      const eventBus = TestBed.inject(EventBusService);
+      const emitSpy = spyOn(eventBus, 'emit').and.callThrough();
+
+      fixture.detectChanges();
+      emitSpy.calls.reset();
+
+      await commandRegistry.execute('shell.panel.toggleBottom');
+
+      expect(emitSpy).toHaveBeenCalledWith('shell.layout.changed.v1', { layout: 'bottom-panel' }, 'ShellComponent');
+    });
+
+    it('should emit shell.layout.changed.v1 when shell.panel.toggleSecondary is executed', async () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      const commandRegistry = TestBed.inject(CommandRegistryService);
+      const eventBus = TestBed.inject(EventBusService);
+      const emitSpy = spyOn(eventBus, 'emit').and.callThrough();
+
+      fixture.detectChanges();
+      emitSpy.calls.reset();
+
+      await commandRegistry.execute('shell.panel.toggleSecondary');
+
+      expect(emitSpy).toHaveBeenCalledWith('shell.layout.changed.v1', { layout: 'secondary-panel' }, 'ShellComponent');
     });
   });
 });

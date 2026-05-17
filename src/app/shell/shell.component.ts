@@ -12,6 +12,7 @@ import { BottomPanelComponent } from './components/bottom-panel/bottom-panel.com
 import { SecondaryPanelComponent } from './components/secondary-panel/secondary-panel.component';
 import { PlatformService } from '../core/services/platform.service';
 import { EventBusService } from '../core/services/event-bus.service';
+import { CommandRegistryService } from '../core/services/command-registry.service';
 import { setPlatform, shellReady } from '../core/state/session';
 import { WorkspaceSessionService } from '../core/services/workspace-session.service';
 import { FALLBACK_WORKSPACE_ID } from '../core/utils/workspace-id.util';
@@ -53,6 +54,8 @@ import {
   setActiveSecondaryPanelEntry,
   setActiveShellTab,
 } from '../core/state/shell-content';
+import { setPreference } from '../core/state/preferences/preferences.actions';
+import { AppTheme, THEME_PREFERENCE_KEY } from '../core/models/theme.model';
 import { TabItem } from './models/tab-item.model';
 
 @Component({
@@ -75,6 +78,7 @@ import { TabItem } from './models/tab-item.model';
 export class ShellComponent implements OnInit, AfterViewInit {
   private readonly platformService = inject(PlatformService);
   private readonly eventBus = inject(EventBusService);
+  private readonly commandRegistry = inject(CommandRegistryService);
   private readonly store = inject(Store);
   private readonly sessionService = inject(WorkspaceSessionService);
   private readonly zone = inject(NgZone);
@@ -218,6 +222,61 @@ export class ShellComponent implements OnInit, AfterViewInit {
     this.secondaryPanelWidth$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((w) => { this._committedSecondaryWidth = w; });
+
+    // Register shell panel toggle commands in the central command registry.
+    // These commands are invoked by the native menu via the IPC → preload bridge.
+    this.commandRegistry.register({
+      id: 'shell.panel.toggleBottom',
+      label: 'Panel inferior',
+      category: 'Vista',
+      execute: () => {
+        this.store.dispatch(toggleBottomPanel());
+        this.eventBus.emit('shell.layout.changed.v1', { layout: 'bottom-panel' }, 'ShellComponent');
+      },
+    });
+
+    this.commandRegistry.register({
+      id: 'shell.panel.toggleSecondary',
+      label: 'Panel secundario',
+      category: 'Vista',
+      execute: () => {
+        this.store.dispatch(toggleSecondaryPanel());
+        this.eventBus.emit('shell.layout.changed.v1', { layout: 'secondary-panel' }, 'ShellComponent');
+      },
+    });
+
+    // Subscribe to native menu IPC events from the preload bridge.
+    // Each event executes the corresponding command through the central registry.
+    const electronAPI = (window as unknown as { electronAPI?: { menu?: {
+      onToggleBottomPanel?: (cb: () => void) => void;
+      onToggleSecondaryPanel?: (cb: () => void) => void;
+      onThemeChanged?: (cb: (theme: AppTheme) => void) => void;
+      updatePanelState?: (bottomPanelVisible: boolean, secondaryPanelVisible: boolean) => Promise<void>;
+    }}}).electronAPI;
+
+    if (electronAPI?.menu) {
+      electronAPI.menu.onToggleBottomPanel?.(() => {
+        this.zone.run(() => this.commandRegistry.execute('shell.panel.toggleBottom'));
+      });
+
+      electronAPI.menu.onToggleSecondaryPanel?.(() => {
+        this.zone.run(() => this.commandRegistry.execute('shell.panel.toggleSecondary'));
+      });
+
+      electronAPI.menu.onThemeChanged?.((theme: AppTheme) => {
+        this.zone.run(() => this.store.dispatch(setPreference({ key: THEME_PREFERENCE_KEY, value: theme })));
+      });
+
+      // Sync panel state to menu when state changes in store
+      combineLatest([
+        this.store.select(selectBottomPanelVisible),
+        this.store.select(selectSecondaryPanelVisible),
+      ])
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(([bottomVisible, secondaryVisible]) => {
+          electronAPI.menu?.updatePanelState?.(bottomVisible, secondaryVisible);
+        });
+    }
 
     // Attempt to restore the persisted workspace session for the default workspace.
     // Valid dimension and visibility values are dispatched as a layout restoration;

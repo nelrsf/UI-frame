@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { ALLOWED_EXTERNAL_PROTOCOLS, IPC_CHANNELS } from './ipc/channels';
+import { AppTheme } from '../contracts';
 
 type PlatformName = 'win32' | 'darwin' | 'linux';
 
@@ -20,6 +21,12 @@ export interface ElectronAPI {
   preferences: {
     get<T>(key: string, defaultValue: T): Promise<T>;
     set<T>(key: string, value: T): Promise<void>;
+  };
+  menu: {
+    onToggleBottomPanel(callback: () => void): void;
+    onToggleSecondaryPanel(callback: () => void): void;
+    onThemeChanged(callback: (theme: AppTheme) => void): void;
+    updatePanelState(bottomPanelVisible: boolean, secondaryPanelVisible: boolean): Promise<void>;
   };
 }
 
@@ -70,6 +77,31 @@ const api: ElectronAPI = {
         return Promise.resolve();
       }
       return ipcRenderer.invoke(IPC_CHANNELS.PREFERENCES.SET, key, value);
+    },
+  },
+
+  menu: {
+    onToggleBottomPanel: (callback: () => void): void => {
+      ipcRenderer.on(IPC_CHANNELS.MENU.TOGGLE_BOTTOM_PANEL, () => callback());
+    },
+
+    onToggleSecondaryPanel: (callback: () => void): void => {
+      ipcRenderer.on(IPC_CHANNELS.MENU.TOGGLE_SECONDARY_PANEL, () => callback());
+    },
+
+    onThemeChanged: (callback: (theme: AppTheme) => void): void => {
+      ipcRenderer.on(IPC_CHANNELS.MENU.THEME_CHANGED, (_event, payload: { theme: AppTheme }) => {
+        if (payload && (payload.theme === 'dark' || payload.theme === 'light')) {
+          callback(payload.theme);
+        }
+      });
+    },
+
+    updatePanelState: (bottomPanelVisible: boolean, secondaryPanelVisible: boolean): Promise<void> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.MENU.UPDATE_PANEL_STATE, {
+        bottomPanelVisible,
+        secondaryPanelVisible,
+      });
     },
   },
 };

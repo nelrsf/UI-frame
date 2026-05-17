@@ -8,10 +8,10 @@
     "strict": true,
     "skipLibCheck": true,
     "outDir": "dist-electron",
-    "rootDir": "src/electron",
+    "rootDir": "src",
     "sourceMap": true,
     "types": ["node"]
   },
-  "include": ["src/electron/**/*.ts"],
+  "include": ["src/electron/**/*.ts", "src/contracts/**/*.ts", "src/app/core/contracts/**/*.ts"],
   "exclude": ["node_modules", "src/electron/**/*.spec.ts"]
 }

@@ -1,14 +1,63 @@
-import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, shell, Menu, nativeTheme } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
 import { ALLOWED_EXTERNAL_PROTOCOLS, IPC_CHANNELS } from './ipc/channels';
 import { registerWindowHandlers } from './ipc/handlers/window.handlers';
 import { registerPreferencesHandlers } from './ipc/handlers/preferences.handlers';
+import { MenuBuilder, MenuManager } from './menu';
+import { AppTheme, DEFAULT_THEME, THEME_PREFERENCE_KEY } from '../contracts';
+import * as fs from 'fs';
 
 const isDev = process.env['ELECTRON_ENV'] === 'development';
 const ANGULAR_DEV_URL = 'http://localhost:4200';
 
 let mainWindow: BrowserWindow | null = null;
+
+/**
+ * Read the stored theme preference from preferences.json.
+ * Returns the stored theme or DEFAULT_THEME if not found.
+ */
+function getStoredTheme(): AppTheme {
+  try {
+    const preferencesPath = path.join(app.getPath('userData'), 'preferences.json');
+    if (fs.existsSync(preferencesPath)) {
+      const content = fs.readFileSync(preferencesPath, 'utf-8');
+      const parsed = JSON.parse(content) as unknown;
+      if (
+        parsed === null ||
+        typeof parsed !== 'object' ||
+        (parsed as { schemaVersion?: unknown }).schemaVersion !== 1 ||
+        typeof (parsed as { data?: unknown }).data !== 'object' ||
+        (parsed as { data?: unknown }).data === null
+      ) {
+        return DEFAULT_THEME;
+      }
+      const theme = (parsed as { data: Record<string, unknown> }).data[THEME_PREFERENCE_KEY];
+      if (theme === 'dark' || theme === 'light') {
+        return theme;
+      }
+    }
+  } catch {
+    // Preference file not found or invalid JSON — use default
+  }
+  return DEFAULT_THEME;
+}
+
+/**
+ * Rebuild the application menu with updated panel visibility state.
+ * Called from IPC handler when shell toggles panels.
+ * 
+ * @deprecated Usar MenuManager para actualizaciones parciales.
+ */
+function rebuildMenu(bottomPanelVisible: boolean, secondaryPanelVisible: boolean): void {
+  const manager = MenuManager.getInstance();
+  manager.rebuildFull({
+    activeTheme: getStoredTheme(),
+    isDev,
+    bottomPanelVisible,
+    secondaryPanelVisible,
+  });
+}
 
 function registerIpcHandlers(): void {
   registerWindowHandlers(() => mainWindow);
@@ -34,6 +83,24 @@ function registerIpcHandlers(): void {
     }
     return false;
   });
+
+  // Handler to update menu checkboxes when panel state changes from the shell.
+  // Optimizes common panel sync with a targeted update instead of a full menu rebuild.
+  ipcMain.handle(IPC_CHANNELS.MENU.UPDATE_PANEL_STATE, async (_event, payload: unknown): Promise<void> => {
+    if (typeof payload === 'object' && payload !== null) {
+      const { bottomPanelVisible, secondaryPanelVisible } = payload as { bottomPanelVisible?: boolean; secondaryPanelVisible?: boolean };
+      
+      const manager = MenuManager.getInstance();
+      
+      // Update only the affected checkbox items.
+      if (bottomPanelVisible !== undefined) {
+        manager.updateBottomPanel(bottomPanelVisible);
+      }
+      if (secondaryPanelVisible !== undefined) {
+        manager.updateSecondaryPanel(secondaryPanelVisible);
+      }
+    }
+  });
 }
 
 function createWindow(): void {
@@ -47,7 +114,7 @@ function createWindow(): void {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: true,
+      sandbox: isDev ? false : true, // sandbox requiere preload bundlado
     },
   });
 
@@ -57,7 +124,7 @@ function createWindow(): void {
   } else {
     mainWindow.loadURL(
       url.format({
-        pathname: path.join(__dirname, '..', 'dist', 'ui-frame', 'browser', 'index.html'),
+        pathname: path.join(__dirname, '..', '..', 'dist', 'ui-frame', 'browser', 'index.html'),
         protocol: 'file:',
         slashes: true,
       })
@@ -143,8 +210,22 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
+  // Read and apply the stored theme preference before creating the window
+  const storedTheme = getStoredTheme();
+  nativeTheme.themeSource = storedTheme === 'dark' ? 'dark' : 'light';
+
   registerIpcHandlers();
   createWindow();
+
+  // Initialize MenuManager with the window reference so panel state can update
+  // menu checkboxes without rebuilding the full menu.
+  if (mainWindow) {
+    MenuManager.getInstance().setMainWindow(mainWindow);
+  }
+
+  // Build and apply the native menu after the window is created
+  // Default to true, actual state will sync when shell loads
+  rebuildMenu(true, true);
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

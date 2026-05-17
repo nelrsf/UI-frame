@@ -29,10 +29,17 @@ export const IPC_CHANNELS = {
     GET: 'preferences:get',
     SET: 'preferences:set',
   },
+  MENU: {
+    TOGGLE_BOTTOM_PANEL: 'menu:toggleBottomPanel',
+    TOGGLE_SECONDARY_PANEL: 'menu:toggleSecondaryPanel',
+    THEME_CHANGED: 'menu:themeChanged',
+    UPDATE_PANEL_STATE: 'menu:updatePanelState',
+  },
 } as const;
 
 /** Union of every valid IPC channel string. */
 export type IpcChannel =
   | (typeof IPC_CHANNELS.WINDOW)[keyof typeof IPC_CHANNELS.WINDOW]
   | (typeof IPC_CHANNELS.SHELL)[keyof typeof IPC_CHANNELS.SHELL]
-  | (typeof IPC_CHANNELS.PREFERENCES)[keyof typeof IPC_CHANNELS.PREFERENCES];
+  | (typeof IPC_CHANNELS.PREFERENCES)[keyof typeof IPC_CHANNELS.PREFERENCES]
+  | (typeof IPC_CHANNELS.MENU)[keyof typeof IPC_CHANNELS.MENU];
