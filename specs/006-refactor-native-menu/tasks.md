@@ -17,9 +17,9 @@ Refactorizar la integracion del menu nativo de Electron con foco en SRP para `ma
 
 **Goal**: Create directory structure for new modules.
 
-- [ ] T001 Create directory `src/electron/preferences/` for PreferenceStore module
-- [ ] T002 Create directory `src/electron/theme/` for ThemeInitializer module
-- [ ] T003 Create directory `src/electron/lifecycle/` for LifecycleSignals module
+- [X] T001 Create directory `src/electron/preferences/` for PreferenceStore module
+- [X] T002 Create directory `src/electron/theme/` for ThemeInitializer module
+- [X] T003 Create directory `src/electron/lifecycle/` for LifecycleSignals module
 
 ---
 
@@ -27,10 +27,10 @@ Refactorizar la integracion del menu nativo de Electron con foco en SRP para `ma
 
 **Goal**: Create shared modules required by all user stories.
 
-- [ ] T004 [P] Implement PreferenceStore in `src/electron/preferences/preference-store.ts`
-- [ ] T005 [P] Implement ThemeInitializer in `src/electron/theme/theme-initializer.ts`
-- [ ] T006 Create shell handler module in `src/electron/ipc/handlers/shell.handlers.ts`
-- [ ] T007 Create lifecycle signals module in `src/electron/lifecycle/signals.ts`
+- [X] T004 [P] Implement PreferenceStore in `src/electron/preferences/preference-store.ts`
+- [X] T005 [P] Implement ThemeInitializer in `src/electron/theme/theme-initializer.ts`
+- [X] T006 Create shell handler module in `src/electron/ipc/handlers/shell.handlers.ts`
+- [X] T007 Create lifecycle signals module in `src/electron/lifecycle/signals.ts`
 
 **Independent Test**: Verify modules can be imported without errors; basic method signatures work.
 
@@ -44,17 +44,17 @@ Refactorizar la integracion del menu nativo de Electron con foco en SRP para `ma
 
 ### Implementation
 
-- [ ] T008 [US1] Refactor `main.ts` to use PreferenceStore instead of direct fs.readFileSync for theme
-- [ ] T009 [US1] Refactor `main.ts` to use ThemeInitializer instead of inline getStoredTheme()
-- [ ] T010 [US1] Move SHELL.OPEN_EXTERNAL handler to shell.handlers.ts module
-- [ ] T011 [US1] Move MENU.UPDATE_PANEL_STATE handler to menu.handlers.ts module
-- [ ] T012 [US1] Refactor `main.ts` to use registerShellHandlers() for shell IPC
-- [ ] T013 [US1] Implement registerMenuHandlers() in `src/electron/ipc/handlers/menu.handlers.ts`
-- [ ] T014 [US1] Move smoke/accessibility signals to lifecycle/signals.ts module
-- [ ] T015 [US1] Refactor `main.ts` to call emitShellSignals() after window load
-- [ ] T016 [US1] Create MenuInitializer in `src/electron/menu/menu.initializer.ts` that orchestrates menu setup
-- [ ] T016a [P] [US1] Update MenuManager to accept injected configuration or factory (FR-011)
-- [ ] T016b [US1] Verify custom menu actions propagate errors to upper handler (FR-015)
+- [X] T008 [US1] Refactor `main.ts` to use PreferenceStore instead of direct fs.readFileSync for theme
+- [X] T009 [US1] Refactor `main.ts` to use ThemeInitializer instead of inline getStoredTheme()
+- [X] T010 [US1] Move SHELL.OPEN_EXTERNAL handler to shell.handlers.ts module
+- [X] T011 [US1] Move MENU.UPDATE_PANEL_STATE handler to menu.handlers.ts module
+- [X] T012 [US1] Refactor `main.ts` to use registerShellHandlers() for shell IPC
+- [X] T013 [US1] Implement registerMenuHandlers() in `src/electron/ipc/handlers/menu.handlers.ts`
+- [X] T014 [US1] Move smoke/accessibility signals to lifecycle/signals.ts module
+- [X] T015 [US1] Refactor `main.ts` to call emitShellSignals() after window load
+- [X] T016 [US1] Create MenuInitializer in `src/electron/menu/menu.initializer.ts` that orchestrates menu setup
+- [X] T016a [P] [US1] Update MenuManager to accept injected configuration or factory (FR-011)
+- [X] T016b [US1] Verify custom menu actions propagate errors to upper handler (FR-015)
 
 ---
 
@@ -81,9 +81,9 @@ Refactorizar la integracion del menu nativo de Electron con foco en SRP para `ma
 
 ### Implementation
 
-- [ ] T021 [P] [US3] Update preferences.handlers.ts to use PreferenceStore instead of direct file access
-- [ ] T022 [US3] Ensure ThemeInitializer handles all edge cases (missing, null, invalid, corrupt preferences.json)
-- [ ] T023 [US3] Verify both ThemeInitializer and preferences.handlers use the same PreferenceStore instance
+- [X] T021 [P] [US3] Update preferences.handlers.ts to use PreferenceStore instead of direct file access
+- [X] T022 [US3] Ensure ThemeInitializer handles all edge cases (missing, null, invalid, corrupt preferences.json)
+- [X] T023 [US3] Verify both ThemeInitializer and preferences.handlers use the same PreferenceStore instance
 
 ---
 
@@ -95,9 +95,9 @@ Refactorizar la integracion del menu nativo de Electron con foco en SRP para `ma
 
 ### Implementation
 
-- [ ] T024 [P] [US4] Update `specs/005-native-menu-customization/quickstart.md` to reference menu.config.ts
-- [ ] T025 [P] [US4] Remove references to editing main.ts from quickstart
-- [ ] T026 [US4] Add this feature's quickstart (specs/006-refactor-native-menu/quickstart.md) to key files reference in existing docs
+- [X] T024 [P] [US4] Update `specs/005-native-menu-customization/quickstart.md` to reference menu.config.ts
+- [X] T025 [P] [US4] Remove references to editing main.ts from quickstart
+- [X] T026 [US4] Add this feature's quickstart (specs/006-refactor-native-menu/quickstart.md) to key files reference in existing docs
 
 ---
 

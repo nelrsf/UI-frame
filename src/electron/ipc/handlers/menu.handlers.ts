@@ -8,15 +8,25 @@
  */
 
 import { ipcMain } from 'electron';
+import { IPC_CHANNELS } from '../channels';
+import { MenuManager } from '../../menu/menu.manager';
 
 /**
  * Register all menu-related IPC handlers.
- *
- * Currently a placeholder for future expansion (e.g., undo/redo coordination).
- * The primary menu handlers (theme change, panel toggle) are wired directly
- * in MenuBuilder.build() via webContents.send().
  */
 export function registerMenuHandlers(): void {
-  // Placeholder for future main-process menu event handlers
-  // (e.g., ipcMain.handle('menu:action', handler))
+  ipcMain.handle(IPC_CHANNELS.MENU.UPDATE_PANEL_STATE, async (_event, payload: unknown): Promise<void> => {
+    if (typeof payload === 'object' && payload !== null) {
+      const { bottomPanelVisible, secondaryPanelVisible } = payload as { bottomPanelVisible?: boolean; secondaryPanelVisible?: boolean };
+
+      const manager = MenuManager.getInstance();
+
+      if (bottomPanelVisible !== undefined) {
+        manager.updateBottomPanel(bottomPanelVisible);
+      }
+      if (secondaryPanelVisible !== undefined) {
+        manager.updateSecondaryPanel(secondaryPanelVisible);
+      }
+    }
+  });
 }

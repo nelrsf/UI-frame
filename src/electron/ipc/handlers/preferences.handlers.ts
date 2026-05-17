@@ -1,42 +1,8 @@
-import { app, ipcMain, IpcMainInvokeEvent } from 'electron';
-import * as fs from 'fs/promises';
-import * as path from 'path';
+import { ipcMain, IpcMainInvokeEvent } from 'electron';
+import { PreferenceStore } from '../../preferences/preference-store';
 import { IPC_CHANNELS } from '../channels';
 
-/** Versioned envelope written to disk. */
-interface PreferencesEnvelope {
-  schemaVersion: 1;
-  data: Record<string, unknown>;
-}
-
-const SCHEMA_VERSION = 1 as const;
-
-function resolveStorePath(): string {
-  return path.join(app.getPath('userData'), 'preferences.json');
-}
-
-async function readEnvelope(): Promise<PreferencesEnvelope> {
-  try {
-    const raw = await fs.readFile(resolveStorePath(), 'utf8');
-    const parsed: unknown = JSON.parse(raw);
-    if (
-      parsed !== null &&
-      typeof parsed === 'object' &&
-      (parsed as PreferencesEnvelope).schemaVersion === SCHEMA_VERSION &&
-      typeof (parsed as PreferencesEnvelope).data === 'object' &&
-      (parsed as PreferencesEnvelope).data !== null
-    ) {
-      return parsed as PreferencesEnvelope;
-    }
-  } catch {
-    // File missing or parse error — fall through to fresh envelope.
-  }
-  return { schemaVersion: SCHEMA_VERSION, data: {} };
-}
-
-async function writeEnvelope(envelope: PreferencesEnvelope): Promise<void> {
-  await fs.writeFile(resolveStorePath(), JSON.stringify(envelope), 'utf8');
-}
+const preferenceStore = PreferenceStore.getInstance();
 
 /**
  * Register all preferences IPC handlers.
@@ -55,10 +21,8 @@ export function registerPreferencesHandlers(): void {
         return defaultValue;
       }
       try {
-        const envelope = await readEnvelope();
-        return Object.prototype.hasOwnProperty.call(envelope.data, key)
-          ? envelope.data[key]
-          : defaultValue;
+        const value = await preferenceStore.read(key);
+        return value !== undefined ? value : defaultValue;
       } catch {
         return defaultValue;
       }
@@ -72,9 +36,7 @@ export function registerPreferencesHandlers(): void {
         return;
       }
       try {
-        const envelope = await readEnvelope();
-        envelope.data[key] = value;
-        await writeEnvelope(envelope);
+        await preferenceStore.write(key, value);
       } catch {
         // Swallow write errors — renderer must not crash on persistence failure.
       }
