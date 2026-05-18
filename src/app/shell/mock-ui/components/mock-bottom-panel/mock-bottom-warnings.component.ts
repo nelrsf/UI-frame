@@ -26,8 +26,8 @@ import { Component } from '@angular/core';
     :host {
       display: block;
       height: 100%;
-      background: #1e1e1e;
-      color: #d4d4d4;
+      background: var(--color-panel-bg);
+      color: var(--color-text-primary);
     }
 
     .tab-content {
@@ -46,9 +46,9 @@ import { Component } from '@angular/core';
       display: flex;
       gap: 12px;
       padding: 12px;
-      background: rgba(255, 152, 0, 0.1);
-      border: 1px solid rgba(255, 152, 0, 0.3);
-      border-radius: 4px;
+      background: color-mix(in srgb, var(--color-warning) 10%, transparent);
+      border: 1px solid color-mix(in srgb, var(--color-warning) 30%, transparent);
+      border-radius: var(--radius-md);
     }
 
     .warning-icon {
@@ -64,13 +64,13 @@ import { Component } from '@angular/core';
     .warning-title {
       font-size: 12px;
       font-weight: 600;
-      color: #ffb74d;
+      color: var(--color-warning);
       margin-bottom: 4px;
     }
 
     .warning-message {
       font-size: 11px;
-      color: #b4b4b4;
+      color: var(--color-text-secondary);
       margin-bottom: 8px;
       line-height: 1.4;
     }
@@ -85,26 +85,26 @@ import { Component } from '@angular/core';
       font-size: 11px;
       font-weight: 600;
       border: none;
-      border-radius: 3px;
+      border-radius: var(--radius-sm);
       cursor: pointer;
       transition: all 0.2s ease;
-      background: #007acc;
-      color: white;
+      background: var(--color-accent);
+      color: var(--color-text-inverse);
     }
 
     .action-btn:hover {
-      background: #005a9e;
+      background: var(--color-accent-active);
     }
 
     .action-btn.secondary {
       background: transparent;
-      color: #858585;
-      border: 1px solid #858585;
+      color: var(--color-text-disabled);
+      border: 1px solid var(--color-text-disabled);
     }
 
     .action-btn.secondary:hover {
-      color: #cccccc;
-      border-color: #cccccc;
+      color: var(--color-text-primary);
+      border-color: var(--color-text-primary);
     }
 
     ::-webkit-scrollbar {
@@ -116,12 +116,12 @@ import { Component } from '@angular/core';
     }
 
     ::-webkit-scrollbar-thumb {
-      background: #424242;
+      background: var(--color-border-default);
       border-radius: 3px;
     }
 
     ::-webkit-scrollbar-thumb:hover {
-      background: #4e4e4e;
+      background: var(--color-accent);
     }
   `],
 })

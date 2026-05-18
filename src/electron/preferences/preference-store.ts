@@ -73,32 +73,10 @@ export class PreferenceStore {
   }
 
   async getTheme(): Promise<AppTheme> {
-    const theme = await this.read(THEME_PREFERENCE_KEY);
+    const workspaceData = await this.read('ws-default') as Record<string, unknown> | undefined;
+    const theme = workspaceData?.[THEME_PREFERENCE_KEY];
     if (theme === 'dark' || theme === 'light') {
       return theme;
-    }
-    return DEFAULT_THEME;
-  }
-
-  getStoredThemeSync(): AppTheme {
-    try {
-      const raw = require('fs').readFileSync(this.storePath, 'utf8');
-      const parsed = JSON.parse(raw) as unknown;
-
-      if (
-        parsed !== null &&
-        typeof parsed === 'object' &&
-        (parsed as { schemaVersion?: unknown }).schemaVersion === 1 &&
-        typeof (parsed as { data?: unknown }).data === 'object' &&
-        (parsed as { data?: unknown }).data !== null
-      ) {
-        const theme = (parsed as { data: Record<string, unknown> }).data[THEME_PREFERENCE_KEY];
-        if (theme === 'dark' || theme === 'light') {
-          return theme;
-        }
-      }
-    } catch {
-      // File not found or invalid JSON — use default
     }
     return DEFAULT_THEME;
   }

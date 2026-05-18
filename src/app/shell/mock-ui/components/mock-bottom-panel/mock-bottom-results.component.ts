@@ -25,8 +25,8 @@ import { Component } from '@angular/core';
     :host {
       display: block;
       height: 100%;
-      background: #1e1e1e;
-      color: #d4d4d4;
+      background: var(--color-panel-bg);
+      color: var(--color-text-primary);
     }
 
     .tab-content {
@@ -46,14 +46,14 @@ import { Component } from '@angular/core';
       align-items: center;
       gap: 12px;
       padding: 10px;
-      background: #252526;
-      border-radius: 4px;
-      border-left: 3px solid #007acc;
+      background: var(--color-bg-elevated);
+      border-radius: var(--radius-md);
+      border-left: 3px solid var(--color-accent);
       transition: all 0.2s ease;
     }
 
     .result-item:hover {
-      background: #2d2d30;
+      background: var(--color-bg-hover);
       transform: translateX(4px);
     }
 
@@ -64,8 +64,8 @@ import { Component } from '@angular/core';
       min-width: 24px;
       width: 24px;
       height: 24px;
-      background: #007acc;
-      color: white;
+      background: var(--color-accent);
+      color: var(--color-text-inverse);
       border-radius: 50%;
       font-size: 12px;
       font-weight: 600;
@@ -78,18 +78,18 @@ import { Component } from '@angular/core';
     .result-title {
       font-size: 12px;
       font-weight: 600;
-      color: #cccccc;
+      color: var(--color-text-primary);
       margin-bottom: 2px;
     }
 
     .result-meta {
       font-size: 11px;
-      color: #858585;
+      color: var(--color-text-secondary);
     }
 
     .result-status {
       padding: 2px 8px;
-      border-radius: 3px;
+      border-radius: var(--radius-sm);
       font-size: 11px;
       font-weight: 600;
       white-space: nowrap;
@@ -97,17 +97,17 @@ import { Component } from '@angular/core';
 
     .status-success {
       background: rgba(76, 175, 80, 0.2);
-      color: #4caf50;
+      color: var(--color-success);
     }
 
     .status-warning {
       background: rgba(255, 193, 7, 0.2);
-      color: #ffc107;
+      color: var(--color-warning);
     }
 
     .status-error {
       background: rgba(244, 67, 54, 0.2);
-      color: #f44336;
+      color: var(--color-error);
     }
 
     ::-webkit-scrollbar {
@@ -119,12 +119,12 @@ import { Component } from '@angular/core';
     }
 
     ::-webkit-scrollbar-thumb {
-      background: #424242;
+      background: var(--color-border-default);
       border-radius: 3px;
     }
 
     ::-webkit-scrollbar-thumb:hover {
-      background: #4e4e4e;
+      background: var(--color-accent);
     }
   `],
 })

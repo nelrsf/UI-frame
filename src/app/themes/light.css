@@ -1,98 +1,97 @@
 /* ============================================================
-   Dark Theme Tokens — Shell v1
+   Light Theme Tokens — Shell v1
    All variables are declared on :root and are globally available.
    ============================================================ */
 
-:root,
-body[data-theme="dark"] {
+body[data-theme="light"] {
 
   /* ----------------------------------------------------------
      4.1 Colores Base
      ---------------------------------------------------------- */
 
   /* Superficie */
-  --color-bg-base:          #1e1e1e;   /* fondo principal (content area) */
-  --color-bg-elevated:      #252526;   /* sidebars, paneles */
-  --color-bg-overlay:       #2d2d30;   /* dropdowns, tooltips, modales */
-  --color-bg-input:         #3c3c3c;   /* campos de texto */
-  --color-bg-hover:         #2a2d2e;   /* hover state */
-  --color-bg-active:        #094771;   /* elemento seleccionado/activo */
+  --color-bg-base:          #ffffff;   /* fondo principal (content area) */
+  --color-bg-elevated:      #f3f3f3;   /* sidebars, paneles */
+  --color-bg-overlay:      #ffffff;   /* dropdowns, tooltips, modales */
+  --color-bg-input:        #f3f3f3;   /* campos de texto */
+  --color-bg-hover:        #e8e8e8;   /* hover state */
+  --color-bg-active:       #0078d4;   /* elemento seleccionado/activo */
 
   /* Bordes */
-  --color-border-subtle:    #333333;
-  --color-border-default:   #454545;
-  --color-border-focus:     #007fd4;
+  --color-border-subtle:   #e1e1e1;
+  --color-border-default:  #d4d4d4;
+  --color-border-focus:    #0078d4;
 
   /* Texto */
-  --color-text-primary:     #cccccc;
-  --color-text-secondary:   #9d9d9d;
-  --color-text-disabled:    #5a5a5a;
-  --color-text-inverse:     #1e1e1e;
-  --color-text-link:        #4fc1ff;
+  --color-text-primary:    #1e1e1e;
+  --color-text-secondary:  #6e6e6e;
+  --color-text-disabled:   #a0a0a0;
+  --color-text-inverse:    #ffffff;
+  --color-text-link:       #0066b8;
 
   /* Acento / Brand */
-  --color-accent:           #007acc;
-  --color-accent-hover:     #1a8ccc;
-  --color-accent-active:    #005a9e;
+  --color-accent:          #0078d4;
+  --color-accent-hover:    #106ebe;
+  --color-accent-active:   #005a9e;
 
   /* Semánticos */
-  --color-success:          #4ec9b0;
-  --color-warning:          #cca700;
-  --color-error:            #f44747;
-  --color-info:             #75beff;
+  --color-success:         #107c10;
+  --color-warning:         #c19c00;
+  --color-error:           #d13438;
+  --color-info:           #0078d4;
 
   /* Sidebar */
-  --color-activity-bar-bg:  #333333;
-  --color-sidebar-bg:       #252526;
+  --color-activity-bar-bg: #f3f3f3;
+  --color-sidebar-bg:      #f3f3f3;
 
   /* TopBar */
-  --color-topbar-bg:        #3c3c3c;
+  --color-topbar-bg:       #ffffff;
 
   /* StatusBar */
-  --color-statusbar-bg:     #007acc;
-  --color-statusbar-text:   #ffffff;
+  --color-statusbar-bg:    #0078d4;
+  --color-statusbar-text: #ffffff;
 
   /* Tab */
-  --color-tab-active-bg:    #1e1e1e;
-  --color-tab-inactive-bg:  #2d2d2d;
-  --color-tab-border:       #007acc;
+  --color-tab-active-bg:   #ffffff;
+  --color-tab-inactive-bg: #ececec;
+  --color-tab-border:      #0078d4;
 
   /* Panel (bottom panel / dockable panels) */
-  --color-panel-bg:         #1e1e1e;
-  --color-panel-text:       #cccccc;
-  --color-panel-header-bg:  #252526;
-  --color-panel-tab-text:   #969696;
-  --color-panel-tab-hover-bg: #2a2d2e;
-  --color-panel-tab-hover-text: #cccccc;
-  --color-panel-tab-active-text: #cccccc;
-  --color-panel-action-text: #cccccc;
-  --color-panel-action-hover-bg: #3e3e3e;
+  --color-panel-bg:         #ffffff;
+  --color-panel-text:       #1e1e1e;
+  --color-panel-header-bg:  #f3f3f3;
+  --color-panel-tab-text:   #6e6e6e;
+  --color-panel-tab-hover-bg: #e8e8e8;
+  --color-panel-tab-hover-text: #1e1e1e;
+  --color-panel-tab-active-text: #1e1e1e;
+  --color-panel-action-text: #1e1e1e;
+  --color-panel-action-hover-bg: #e8e8e8;
 
   /* Toolbar */
-  --color-toolbar-bg:       #3c3c3c;
-  --color-toolbar-text:     #cccccc;
-  --color-toolbar-breadcrumb: #cccccc;
-  --color-toolbar-separator: #858585;
-  --color-toolbar-action-hover: rgba(255, 255, 255, 0.1);
-  --color-toolbar-action-active: rgba(255, 255, 255, 0.15);
-  --color-toolbar-action-active-text: #ffffff;
+  --color-toolbar-bg:       #ffffff;
+  --color-toolbar-text:     #1e1e1e;
+  --color-toolbar-breadcrumb: #6e6e6e;
+  --color-toolbar-separator: #d4d4d4;
+  --color-toolbar-action-hover: rgba(0, 0, 0, 0.05);
+  --color-toolbar-action-active: rgba(0, 0, 0, 0.1);
+  --color-toolbar-action-active-text: #1e1e1e;
 
   /* TabBar */
-  --color-tabbar-bg:        #252526;
-  --color-tab-inactive-text: #969696;
-  --color-tab-hover-bg:     #2a2d2e;
-  --color-tab-hover-text:   #cccccc;
-  --color-tab-active-text:  #ffffff;
-  --color-tab-dirty:        #e8a84c;
-  --color-tab-close-hover:  rgba(255, 255, 255, 0.15);
+  --color-tabbar-bg:        #f3f3f3;
+  --color-tab-inactive-text: #6e6e6e;
+  --color-tab-hover-bg:     #e8e8e8;
+  --color-tab-hover-text:   #1e1e1e;
+  --color-tab-active-text:  #1e1e1e;
+  --color-tab-dirty:        #c19c00;
+  --color-tab-close-hover:  rgba(0, 0, 0, 0.1);
 
   /* Content Area */
-  --color-content-bg:       #1e1e1e;
-  --color-content-text:     #d4d4d4;
-  --color-content-empty-text: #858585;
+  --color-content-bg:       #ffffff;
+  --color-content-text:     #1e1e1e;
+  --color-content-empty-text: #6e6e6e;
 
   /* Accent */
-  --color-accent-primary:   #007acc;
+  --color-accent-primary:   #0078d4;
 
   /* ----------------------------------------------------------
      4.2 Tipografía
@@ -105,7 +104,7 @@ body[data-theme="dark"] {
   --font-size-sm:           12px;
   --font-size-base:         13px;
   --font-size-md:           14px;
-  --font-size-lg:           16px;
+  --font-size-lg:          16px;
 
   --font-weight-normal:     400;
   --font-weight-medium:     500;
@@ -130,9 +129,9 @@ body[data-theme="dark"] {
   --radius-md:   4px;
   --radius-lg:   6px;
 
-  --shadow-sm:   0 1px 3px rgba(0, 0, 0, 0.4);
-  --shadow-md:   0 4px 12px rgba(0, 0, 0, 0.5);
-  --shadow-lg:   0 8px 24px rgba(0, 0, 0, 0.6);
+  --shadow-sm:   0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md:   0 4px 12px rgba(0, 0, 0, 0.15);
+  --shadow-lg:   0 8px 24px rgba(0, 0, 0, 0.2);
 
   --transition-fast:    100ms ease;
   --transition-base:    200ms ease;

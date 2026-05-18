@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { ShellComponent } from './shell/shell.component';
+import { ThemeService } from './core/application/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -8,4 +9,10 @@ import { ShellComponent } from './shell/shell.component';
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })
-export class AppComponent {}
+export class AppComponent implements OnInit {
+  private readonly themeService = inject(ThemeService);
+
+  ngOnInit(): void {
+    this.themeService.initialize();
+  }
+}

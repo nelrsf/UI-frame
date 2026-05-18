@@ -50,20 +50,20 @@ import { CommonModule } from '@angular/common';
       display: flex;
       flex-direction: column;
       height: 100%;
-      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      background: var(--color-bg-elevated);
       padding: 16px;
-      border-left: 3px solid #4a90e2;
+      border-left: 3px solid var(--color-accent);
     }
 
     .sidebar-header {
       margin-bottom: 16px;
       padding-bottom: 12px;
-      border-bottom: 2px solid rgba(74, 144, 226, 0.3);
+      border-bottom: 2px solid var(--color-border-subtle);
     }
 
     .sidebar-header h3 {
       margin: 0;
-      color: #2c3e50;
+      color: var(--color-text-primary);
       font-size: 14px;
       font-weight: 600;
     }
@@ -82,7 +82,7 @@ import { CommonModule } from '@angular/common';
     .section-title {
       font-size: 11px;
       font-weight: 700;
-      color: #7f8c8d;
+      color: var(--color-text-secondary);
       text-transform: uppercase;
       letter-spacing: 0.5px;
       margin-bottom: 8px;
@@ -95,15 +95,15 @@ import { CommonModule } from '@angular/common';
       align-items: center;
       padding: 8px 8px;
       margin-bottom: 6px;
-      border-radius: 4px;
+      border-radius: var(--radius-md);
       cursor: pointer;
       transition: all 0.2s ease;
-      background: rgba(255, 255, 255, 0.6);
+      background: var(--color-bg-overlay);
     }
 
     .nav-item:hover,
     .tool-item:hover {
-      background: rgba(74, 144, 226, 0.15);
+      background: var(--color-bg-hover);
       transform: translateX(4px);
     }
 
@@ -118,13 +118,13 @@ import { CommonModule } from '@angular/common';
     .nav-label,
     .tool-label {
       font-size: 13px;
-      color: #2c3e50;
+      color: var(--color-text-primary);
       font-weight: 500;
     }
 
     .divider {
       height: 1px;
-      background: linear-gradient(to right, transparent, rgba(74, 144, 226, 0.3), transparent);
+      background: var(--color-border-subtle);
       margin: 12px 0;
     }
 
@@ -133,20 +133,20 @@ import { CommonModule } from '@angular/common';
       align-items: center;
       justify-content: space-between;
       padding: 8px;
-      background: rgba(255, 255, 255, 0.8);
-      border-radius: 4px;
+      background: var(--color-bg-overlay);
+      border-radius: var(--radius-md);
       margin-bottom: 4px;
       font-size: 12px;
     }
 
     .status-label {
-      color: #7f8c8d;
+      color: var(--color-text-secondary);
       font-weight: 600;
     }
 
     .status-badge {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
+      background: var(--color-accent);
+      color: var(--color-text-inverse);
       padding: 2px 8px;
       border-radius: 12px;
       font-size: 11px;
@@ -158,17 +158,17 @@ import { CommonModule } from '@angular/common';
     }
 
     ::-webkit-scrollbar-track {
-      background: rgba(74, 144, 226, 0.1);
+      background: var(--color-bg-hover);
       border-radius: 3px;
     }
 
     ::-webkit-scrollbar-thumb {
-      background: rgba(74, 144, 226, 0.3);
+      background: var(--color-border-default);
       border-radius: 3px;
     }
 
     ::-webkit-scrollbar-thumb:hover {
-      background: rgba(74, 144, 226, 0.5);
+      background: var(--color-accent);
     }
   `]
 })

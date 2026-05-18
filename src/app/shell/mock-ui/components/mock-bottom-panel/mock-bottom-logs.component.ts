@@ -20,8 +20,8 @@ import { Component } from '@angular/core';
     :host {
       display: block;
       height: 100%;
-      background: #1e1e1e;
-      color: #d4d4d4;
+      background: var(--color-panel-bg);
+      color: var(--color-text-primary);
     }
 
     .tab-content {
@@ -34,7 +34,7 @@ import { Component } from '@angular/core';
       display: flex;
       flex-direction: column;
       gap: 4px;
-      font-family: 'Consolas', 'Monaco', monospace;
+      font-family: var(--font-family-mono);
     }
 
     .log-entry {
@@ -43,18 +43,18 @@ import { Component } from '@angular/core';
       gap: 8px;
       padding: 6px 8px;
       font-size: 11px;
-      border-radius: 3px;
-      background: rgba(255, 255, 255, 0.02);
+      border-radius: var(--radius-sm);
+      background: var(--color-bg-base);
     }
 
     .log-timestamp {
-      color: #858585;
+      color: var(--color-text-disabled);
       min-width: 60px;
     }
 
     .log-level {
       padding: 0 6px;
-      border-radius: 2px;
+      border-radius: var(--radius-sm);
       font-weight: 600;
       min-width: 50px;
       text-align: center;
@@ -62,7 +62,7 @@ import { Component } from '@angular/core';
 
     .log-info .log-level {
       background: rgba(33, 150, 243, 0.2);
-      color: #2196f3;
+      color: var(--color-info);
     }
 
     .log-debug .log-level {
@@ -72,12 +72,12 @@ import { Component } from '@angular/core';
 
     .log-error .log-level {
       background: rgba(244, 67, 54, 0.2);
-      color: #f44336;
+      color: var(--color-error);
     }
 
     .log-message {
       flex: 1;
-      color: #b4b4b4;
+      color: var(--color-text-secondary);
       word-break: break-word;
     }
 
@@ -90,12 +90,12 @@ import { Component } from '@angular/core';
     }
 
     ::-webkit-scrollbar-thumb {
-      background: #424242;
+      background: var(--color-border-default);
       border-radius: 3px;
     }
 
     ::-webkit-scrollbar-thumb:hover {
-      background: #4e4e4e;
+      background: var(--color-accent);
     }
   `],
 })

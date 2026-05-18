@@ -1,12 +1,11 @@
 /**
- * Theme adapter port for future renderer-side theme engine.
+ * Theme adapter port for renderer-side theme engine.
  *
  * This interface enables the renderer to coordinate theme changes
- * with a dedicated theme service (styling library, CSS variables, etc.).
- * Currently unused; reserved for future "light theme" feature development.
+ * with a dedicated theme service.
  */
 
-import { AppTheme } from '../models/theme.model';
+import { AppTheme } from '../../models/theme.model';
 
 /** Interface for renderer-side theme adaptation. */
 export interface IThemeAdapter {
@@ -21,4 +20,41 @@ export interface IThemeAdapter {
 
   /** Listen for theme changes (e.g., OS-level dark mode toggle). */
   onThemeChange(callback: (theme: AppTheme) => void): void;
+}
+
+/** Default implementation using body data-theme attribute and NgRx. */
+export class ThemeAdapter implements IThemeAdapter {
+  private currentTheme: AppTheme = 'dark';
+  private callbacks: Array<(theme: AppTheme) => void> = [];
+
+  constructor() {
+    this.initializeFromDOM();
+  }
+
+  private initializeFromDOM(): void {
+    const stored = document.body.getAttribute('data-theme');
+    if (stored === 'light' || stored === 'dark') {
+      this.currentTheme = stored;
+    }
+  }
+
+  getCurrentTheme(): AppTheme {
+    return this.currentTheme;
+  }
+
+  setTheme(theme: AppTheme): void {
+    if (theme !== this.currentTheme) {
+      this.currentTheme = theme;
+      document.body.setAttribute('data-theme', theme);
+      this.callbacks.forEach(cb => cb(theme));
+    }
+  }
+
+  getSystemTheme(): AppTheme {
+    return 'dark';
+  }
+
+  onThemeChange(callback: (theme: AppTheme) => void): void {
+    this.callbacks.push(callback);
+  }
 }

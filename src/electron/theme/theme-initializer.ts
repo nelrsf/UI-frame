@@ -15,10 +15,6 @@ export class ThemeInitializer {
     return theme;
   }
 
-  getStoredTheme(): AppTheme {
-    return this.preferenceStore.getStoredThemeSync();
-  }
-
   private applyTheme(theme: AppTheme): void {
     nativeTheme.themeSource = theme === 'dark' ? 'dark' : 'light';
   }

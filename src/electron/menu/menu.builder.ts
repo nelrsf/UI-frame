@@ -21,7 +21,7 @@
    * ## Customization Rules
    *
    * - `file.exit` cannot be hidden (attempts to set `visible: false` are silently ignored).
-   * - `themes.light` is always disabled until a future spec enables light theme support.
+   * - `themes.light` is enabled in spec 007 - Light Theme Support.
    * - `view.devtools` is visible only when `isDev === true`.
    * - Extra entries are appended after the built-in entries.
  */
@@ -34,8 +34,6 @@ import {
   nativeTheme,
   BrowserWindow,
 } from 'electron';
-import * as fs from 'fs/promises';
-import * as path from 'path';
 import { IMenuConfig, IMenuBuildContext, AppTheme, THEME_PREFERENCE_KEY } from '../../contracts';
 import { IPC_CHANNELS } from '../ipc/channels';
 import { DEFAULT_MENU_ENTRIES } from './menu.defaults';
@@ -228,9 +226,9 @@ export class MenuBuilder {
         label: 'Claro',
         type: 'radio',
         checked: context.activeTheme === 'light',
-        enabled: false, // Future: enable when light theme spec ships
+        enabled: true,
         click: () => {
-          // Stub: do nothing until light theme is enabled
+          this.applyTheme('light', context);
         },
       },
     ];
@@ -253,18 +251,15 @@ export class MenuBuilder {
   }
 
   /**
-   * Internal: Apply a theme change (update nativeTheme, persist, notify renderer).
+   * Internal: Apply a theme change (update nativeTheme, notify renderer).
+   * Persistence is handled by the renderer via IPC → PreferencesAdapter → PreferenceStore.
    */
   private applyTheme(theme: AppTheme, context: IMenuBuildContext): void {
     // Set the native theme in the OS
     nativeTheme.themeSource = theme === 'dark' ? 'dark' : 'light';
 
-    // Persist the theme preference to disk (fire-and-forget)
-    this.persistTheme(theme).catch(() => {
-      // Swallow write errors - UI must not crash on persistence failure
-    });
-
     // Notify the renderer that the theme has changed
+    // The renderer will persist the preference via the PreferencesAdapter IPC bridge
     if (this.mainWindow && !this.mainWindow.isDestroyed()) {
       this.mainWindow.webContents.send(IPC_CHANNELS.MENU.THEME_CHANGED, { theme });
     }
@@ -272,33 +267,5 @@ export class MenuBuilder {
     // Rebuild and re-apply the menu with the new theme context
     const updatedMenu = this.build({ ...context, activeTheme: theme });
     Menu.setApplicationMenu(updatedMenu);
-  }
-
-  /**
-   * Persist the active theme preference to disk.
-   * Reads the existing preferences envelope, updates shell.theme, and writes back.
-   */
-  private async persistTheme(theme: AppTheme): Promise<void> {
-    const storePath = path.join(app.getPath('userData'), 'preferences.json');
-    let envelope: { schemaVersion: 1; data: Record<string, unknown> };
-    try {
-      const raw = await fs.readFile(storePath, 'utf8');
-      const parsed = JSON.parse(raw) as unknown;
-      if (
-        parsed !== null &&
-        typeof parsed === 'object' &&
-        (parsed as { schemaVersion: number }).schemaVersion === 1 &&
-        typeof (parsed as { data: unknown }).data === 'object' &&
-        (parsed as { data: unknown }).data !== null
-      ) {
-        envelope = parsed as typeof envelope;
-      } else {
-        envelope = { schemaVersion: 1, data: {} };
-      }
-    } catch {
-      envelope = { schemaVersion: 1, data: {} };
-    }
-    envelope.data[THEME_PREFERENCE_KEY] = theme;
-    await fs.writeFile(storePath, JSON.stringify(envelope), 'utf8');
   }
 }

@@ -1,6 +1,15 @@
 /* ============================================================
    variables.css — re-exports the active theme token set.
-   Import this file when consuming tokens in component styles.
+   Supports multiple themes via data-theme attribute on <body>.
+
+   Usage:
+   - Set data-theme="light" or data-theme="dark" on <body>
+   - Or rely on the shell component to manage theme via NgRx
+
+   Adding a new theme:
+   1. Create a new file (e.g. classic.css) with body[data-theme="classic"] { ... }
+   2. Add @import './classic.css' below
    ============================================================ */
 
 @import './dark.css';
+@import './light.css';

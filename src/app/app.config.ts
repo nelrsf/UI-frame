@@ -2,6 +2,7 @@ import { APP_INITIALIZER, ApplicationConfig } from '@angular/core';
 import { provideStore, provideState } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
 import { provideStoreDevtools } from '@ngrx/store-devtools';
+import { Store } from '@ngrx/store';
 import { sessionReducer } from './core/state/session';
 import { layoutReducer } from './core/state/layout';
 import { uiContextReducer } from './core/state/ui-context';
@@ -10,9 +11,18 @@ import { workspaceReducer } from './core/state/workspace';
 import { shellContentReducer } from './core/state/shell-content';
 import { ShellManager } from './shell/shell-manager.service';
 import { registerMockContent } from './shell/mock-ui/mock-content.initializer';
+import { FALLBACK_WORKSPACE_ID } from './core/utils/workspace-id.util';
+import { loadPreferences } from './core/state/preferences/preferences.actions';
 
 function initializeShellContent(shell: ShellManager): () => void {
   return () => registerMockContent(shell);
+}
+
+function initializePreferences(store: Store): () => void {
+  return () => {
+    store.dispatch(loadPreferences({ workspaceId: FALLBACK_WORKSPACE_ID }));
+    return Promise.resolve();
+  };
 }
 
 /**
@@ -51,6 +61,12 @@ export const appConfig: ApplicationConfig = {
       provide: APP_INITIALIZER,
       useFactory: initializeShellContent,
       deps: [ShellManager],
+      multi: true,
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initializePreferences,
+      deps: [Store],
       multi: true,
     },
     provideEffects([PreferencesEffects]),
