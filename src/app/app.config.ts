@@ -9,6 +9,7 @@ import { uiContextReducer } from './core/state/ui-context';
 import { preferencesReducer, PreferencesEffects } from './core/state/preferences';
 import { workspaceReducer } from './core/state/workspace';
 import { shellContentReducer } from './core/state/shell-content';
+import { commandTelemetryReducer } from './core/state/command-telemetry';
 import { ShellManager } from './shell/shell-manager.service';
 import { registerMockContent } from './shell/mock-ui/mock-content.initializer';
 import { FALLBACK_WORKSPACE_ID } from './core/utils/workspace-id.util';
@@ -57,6 +58,7 @@ export const appConfig: ApplicationConfig = {
     provideState('preferences', preferencesReducer),
     provideState('workspace', workspaceReducer),
     provideState('shellContent', shellContentReducer),
+    provideState('commandTelemetry', commandTelemetryReducer),
     {
       provide: APP_INITIALIZER,
       useFactory: initializeShellContent,

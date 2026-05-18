@@ -11,7 +11,6 @@ import { TabBarComponent } from './components/tab-bar/tab-bar.component';
 import { BottomPanelComponent } from './components/bottom-panel/bottom-panel.component';
 import { SecondaryPanelComponent } from './components/secondary-panel/secondary-panel.component';
 import { PlatformService } from '../core/services/platform.service';
-import { EventBusService } from '../core/services/event-bus.service';
 import { CommandRegistryService } from '../core/services/command-registry.service';
 import { setPlatform, shellReady } from '../core/state/session';
 import { WorkspaceSessionService } from '../core/services/workspace-session.service';
@@ -77,7 +76,6 @@ import { TabItem } from './models/tab-item.model';
 })
 export class ShellComponent implements OnInit, AfterViewInit {
   private readonly platformService = inject(PlatformService);
-  private readonly eventBus = inject(EventBusService);
   private readonly commandRegistry = inject(CommandRegistryService);
   private readonly store = inject(Store);
   private readonly sessionService = inject(WorkspaceSessionService);
@@ -231,7 +229,6 @@ export class ShellComponent implements OnInit, AfterViewInit {
       category: 'Vista',
       execute: () => {
         this.store.dispatch(toggleBottomPanel());
-        this.eventBus.emit('shell.layout.changed.v1', { layout: 'bottom-panel' }, 'ShellComponent');
       },
     });
 
@@ -241,7 +238,6 @@ export class ShellComponent implements OnInit, AfterViewInit {
       category: 'Vista',
       execute: () => {
         this.store.dispatch(toggleSecondaryPanel());
-        this.eventBus.emit('shell.layout.changed.v1', { layout: 'secondary-panel' }, 'ShellComponent');
       },
     });
 
@@ -311,9 +307,6 @@ export class ShellComponent implements OnInit, AfterViewInit {
     // Persist platform and shell-readiness in the transversal session slice.
     this.store.dispatch(setPlatform({ platform: this.platformService.platform }));
     this.store.dispatch(shellReady({ timestamp: Date.now() }));
-
-    // Notify any EventBus subscribers that the shell is ready.
-    this.eventBus.emit('shell.ready.v1', {}, 'ShellComponent');
   }
 
   // ---------------------------------------------------------------------------
@@ -323,7 +316,6 @@ export class ShellComponent implements OnInit, AfterViewInit {
   onSidebarCollapsedChange(_collapsed: boolean): void {
     performance.mark('shell.sidebar.toggle.start');
     this.store.dispatch(toggleSidebar());
-    this.eventBus.emit('shell.layout.changed.v1', { layout: 'sidebar' }, 'ShellComponent');
     this._markEnd('shell.sidebar.toggle');
   }
 
@@ -338,7 +330,6 @@ export class ShellComponent implements OnInit, AfterViewInit {
   onBottomPanelVisibilityChange(_visible: boolean): void {
     performance.mark('shell.bottom-panel.toggle.start');
     this.store.dispatch(toggleBottomPanel());
-    this.eventBus.emit('shell.layout.changed.v1', { layout: 'bottom-panel' }, 'ShellComponent');
     this._markEnd('shell.bottom-panel.toggle');
   }
 
@@ -356,7 +347,6 @@ export class ShellComponent implements OnInit, AfterViewInit {
         this._pendingBottomHeight = null;
         performance.mark('shell.bottom-panel.resize.start');
         this.store.dispatch(setBottomPanelHeight({ height: h }));
-        this.eventBus.emit('bottomPanel.resized.v1', { height: h }, 'ShellComponent');
         this._markEnd('shell.bottom-panel.resize');
       }, 0);
     }
@@ -429,11 +419,6 @@ export class ShellComponent implements OnInit, AfterViewInit {
     const committed = Math.min(BOTTOM_PANEL_HEIGHT_MAX, Math.max(BOTTOM_PANEL_HEIGHT_MIN, Math.round(this._bottomDragStartHeight + delta)));
     this._draftBottomHeight$.next(null);
     this.store.dispatch(setBottomPanelHeight({ height: committed }));
-    this.eventBus.emit(
-      'shell.region.resized.v1',
-      { regionId: 'bottom-panel', widthPx: null, heightPx: committed, source: 'user-drag', committedAt: Date.now() },
-      'ShellComponent'
-    );
   }
 
   onBottomSplitterPointerCancel(_event: PointerEvent): void {
@@ -466,11 +451,6 @@ export class ShellComponent implements OnInit, AfterViewInit {
     const committed = Math.min(SECONDARY_PANEL_WIDTH_MAX, Math.max(SECONDARY_PANEL_WIDTH_MIN, Math.round(this._secondaryDragStartWidth + delta)));
     this._draftSecondaryWidth$.next(null);
     this.store.dispatch(setSecondaryPanelWidth({ width: committed }));
-    this.eventBus.emit(
-      'shell.region.resized.v1',
-      { regionId: 'secondary-panel', widthPx: committed, heightPx: null, source: 'user-drag', committedAt: Date.now() },
-      'ShellComponent'
-    );
   }
 
   onSecondarySplitterPointerCancel(_event: PointerEvent): void {

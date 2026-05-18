@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { provideStore } from '@ngrx/store';
 import { ToolbarComponent } from './toolbar.component';
 import { BreadcrumbItem, ToolbarAction } from '../../models/toolbar-action.model';
 import { CommandRegistryService } from '../../../core/services/command-registry.service';
@@ -9,6 +10,7 @@ describe('ToolbarComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ToolbarComponent],
+      providers: [provideStore({})],
     }).compileComponents();
     commandRegistry = TestBed.inject(CommandRegistryService);
   });

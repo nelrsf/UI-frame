@@ -3,7 +3,6 @@ import { Store } from '@ngrx/store';
 import { provideStore } from '@ngrx/store';
 import { ShellComponent } from './shell.component';
 import { PlatformAdapter } from '../core/infrastructure/electron/adapters/platform.adapter';
-import { EventBusService } from '../core/services/event-bus.service';
 import { CommandRegistryService } from '../core/services/command-registry.service';
 import { PlatformName } from '../core/application/ports/platform.port';
 import { setBottomPanelHeight, setSecondaryPanelWidth, toggleSecondaryPanel, toggleBottomPanel } from '../core/state/layout/layout.actions';
@@ -84,25 +83,6 @@ describe('ShellComponent', () => {
     });
   });
 
-  describe('shell.ready emission', () => {
-    it('should emit shell.ready.v1 on the EventBus after view init', () => {
-      const fixture = TestBed.createComponent(ShellComponent);
-      const eventBus = TestBed.inject(EventBusService);
-      const emitSpy = spyOn(eventBus, 'emit').and.callThrough();
-      fixture.detectChanges();
-      expect(emitSpy).toHaveBeenCalledWith('shell.ready.v1', {}, 'ShellComponent');
-    });
-
-    it('should emit shell.ready.v1 exactly once per view init', () => {
-      const fixture = TestBed.createComponent(ShellComponent);
-      const eventBus = TestBed.inject(EventBusService);
-      const emitSpy = spyOn(eventBus, 'emit').and.callThrough();
-      fixture.detectChanges();
-      const readyCalls = emitSpy.calls.all().filter(c => c.args[0] === 'shell.ready.v1');
-      expect(readyCalls.length).toBe(1);
-    });
-  });
-
   describe('accessibility — shell landmark regions', () => {
     it('should have role="region" on the workspace container', () => {
       const fixture = TestBed.createComponent(ShellComponent);
@@ -150,35 +130,35 @@ describe('ShellComponent', () => {
   });
 
   describe('layout event emissions', () => {
-    it('should emit shell.layout.changed.v1 when sidebar is toggled', () => {
+    it('should dispatch toggleSidebar when sidebar collapsed changes', () => {
       const fixture = TestBed.createComponent(ShellComponent);
-      const eventBus = TestBed.inject(EventBusService);
-      const emitSpy = spyOn(eventBus, 'emit').and.callThrough();
+      const store = TestBed.inject(Store);
+      const dispatchSpy = spyOn(store, 'dispatch');
 
       fixture.componentInstance.onSidebarCollapsedChange(true);
 
-      expect(emitSpy).toHaveBeenCalledWith('shell.layout.changed.v1', { layout: 'sidebar' }, 'ShellComponent');
+      expect(dispatchSpy).toHaveBeenCalledWith(jasmine.objectContaining({ type: '[Layout] Toggle Sidebar' }));
     });
 
-    it('should emit shell.layout.changed.v1 when bottom panel visibility changes', () => {
+    it('should dispatch toggleBottomPanel when bottom panel visibility changes', () => {
       const fixture = TestBed.createComponent(ShellComponent);
-      const eventBus = TestBed.inject(EventBusService);
-      const emitSpy = spyOn(eventBus, 'emit').and.callThrough();
+      const store = TestBed.inject(Store);
+      const dispatchSpy = spyOn(store, 'dispatch');
 
       fixture.componentInstance.onBottomPanelVisibilityChange(false);
 
-      expect(emitSpy).toHaveBeenCalledWith('shell.layout.changed.v1', { layout: 'bottom-panel' }, 'ShellComponent');
+      expect(dispatchSpy).toHaveBeenCalledWith(toggleBottomPanel());
     });
 
-    it('should emit bottomPanel.resized.v1 when bottom panel height changes', fakeAsync(() => {
+    it('should dispatch setBottomPanelHeight when bottom panel height changes', fakeAsync(() => {
       const fixture = TestBed.createComponent(ShellComponent);
-      const eventBus = TestBed.inject(EventBusService);
-      const emitSpy = spyOn(eventBus, 'emit').and.callThrough();
+      const store = TestBed.inject(Store);
+      const dispatchSpy = spyOn(store, 'dispatch');
 
       fixture.componentInstance.onBottomPanelHeightChange(350);
       tick(0);
 
-      expect(emitSpy).toHaveBeenCalledWith('bottomPanel.resized.v1', { height: 350 }, 'ShellComponent');
+      expect(dispatchSpy).toHaveBeenCalledWith(setBottomPanelHeight({ height: 350 }));
     }));
 
     it('should update the active bottom panel id when a panel tab is selected', () => {
@@ -410,117 +390,6 @@ describe('ShellComponent', () => {
     });
   });
 
-  // ── US3: EventBus integration ───────────────────────────────────────────────
-
-  describe('US3 — shell.region.resized.v1 on bottom commit (T026)', () => {
-    function makePointerEvent(clientY: number, pointerId = 1): PointerEvent {
-      return { clientY, pointerId, preventDefault: () => {}, target: { setPointerCapture: () => {} } } as unknown as PointerEvent;
-    }
-
-    it('should emit shell.region.resized.v1 exactly once on bottom splitter pointer-up', () => {
-      const fixture = TestBed.createComponent(ShellComponent);
-      const eventBus = TestBed.inject(EventBusService);
-      const emitSpy = spyOn(eventBus, 'emit').and.callThrough();
-
-      const component = fixture.componentInstance as unknown as {
-        _committedBottomHeight: number;
-        onBottomSplitterPointerDown: (e: PointerEvent) => void;
-        onBottomSplitterPointerUp: (e: PointerEvent) => void;
-      };
-
-      component._committedBottomHeight = 200;
-      component.onBottomSplitterPointerDown(makePointerEvent(500));
-      component.onBottomSplitterPointerUp(makePointerEvent(450));
-
-      const resizeCalls = emitSpy.calls.all().filter(c => c.args[0] === 'shell.region.resized.v1');
-      expect(resizeCalls.length).toBe(1);
-    });
-  });
-
-  describe('US3 — shell.region.resized.v1 on secondary commit (T027)', () => {
-    function makePointerEvent(clientX: number, pointerId = 1): PointerEvent {
-      return { clientX, pointerId, preventDefault: () => {}, target: { setPointerCapture: () => {} } } as unknown as PointerEvent;
-    }
-
-    it('should emit shell.region.resized.v1 exactly once on secondary splitter pointer-up', () => {
-      const fixture = TestBed.createComponent(ShellComponent);
-      const eventBus = TestBed.inject(EventBusService);
-      const emitSpy = spyOn(eventBus, 'emit').and.callThrough();
-
-      const component = fixture.componentInstance as unknown as {
-        _committedSecondaryWidth: number;
-        onSecondarySplitterPointerDown: (e: PointerEvent) => void;
-        onSecondarySplitterPointerUp: (e: PointerEvent) => void;
-      };
-
-      component._committedSecondaryWidth = 300;
-      component.onSecondarySplitterPointerDown(makePointerEvent(800));
-      component.onSecondarySplitterPointerUp(makePointerEvent(750));
-
-      const resizeCalls = emitSpy.calls.all().filter(c => c.args[0] === 'shell.region.resized.v1');
-      expect(resizeCalls.length).toBe(1);
-    });
-  });
-
-  describe('US3 — payload integer pixels and regionId semantics (T028)', () => {
-    it('should emit shell.region.resized.v1 with integer heightPx and regionId=bottom-panel for bottom commit', () => {
-      const fixture = TestBed.createComponent(ShellComponent);
-      const eventBus = TestBed.inject(EventBusService);
-      const emitSpy = spyOn(eventBus, 'emit').and.callThrough();
-
-      const component = fixture.componentInstance as unknown as {
-        _committedBottomHeight: number;
-        onBottomSplitterPointerDown: (e: PointerEvent) => void;
-        onBottomSplitterPointerUp: (e: PointerEvent) => void;
-      };
-
-      component._committedBottomHeight = 200;
-      component.onBottomSplitterPointerDown(
-        { clientY: 500, pointerId: 1, preventDefault: () => {}, target: { setPointerCapture: () => {} } } as unknown as PointerEvent
-      );
-      component.onBottomSplitterPointerUp(
-        { clientY: 450, pointerId: 1, preventDefault: () => {}, target: { setPointerCapture: () => {} } } as unknown as PointerEvent
-      );
-
-      const call = emitSpy.calls.all().find(c => c.args[0] === 'shell.region.resized.v1');
-      expect(call).toBeDefined();
-      const payload = call!.args[1] as { regionId: string; widthPx: unknown; heightPx: number; source: string; committedAt: number };
-      expect(payload.regionId).toBe('bottom-panel');
-      expect(payload.widthPx).toBeNull();
-      expect(Number.isInteger(payload.heightPx)).toBeTrue();
-      expect(payload.source).toBe('user-drag');
-      expect(typeof payload.committedAt).toBe('number');
-    });
-
-    it('should emit shell.region.resized.v1 with integer widthPx and regionId=secondary-panel for secondary commit', () => {
-      const fixture = TestBed.createComponent(ShellComponent);
-      const eventBus = TestBed.inject(EventBusService);
-      const emitSpy = spyOn(eventBus, 'emit').and.callThrough();
-
-      const component = fixture.componentInstance as unknown as {
-        _committedSecondaryWidth: number;
-        onSecondarySplitterPointerDown: (e: PointerEvent) => void;
-        onSecondarySplitterPointerUp: (e: PointerEvent) => void;
-      };
-
-      component._committedSecondaryWidth = 300;
-      component.onSecondarySplitterPointerDown(
-        { clientX: 800, pointerId: 1, preventDefault: () => {}, target: { setPointerCapture: () => {} } } as unknown as PointerEvent
-      );
-      component.onSecondarySplitterPointerUp(
-        { clientX: 750, pointerId: 1, preventDefault: () => {}, target: { setPointerCapture: () => {} } } as unknown as PointerEvent
-      );
-
-      const call = emitSpy.calls.all().find(c => c.args[0] === 'shell.region.resized.v1');
-      expect(call).toBeDefined();
-      const payload = call!.args[1] as { regionId: string; widthPx: number; heightPx: unknown; source: string; committedAt: number };
-      expect(payload.regionId).toBe('secondary-panel');
-      expect(Number.isInteger(payload.widthPx)).toBeTrue();
-      expect(payload.heightPx).toBeNull();
-      expect(payload.source).toBe('user-drag');
-    });
-  });
-
   // ── T025: Native menu panel toggle commands (MVP Gate) ─────────────────────
 
   describe('T025 — native menu panel toggle commands via CommandRegistry', () => {
@@ -570,34 +439,6 @@ describe('ShellComponent', () => {
       await commandRegistry.execute('shell.panel.toggleSecondary');
 
       expect(dispatchSpy).toHaveBeenCalledWith(toggleSecondaryPanel());
-    });
-
-    it('should emit shell.layout.changed.v1 when shell.panel.toggleBottom is executed', async () => {
-      const fixture = TestBed.createComponent(ShellComponent);
-      const commandRegistry = TestBed.inject(CommandRegistryService);
-      const eventBus = TestBed.inject(EventBusService);
-      const emitSpy = spyOn(eventBus, 'emit').and.callThrough();
-
-      fixture.detectChanges();
-      emitSpy.calls.reset();
-
-      await commandRegistry.execute('shell.panel.toggleBottom');
-
-      expect(emitSpy).toHaveBeenCalledWith('shell.layout.changed.v1', { layout: 'bottom-panel' }, 'ShellComponent');
-    });
-
-    it('should emit shell.layout.changed.v1 when shell.panel.toggleSecondary is executed', async () => {
-      const fixture = TestBed.createComponent(ShellComponent);
-      const commandRegistry = TestBed.inject(CommandRegistryService);
-      const eventBus = TestBed.inject(EventBusService);
-      const emitSpy = spyOn(eventBus, 'emit').and.callThrough();
-
-      fixture.detectChanges();
-      emitSpy.calls.reset();
-
-      await commandRegistry.execute('shell.panel.toggleSecondary');
-
-      expect(emitSpy).toHaveBeenCalledWith('shell.layout.changed.v1', { layout: 'secondary-panel' }, 'ShellComponent');
     });
   });
 });

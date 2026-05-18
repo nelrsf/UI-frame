@@ -1,6 +1,7 @@
-import { Injectable } from '@angular/core';
-import { EventBusService } from './event-bus.service';
+import { Injectable, isDevMode } from '@angular/core';
+import { Store } from '@ngrx/store';
 import { CommandRegistration, ICommandRegistryService } from '../models/command-registration.model';
+import { commandExecuted } from '../state/command-telemetry';
 
 /**
  * Central registry for shell commands.
@@ -8,15 +9,15 @@ import { CommandRegistration, ICommandRegistryService } from '../models/command-
  * Responsibilities:
  * - `register`: stores a command by id (overwrites duplicate ids).
  * - `execute`: invokes a command handler asynchronously; always resolves.
- *   On completion (success or failure) emits a `command.executed.v1` event
- *   via EventBus for auditing.
+ *   On completion (success or failure) dispatches a `commandExecuted` NgRx
+ *   action for auditing.
  * - `list`: returns an immutable snapshot of all registered commands.
  */
 @Injectable({ providedIn: 'root' })
 export class CommandRegistryService implements ICommandRegistryService {
   private readonly _registry = new Map<string, CommandRegistration>();
 
-  constructor(private readonly eventBus: EventBusService) {}
+  constructor(private readonly store: Store) {}
 
   register(command: CommandRegistration): void {
     this._registry.set(command.id, command);
@@ -29,11 +30,7 @@ export class CommandRegistryService implements ICommandRegistryService {
 
     if (!command) {
       console.warn('[CommandRegistry] Unknown command id:', id);
-      this.eventBus.emit(
-        'command.executed.v1',
-        { commandId: id, success: false, timestamp },
-        'command-registry'
-      );
+      this.store.dispatch(commandExecuted({ commandId: id, success: false, timestamp }));
       return;
     }
 
@@ -45,11 +42,7 @@ export class CommandRegistryService implements ICommandRegistryService {
       console.error('[CommandRegistry] Command execution failed:', id, err);
     }
 
-    this.eventBus.emit(
-      'command.executed.v1',
-      { commandId: id, success, timestamp, context: command.context },
-      'command-registry'
-    );
+    this.store.dispatch(commandExecuted({ commandId: id, success, timestamp, context: command.context }));
   }
 
   list(): ReadonlyArray<CommandRegistration> {

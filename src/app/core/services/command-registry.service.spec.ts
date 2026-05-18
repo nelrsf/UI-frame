@@ -1,16 +1,21 @@
 import { TestBed } from '@angular/core/testing';
-import { AppEvent } from '../models/app-event.model';
+import { provideStore } from '@ngrx/store';
+import { Store } from '@ngrx/store';
 import { CommandRegistryService } from './command-registry.service';
-import { EventBusService } from './event-bus.service';
+import { commandTelemetryReducer, selectRecentExecutions, selectLastExecution } from '../state/command-telemetry';
 
 describe('CommandRegistryService', () => {
   let service: CommandRegistryService;
-  let eventBus: EventBusService;
+  let store: Store;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({
+      providers: [
+        provideStore({ commandTelemetry: commandTelemetryReducer }),
+      ],
+    });
     service = TestBed.inject(CommandRegistryService);
-    eventBus = TestBed.inject(EventBusService);
+    store = TestBed.inject(Store);
   });
 
   it('should be created', () => {
@@ -92,37 +97,30 @@ describe('CommandRegistryService', () => {
       expect(order).toEqual(['handler', 'after']);
     });
 
-    it('should emit command.executed.v1 with success=true after execution', async () => {
-      const events: AppEvent<'command.executed.v1'>[] = [];
-      eventBus.on('command.executed.v1').subscribe((e) => events.push(e));
-
+    it('should dispatch commandExecuted action with success=true after execution', async () => {
       service.register({ id: 'cmd.ok', label: 'OK', execute: () => {} });
       await service.execute('cmd.ok');
 
-      expect(events.length).toBe(1);
-      expect(events[0].payload.commandId).toBe('cmd.ok');
-      expect(events[0].payload.success).toBeTrue();
-      expect(typeof events[0].payload.timestamp).toBe('number');
+      const executions = await new Promise<any[]>((resolve) => {
+        store.select(selectRecentExecutions(10)).subscribe(resolve);
+      });
+
+      expect(executions.length).toBeGreaterThanOrEqual(1);
+      const record = executions.find((e) => e.commandId === 'cmd.ok');
+      expect(record).toBeDefined();
+      expect(record.success).toBeTrue();
+      expect(typeof record.timestamp).toBe('number');
     });
 
-    it('should include the command context in the emitted event', async () => {
-      const events: AppEvent<'command.executed.v1'>[] = [];
-      eventBus.on('command.executed.v1').subscribe((e) => events.push(e));
-
+    it('should include the command context in the telemetry record', async () => {
       service.register({ id: 'cmd.ctx', label: 'Ctx', context: 'editor', execute: () => {} });
       await service.execute('cmd.ctx');
 
-      expect(events[0].payload.context).toBe('editor');
-    });
+      const record = await new Promise<any>((resolve) => {
+        store.select(selectLastExecution('cmd.ctx')).subscribe(resolve);
+      });
 
-    it('should emit event with origin "command-registry"', async () => {
-      const events: AppEvent<'command.executed.v1'>[] = [];
-      eventBus.on('command.executed.v1').subscribe((e) => events.push(e));
-
-      service.register({ id: 'cmd.origin', label: 'Origin', execute: () => {} });
-      await service.execute('cmd.origin');
-
-      expect(events[0].origin).toBe('command-registry');
+      expect(record.context).toBe('editor');
     });
   });
 
@@ -145,16 +143,17 @@ describe('CommandRegistryService', () => {
       await expectAsync(service.execute('cmd.reject')).toBeResolved();
     });
 
-    it('should emit command.executed.v1 with success=false when handler throws', async () => {
-      const events: AppEvent<'command.executed.v1'>[] = [];
-      eventBus.on('command.executed.v1').subscribe((e) => events.push(e));
-
+    it('should dispatch commandExecuted action with success=false when handler throws', async () => {
       service.register({ id: 'cmd.fail', label: 'Fail', execute: () => { throw new Error('fail'); } });
       await service.execute('cmd.fail');
 
-      expect(events.length).toBe(1);
-      expect(events[0].payload.commandId).toBe('cmd.fail');
-      expect(events[0].payload.success).toBeFalse();
+      const record = await new Promise<any>((resolve) => {
+        store.select(selectLastExecution('cmd.fail')).subscribe(resolve);
+      });
+
+      expect(record).toBeDefined();
+      expect(record.commandId).toBe('cmd.fail');
+      expect(record.success).toBeFalse();
     });
 
     it('should log the error to console when handler throws', async () => {
@@ -180,15 +179,16 @@ describe('CommandRegistryService', () => {
       await expectAsync(service.execute('nonexistent')).toBeResolved();
     });
 
-    it('should emit command.executed.v1 with success=false for unknown id', async () => {
-      const events: AppEvent<'command.executed.v1'>[] = [];
-      eventBus.on('command.executed.v1').subscribe((e) => events.push(e));
-
+    it('should dispatch commandExecuted action with success=false for unknown id', async () => {
       await service.execute('unknown.cmd');
 
-      expect(events.length).toBe(1);
-      expect(events[0].payload.commandId).toBe('unknown.cmd');
-      expect(events[0].payload.success).toBeFalse();
+      const record = await new Promise<any>((resolve) => {
+        store.select(selectLastExecution('unknown.cmd')).subscribe(resolve);
+      });
+
+      expect(record).toBeDefined();
+      expect(record.commandId).toBe('unknown.cmd');
+      expect(record.success).toBeFalse();
     });
 
     it('should warn to console for an unknown id', async () => {
@@ -199,21 +199,22 @@ describe('CommandRegistryService', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // EventBus audit — timestamp
+  // telemetry — timestamp
   // ---------------------------------------------------------------------------
 
-  describe('execute — event timestamp', () => {
-    it('should include a timestamp close to the current time in the event payload', async () => {
-      const events: AppEvent<'command.executed.v1'>[] = [];
-      eventBus.on('command.executed.v1').subscribe((e) => events.push(e));
-
+  describe('execute — telemetry timestamp', () => {
+    it('should include a timestamp close to the current time in the telemetry record', async () => {
       const before = Date.now();
       service.register({ id: 'cmd.ts', label: 'TS', execute: () => {} });
       await service.execute('cmd.ts');
       const after = Date.now();
 
-      expect(events[0].payload.timestamp).toBeGreaterThanOrEqual(before);
-      expect(events[0].payload.timestamp).toBeLessThanOrEqual(after);
+      const record = await new Promise<any>((resolve) => {
+        store.select(selectLastExecution('cmd.ts')).subscribe(resolve);
+      });
+
+      expect(record.timestamp).toBeGreaterThanOrEqual(before);
+      expect(record.timestamp).toBeLessThanOrEqual(after);
     });
   });
 

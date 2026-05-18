@@ -1,17 +1,12 @@
 <!--
 Sync Impact Report
-Version change: template -> 1.0.0
+Version change: 1.0.0 -> 1.1.0
 Modified principles:
-- [PRINCIPLE_1_NAME] -> I. Official Stack and Layer Boundaries
-- [PRINCIPLE_2_NAME] -> II. Shell-First UX Contract
-- [PRINCIPLE_3_NAME] -> III. State, Commands, and Events Discipline
-- [PRINCIPLE_4_NAME] -> IV. Security and Least Privilege
-- [PRINCIPLE_5_NAME] -> V. Quality Gates and Traceability
+- III. State, Commands, and Events Discipline -> III. Single Reactive Paradigm (NgRx)
 Added sections:
-- Additional Constraints
-- Delivery Workflow
+- Reactive Architecture Contract (new constraint under Additional Constraints)
 Removed sections:
-- Placeholder template sections only
+- None
 Templates requiring updates:
 - ✅ .specify/memory/constitution.md
 - ⚠ .specify/templates/*.md remain generic by design and do not encode project-specific rules
@@ -39,12 +34,30 @@ before any new MVP work proceeds. Layout regions MUST be responsive desktop-firs
 keyboard reachable, and persist enough workspace state to restore the shell safely
 after restart.
 
-### III. State, Commands, and Events Discipline
-Global state MUST only contain transversal shell concerns such as layout, workspace,
-session, UI context, and persisted preferences. Local interaction state SHOULD remain in the
-owning component unless multiple shell regions depend on it. Commands MUST be registered and
-executed through one central registry. Events MUST be typed, versioned, isolated from listener
-failures, and traceable in development mode.
+### III. Single Reactive Paradigm (NgRx)
+NgRx (Actions, Reducers, Selectors, Effects) is the ONLY reactive system for
+application state, cross-component communication, and system events. Angular Outputs
+are the ONLY mechanism for parent-child component communication. CommandRegistry is
+the ONLY mechanism for imperative orchestration.
+
+No secondary pub/sub bus, event emitter, or message-passing abstraction MAY be
+introduced to duplicate, wrap, or mirror NgRx Actions or Angular Outputs.
+
+Specifically:
+- State changes MUST flow through NgRx Actions → Reducers → Selectors.
+- Component-to-component communication across shell regions MUST use NgRx Selectors.
+- Parent-child communication MUST use Angular @Output() EventEmitter.
+- Imperative orchestration MUST use CommandRegistry.
+- Command execution telemetry (auditing, tracing) MUST use NgRx Actions or a
+  dedicated telemetry stream, NOT a generic EventBus.
+- Events that represent transient cross-cutting concerns (e.g., command execution
+  audit logs) MUST be modeled as NgRx Actions with dedicated Effects, not as
+  pub/sub events on a separate bus.
+
+Rationale: Multiple overlapping reactive paradigms create "event spaghetti,"
+implicit coupling, non-deterministic behavior, and debugging complexity. A single
+source of truth for reactivity ensures traceability, testability, and architectural
+simplicity.
 
 ### IV. Security and Least Privilege
 Electron integration MUST follow least privilege. Browser windows MUST run with
@@ -69,6 +82,23 @@ resolved before adjacent feature expansion.
   corrupt persisted data.
 - Docking for Shell v1 MUST stay within fixed MVP zones rather than evolving into arbitrary
   floating or nested layouts.
+
+### Reactive Architecture Contract
+
+- **What belongs to NgRx**: All persistent state (layout, workspace, session, UI context,
+  preferences), all system events that affect state, and all cross-component communication
+  between shell regions.
+- **What belongs to Commands**: Imperative orchestration triggered by menus, keyboard
+  shortcuts, or IPC. Commands dispatch NgRx Actions; they do NOT emit pub/sub events.
+- **What belongs to Angular Outputs**: Parent-child component communication only. Outputs
+  signal user interactions; the parent decides whether to dispatch Actions or handle locally.
+- **What is a true domain event**: An event that represents a meaningful business or system
+  occurrence that multiple independent consumers need to observe WITHOUT modifying shared
+  state. These MUST be modeled as NgRx Actions with Effects, not as pub/sub events.
+- **When NOT to introduce an EventBus**: Never. If a use case appears to need a pub/sub bus,
+  it should be modeled as: (a) an NgRx Action + Effect for state-affecting events, (b) an
+  Angular Output for parent-child communication, or (c) a dedicated telemetry/logging service
+  for cross-cutting audit concerns.
 
 ## Delivery Workflow
 
@@ -115,4 +145,4 @@ artifacts. Compliance MUST be checked during specification, planning, task gener
 review. Exceptions are temporary by default and MUST identify an owner, a sunset condition, and a
 follow-up correction path.
 
-**Version**: 1.0.0 | **Ratified**: 2026-04-26 | **Last Amended**: 2026-04-26
+**Version**: 1.1.0 | **Ratified**: 2026-04-26 | **Last Amended**: 2026-05-18

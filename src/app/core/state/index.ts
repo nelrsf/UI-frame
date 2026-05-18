@@ -9,3 +9,4 @@ export * from './session';
 export * from './layout';
 export * from './ui-context';
 export * from './preferences';
+export * from './command-telemetry';

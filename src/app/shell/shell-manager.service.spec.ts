@@ -1,6 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideMockStore, MockStore } from '@ngrx/store/testing';
-import { EventBusService } from '../core/services/event-bus.service';
+import { provideStore, Store } from '@ngrx/store';
 import { CommandRegistryService } from '../core/services/command-registry.service';
 import {
   setBottomPanelVisible,
@@ -14,32 +13,29 @@ import {
   addSidebarEntry,
   addToolbarAction,
 } from '../core/state/shell-content';
+import { commandTelemetryReducer, selectLastExecution } from '../core/state/command-telemetry';
 import { ShellManager } from './shell-manager.service';
 
 describe('ShellManager', () => {
   let shellManager: ShellManager;
-  let store: MockStore;
+  let store: Store;
   let dispatchSpy: jasmine.Spy;
   let commandRegistry: CommandRegistryService;
   let registerSpy: jasmine.Spy;
-  let eventBus: jasmine.SpyObj<EventBusService>;
 
   beforeEach(() => {
-    eventBus = jasmine.createSpyObj<EventBusService>('EventBusService', ['emit']);
-
     TestBed.configureTestingModule({
       providers: [
         ShellManager,
-        provideMockStore(),
+        provideStore({ commandTelemetry: commandTelemetryReducer }),
         CommandRegistryService,
-        { provide: EventBusService, useValue: eventBus },
       ],
     });
 
     shellManager = TestBed.inject(ShellManager);
-    store = TestBed.inject(MockStore);
+    store = TestBed.inject(Store);
     commandRegistry = TestBed.inject(CommandRegistryService);
-    dispatchSpy = spyOn(store, 'dispatch');
+    dispatchSpy = spyOn(store, 'dispatch').and.callThrough();
     registerSpy = spyOn(commandRegistry, 'register').and.callThrough();
   });
 
@@ -204,11 +200,15 @@ describe('ShellManager', () => {
     });
 
     await expectAsync(commandRegistry.execute('shell.action.danger')).toBeResolved();
-    expect(eventBus.emit).toHaveBeenCalledWith(
-      'command.executed.v1',
-      jasmine.objectContaining({ commandId: 'shell.action.danger', success: false }),
-      'command-registry'
-    );
+
+    // Wait for NgRx state to settle before reading selector.
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+
+    const record = await new Promise<any>((resolve) => {
+      TestBed.inject(Store).select(selectLastExecution('shell.action.danger')).subscribe(resolve);
+    });
+    expect(record.commandId).toBe('shell.action.danger');
+    expect(record.success).toBeFalse();
   });
 
   it('setSidebarVisible dispatches setSidebarVisible with true', () => {

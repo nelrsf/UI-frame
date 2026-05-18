@@ -1,6 +1,5 @@
 import { Component, Input, Output, EventEmitter, inject, NgZone } from '@angular/core';
 import { TabItem, TabCloseGuard } from '../../models/tab-item.model';
-import { EventBusService } from '../../../core/services/event-bus.service';
 
 /** Duration (ms) after which an unresolved async `beforeClose()` guard times out. */
 const CLOSE_GUARD_TIMEOUT_MS = 10_000;
@@ -13,7 +12,6 @@ const CLOSE_GUARD_TIMEOUT_MS = 10_000;
   styleUrl: './tab-bar.component.css',
 })
 export class TabBarComponent {
-  private readonly eventBus = inject(EventBusService);
   private readonly zone = inject(NgZone);
 
   @Input() tabs: TabItem[] = [];
@@ -36,7 +34,6 @@ export class TabBarComponent {
   onTabSelect(tabId: string): void {
     performance.mark('tabs.switch.start');
     this.tabSelected.emit(tabId);
-    this.eventBus.emit('tabs.active.changed.v1', { tabId }, 'TabBarComponent');
     // Measure tab-switch latency to next paint (NFR-Perf-02: < 120 ms).
     // Runs outside the Angular zone to avoid triggering a spurious CD cycle.
     this.zone.runOutsideAngular(() => {
