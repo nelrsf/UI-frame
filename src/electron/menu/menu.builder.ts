@@ -34,7 +34,7 @@ import {
   nativeTheme,
   BrowserWindow,
 } from 'electron';
-import { IMenuConfig, IMenuBuildContext, AppTheme, THEME_PREFERENCE_KEY } from '../../contracts';
+import { IMenuConfig, IMenuBuildContext, AppTheme, THEME_PREFERENCE_KEY, THEME_METADATA } from '../../contracts';
 import { IPC_CHANNELS } from '../ipc/channels';
 import { DEFAULT_MENU_ENTRIES } from './menu.defaults';
 
@@ -255,16 +255,14 @@ export class MenuBuilder {
    * Persistence is handled by the renderer via IPC → PreferencesAdapter → PreferenceStore.
    */
   private applyTheme(theme: AppTheme, context: IMenuBuildContext): void {
-    // Set the native theme in the OS
-    nativeTheme.themeSource = theme === 'dark' ? 'dark' : 'light';
+    const meta = THEME_METADATA[theme];
+    nativeTheme.themeSource = meta.nativeTheme;
 
-    // Notify the renderer that the theme has changed
-    // The renderer will persist the preference via the PreferencesAdapter IPC bridge
     if (this.mainWindow && !this.mainWindow.isDestroyed()) {
+      this.mainWindow.setBackgroundColor(meta.backgroundColor);
       this.mainWindow.webContents.send(IPC_CHANNELS.MENU.THEME_CHANGED, { theme });
     }
 
-    // Rebuild and re-apply the menu with the new theme context
     const updatedMenu = this.build({ ...context, activeTheme: theme });
     Menu.setApplicationMenu(updatedMenu);
   }

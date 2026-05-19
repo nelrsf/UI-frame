@@ -1,6 +1,6 @@
 import { nativeTheme } from 'electron';
 import { PreferenceStore } from '../preferences';
-import { AppTheme, DEFAULT_THEME } from '../../contracts';
+import { AppTheme, DEFAULT_THEME, THEME_METADATA } from '../../contracts';
 
 export class ThemeInitializer {
   private readonly preferenceStore: PreferenceStore;
@@ -16,6 +16,6 @@ export class ThemeInitializer {
   }
 
   private applyTheme(theme: AppTheme): void {
-    nativeTheme.themeSource = theme === 'dark' ? 'dark' : 'light';
+    nativeTheme.themeSource = THEME_METADATA[theme].nativeTheme;
   }
 }

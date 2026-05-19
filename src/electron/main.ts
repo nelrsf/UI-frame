@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, nativeTheme } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
 import { registerWindowHandlers } from './ipc/handlers/window.handlers';
@@ -9,6 +9,7 @@ import { ThemeInitializer } from './theme/theme-initializer';
 import { MenuInitializer } from './menu/menu.initializer';
 import { emitShellSignals } from './lifecycle/signals';
 import { menuConfig } from './menu/menu.config';
+import { AppTheme, THEME_METADATA } from '../contracts';
 
 const isDev = process.env['ELECTRON_ENV'] === 'development';
 const ANGULAR_DEV_URL = 'http://localhost:4200';
@@ -22,12 +23,11 @@ function registerIpcHandlers(): void {
   registerMenuHandlers();
 }
 
-function createWindow(): void {
+function createWindow(theme: AppTheme): void {
   mainWindow = new BrowserWindow({
+    backgroundColor: THEME_METADATA[theme].backgroundColor,
     minWidth: 1280,
     minHeight: 800,
-    darkTheme: true,
-    backgroundColor: '#1e1e1e',
     show: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -88,7 +88,7 @@ app.whenReady().then(async () => {
   const storedTheme = await themeInitializer.initialize();
 
   registerIpcHandlers();
-  createWindow();
+  createWindow(storedTheme);
 
   if (mainWindow) {
     const menuInitializer = new MenuInitializer(menuConfig);
@@ -97,7 +97,7 @@ app.whenReady().then(async () => {
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
+      createWindow(storedTheme);
     }
   });
 });
