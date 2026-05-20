@@ -65,19 +65,19 @@ function updateGroup(
 export const workspaceReducer = createReducer(
   initialWorkspaceState,
 
-  // ── openTab ──────────────────────────────────────────────────────────────
-  on(WorkspaceActions.openTab, (state, { tab }) => {
+  // ── registerTab ───────────────────────────────────────────────────────────
+  on(WorkspaceActions.registerTab, (state, { tab }) => {
     const idx = groupIndex(state, tab.groupId);
 
     if (idx >= 0) {
       const group = state.tabGroups[idx];
-      // Tab already present — just activate it.
+      // Tab already present in group — no-op (do not change activeTabId).
       if (group.tabs.some((t) => t.id === tab.id)) {
-        return updateGroup(state, tab.groupId, (g) => ({ ...g, activeTabId: tab.id }));
+        return state;
       }
-      // Append to existing group.
+      // Append to existing group without activating.
       const groups = [...state.tabGroups] as TabGroupState[];
-      groups[idx] = { ...group, tabs: [...group.tabs, tab], activeTabId: tab.id };
+      groups[idx] = { ...group, tabs: [...group.tabs, tab] };
       return { ...state, tabGroups: groups };
     }
 
@@ -89,11 +89,73 @@ export const workspaceReducer = createReducer(
         {
           groupId: tab.groupId,
           tabs: [tab],
-          activeTabId: tab.id,
+          activeTabId: null,
           zone: DockZone.PrimaryWorkspace,
         },
       ],
     };
+  }),
+
+  // ── openTab ──────────────────────────────────────────────────────────────
+  on(WorkspaceActions.openTab, (state, { tab }) => {
+    const idx = groupIndex(state, tab.groupId);
+
+    if (idx >= 0) {
+      const group = state.tabGroups[idx];
+      // Tab already present — just activate it.
+      if (group.tabs.some((t) => t.id === tab.id)) {
+        return updateGroup(state, tab.groupId, (g) => ({ ...g, activeTabId: tab.id }));
+      }
+      // Tab registered but not yet in this group — add and activate.
+      const groups = [...state.tabGroups] as TabGroupState[];
+      groups[idx] = { ...group, tabs: [...group.tabs, tab], activeTabId: tab.id };
+      return { ...state, tabGroups: groups };
+    }
+
+    // Tab not registered in any group — no-op with warning.
+    console.warn(
+      `[Workspace] openTab: tab '${tab.id}' not registered. Call registerTab first.`
+    );
+    return state;
+  }),
+
+  // ── registerAndOpenTab ───────────────────────────────────────────────────
+  on(WorkspaceActions.registerAndOpenTab, (state, { tab }) => {
+    // Step 1: Apply registerTab logic.
+    let intermediate = state;
+    const groupIdx = groupIndex(intermediate, tab.groupId);
+
+    if (groupIdx >= 0) {
+      const group = intermediate.tabGroups[groupIdx];
+      if (!group.tabs.some((t) => t.id === tab.id)) {
+        const groups = [...intermediate.tabGroups] as TabGroupState[];
+        groups[groupIdx] = { ...group, tabs: [...group.tabs, tab] };
+        intermediate = { ...intermediate, tabGroups: groups };
+      }
+    } else {
+      intermediate = {
+        ...intermediate,
+        tabGroups: [
+          ...intermediate.tabGroups,
+          {
+            groupId: tab.groupId,
+            tabs: [tab],
+            activeTabId: null,
+            zone: DockZone.PrimaryWorkspace,
+          },
+        ],
+      };
+    }
+
+    // Step 2: Apply openTab logic (activate the tab).
+    const finalIdx = groupIndex(intermediate, tab.groupId);
+    if (finalIdx >= 0) {
+      const groups = [...intermediate.tabGroups] as TabGroupState[];
+      groups[finalIdx] = { ...groups[finalIdx], activeTabId: tab.id };
+      return { ...intermediate, tabGroups: groups };
+    }
+
+    return intermediate;
   }),
 
   // ── closeTab ─────────────────────────────────────────────────────────────

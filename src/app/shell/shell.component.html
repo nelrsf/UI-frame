@@ -25,7 +25,10 @@
       class="shell-tabbar"
       [tabs]="(shellTabs$ | async) ?? []"
       [activeTabId]="(activeShellTabId$ | async) ?? ''"
+      [closeGuards]="(closeGuards$ | async) ?? {}"
       (tabSelected)="onShellTabSelected($event)"
+      (tabClosed)="onShellTabClosed($event)"
+      (closeGuardTimeout)="onCloseGuardTimeout($event)"
     ></app-tab-bar>
     <app-content-area
       class="shell-content-area"

@@ -3,12 +3,28 @@ import { TabItem } from '../../../shell/models/tab-item.model';
 import { DockZone } from '../../models/dock-zone-assignment.model';
 
 /**
- * Opens a tab in the group specified by `tab.groupId`.
+ * Registers a tab in the workspace state without making it active or visible.
  * If the group does not yet exist it is created and assigned to the
  * `PrimaryWorkspace` zone by default.
- * If the tab is already present in the group the action only activates it.
+ * If the tab is already present in the group the action is a no-op.
+ */
+export const registerTab = createAction('[Workspace] Register Tab', props<{ tab: TabItem }>());
+
+/**
+ * Opens (activates and displays) a tab that is already registered in the workspace.
+ * If the tab is already present in its group, only activates it.
+ * If the tab is not registered, the action is a no-op.
  */
 export const openTab = createAction('[Workspace] Open Tab', props<{ tab: TabItem }>());
+
+/**
+ * Convenience facade that registers and immediately opens a tab.
+ * Equivalent to dispatching `registerTab` followed by `openTab`.
+ */
+export const registerAndOpenTab = createAction(
+  '[Workspace] Register And Open Tab',
+  props<{ tab: TabItem }>()
+);
 
 /**
  * Closes the tab identified by `tabId` inside `groupId`.
