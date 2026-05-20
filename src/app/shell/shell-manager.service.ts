@@ -9,11 +9,11 @@ import {
 } from '../core/state/layout';
 import {
   addBottomPanelEntry,
-  addShellTab,
   addSecondaryPanelEntry,
   addSidebarEntry,
   addToolbarAction,
 } from '../core/state/shell-content';
+import { registerAndOpenTab } from '../core/state/workspace';
 import {
   IBottomPanelEntry,
   ICentralRegionTab,
@@ -59,9 +59,10 @@ export class ShellManager {
       dirty: false,
       pinned: false,
       groupId: 'main',
+      componentType: tab.component,
     };
 
-    this.store.dispatch(addShellTab({ tabItem, componentType: tab.component, guard }));
+    this.store.dispatch(registerAndOpenTab({ tab: tabItem }));
   }
 
   addSidebarEntry(entry: ISidebarEntry): void {

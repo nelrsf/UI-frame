@@ -1,6 +1,4 @@
 import { createReducer, on, Action } from '@ngrx/store';
-import { Type } from '@angular/core';
-import { TabItem, TabCloseGuard } from '../../../shell/models/tab-item.model';
 import { SidebarItem } from '../../../shell/models/sidebar-item.model';
 import { ToolbarAction } from '../../../shell/models/toolbar-action.model';
 import { PanelTab } from '../../../shell/models/panel-tab.model';
@@ -8,20 +6,10 @@ import { SecondaryPanelEntry } from '../../../shell/models/secondary-panel-entry
 import * as ShellContentActions from './shell-content.actions';
 
 /**
- * Internal wrapper for a tab with its component type and optional close guard.
- */
-export interface ShellTab {
-  tabItem: TabItem;
-  componentType: Type<unknown>;
-  guard?: TabCloseGuard;
-}
-
-/**
- * Shell content state shape.
+ * Shell content state shape (sidebar, toolbar, bottom panel, secondary panel only).
+ * Tab management has been moved to the workspace slice.
  */
 export interface ShellContentState {
-  tabs: ShellTab[];
-  activeShellTabId: string | null;
   sidebarItems: SidebarItem[];
   toolbarActions: ToolbarAction[];
   bottomPanelTabs: PanelTab[];
@@ -33,8 +21,6 @@ export interface ShellContentState {
  * Initial shell content state.
  */
 export const initialShellContentState: ShellContentState = {
-  tabs: [],
-  activeShellTabId: null,
   sidebarItems: [],
   toolbarActions: [],
   bottomPanelTabs: [],
@@ -56,32 +42,6 @@ function pickSecondaryDefault(entries: SecondaryPanelEntry[]): string | null {
  */
 const shellContentReducerFn = createReducer(
   initialShellContentState,
-
-  on(ShellContentActions.addShellTab, (state, { tabItem, componentType, guard }) => {
-    // Guard against duplicate tab IDs
-    const idExists = state.tabs.some((tab) => tab.tabItem.id === tabItem.id);
-    if (idExists) {
-      console.warn(`[ShellContent] Tab with id '${tabItem.id}' already exists. Ignoring.`);
-      return state;
-    }
-    // Set as active if this is the first tab
-    const newActiveTabId = state.activeShellTabId || tabItem.id;
-    return {
-      ...state,
-      tabs: [...state.tabs, { tabItem, componentType, guard }],
-      activeShellTabId: newActiveTabId,
-    };
-  }),
-
-  on(ShellContentActions.setActiveShellTab, (state, { id }) => {
-    // Verify tab exists
-    const tabExists = state.tabs.some((tab) => tab.tabItem.id === id);
-    if (!tabExists) {
-      console.warn(`[ShellContent] Tab with id '${id}' not found. Ignoring.`);
-      return state;
-    }
-    return { ...state, activeShellTabId: id };
-  }),
 
   on(ShellContentActions.addSidebarEntry, (state, sidebarItem) => {
     // Guard against duplicate sidebar item IDs

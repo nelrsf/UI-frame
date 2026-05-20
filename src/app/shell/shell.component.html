@@ -28,7 +28,7 @@
       [closeGuards]="(closeGuards$ | async) ?? {}"
       (tabSelected)="onShellTabSelected($event)"
       (tabClosed)="onShellTabClosed($event)"
-      (newTabRequested)="onNewTabRequested()"
+      (closeGuardTimeout)="onCloseGuardTimeout($event)"
     ></app-tab-bar>
     @if (showTabAddModal) {
       <app-tab-add-modal

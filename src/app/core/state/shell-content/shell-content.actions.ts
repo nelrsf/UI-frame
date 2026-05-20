@@ -7,24 +7,6 @@ import { PanelTab } from '../../../shell/models/panel-tab.model';
 import { SecondaryPanelEntry } from '../../../shell/models/secondary-panel-entry.model';
 
 /**
- * Add a tab to the shell's central content region.
- * Props include the TabItem, the Angular component Type to render,
- * and an optional TabCloseGuard for dirty-tab close interception.
- */
-export const addShellTab = createAction(
-  '[Shell Content] Add Shell Tab',
-  props<{ tabItem: TabItem; componentType: Type<unknown>; guard?: TabCloseGuard }>()
-);
-
-/**
- * Set the active tab by id in the shell's central region.
- */
-export const setActiveShellTab = createAction(
-  '[Shell Content] Set Active Shell Tab',
-  props<{ id: string }>()
-);
-
-/**
  * Add a sidebar entry to the activity bar.
  */
 export const addSidebarEntry = createAction(

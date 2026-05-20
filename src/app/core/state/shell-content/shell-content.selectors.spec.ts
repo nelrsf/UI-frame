@@ -23,8 +23,6 @@ const makeTabItem = (id: string, label: string): TabItem => ({
 describe('shell-content selectors for secondary panel', () => {
   const state: { shellContent: ShellContentState } = {
     shellContent: {
-      tabs: [],
-      activeShellTabId: null,
       sidebarItems: [],
       toolbarActions: [],
       bottomPanelTabs: [],

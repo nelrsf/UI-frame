@@ -1,40 +1,10 @@
 import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { ShellContentState } from './shell-content.reducer';
-import { TabItem, TabCloseGuard } from '../../../shell/models/tab-item.model';
 
 /**
  * Select the root shell content state.
  */
 export const selectShellContentState = createFeatureSelector<ShellContentState>('shellContent');
-
-/**
- * Select all shell tabs with their component types.
- */
-export const selectShellTabs = createSelector(
-  selectShellContentState,
-  (state: ShellContentState): TabItem[] => state.tabs.map((shellTab) => shellTab.tabItem)
-);
-
-/**
- * Select the active shell tab ID.
- */
-export const selectActiveShellTabId = createSelector(
-  selectShellContentState,
-  (state: ShellContentState) => state.activeShellTabId
-);
-
-/**
- * Select the active shell tab's component type for dynamic rendering.
- */
-export const selectActiveShellComponentType = createSelector(
-  selectShellContentState,
-  selectActiveShellTabId,
-  (state, activeTabId) => {
-    if (!activeTabId) return null;
-    const activeTab = state.tabs.find((tab) => tab.tabItem.id === activeTabId);
-    return activeTab?.componentType || null;
-  }
-);
 
 /**
  * Select all sidebar items.

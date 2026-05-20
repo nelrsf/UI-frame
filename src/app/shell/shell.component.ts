@@ -42,19 +42,23 @@ import {
   SECONDARY_PANEL_WIDTH_MAX,
 } from '../core/state/layout/layout.reducer';
 import {
-  selectActiveShellComponentType,
-  selectActiveShellTabId,
   selectActiveSecondaryPanelComponentType,
   selectActiveSecondaryPanelEntryId,
   selectShellBottomPanelTabs,
   selectShellSecondaryPanelEntries,
   selectShellSidebarItems,
-  selectShellTabs,
   selectShellToolbarActions,
   selectShellCloseGuards,
   setActiveSecondaryPanelEntry,
-  setActiveShellTab,
 } from '../core/state/shell-content';
+import {
+  selectActiveShellComponentType,
+  selectActiveShellTabId,
+  selectCloseGuardsForGroup,
+  selectShellTabs,
+  closeTab,
+  selectTab,
+} from '../core/state/workspace';
 import { setPreference } from '../core/state/preferences/preferences.actions';
 import { AppTheme, THEME_PREFERENCE_KEY } from '../core/models/theme.model';
 import { TabCloseGuard, TabItem } from './models/tab-item.model';
@@ -138,12 +142,14 @@ export class ShellComponent implements OnInit, AfterViewInit {
   readonly sidebarItems$ = this.store.select(selectShellSidebarItems);
   /** Observable of registered toolbar actions from shellContent. */
   readonly toolbarActions$ = this.store.select(selectShellToolbarActions);
-  /** Observable of registered shell tabs from shellContent. */
-  readonly shellTabs$ = this.store.select(selectShellTabs);
-  /** Observable of active shell tab id. */
-  readonly activeShellTabId$ = this.store.select(selectActiveShellTabId);
-  /** Observable of active shell tab component type for dynamic rendering. */
-  readonly activeShellComponentType$ = this.store.select(selectActiveShellComponentType);
+  /** Observable of registered shell tabs from workspace. */
+  readonly shellTabs$ = this.store.select(selectShellTabs('main'));
+  /** Observable of active shell tab id from workspace. */
+  readonly activeShellTabId$ = this.store.select(selectActiveShellTabId('main'));
+  /** Observable of active shell tab component type from workspace for dynamic rendering. */
+  readonly activeShellComponentType$ = this.store.select(selectActiveShellComponentType('main'));
+  /** Observable of close guards map for TabBarComponent. */
+  readonly closeGuards$ = this.store.select(selectCloseGuardsForGroup('main'));
   /** Observable of registered bottom panel tabs. */
   readonly bottomPanelTabs$ = this.store.select(selectShellBottomPanelTabs);
   /** Observable of secondary panel entries. */
@@ -344,7 +350,15 @@ export class ShellComponent implements OnInit, AfterViewInit {
   }
 
   onShellTabSelected(tabId: string): void {
-    this.store.dispatch(setActiveShellTab({ id: tabId }));
+    this.store.dispatch(selectTab({ tabId, groupId: 'main' }));
+  }
+
+  onShellTabClosed(tabId: string): void {
+    this.store.dispatch(closeTab({ tabId, groupId: 'main' }));
+  }
+
+  onCloseGuardTimeout(tabId: string): void {
+    console.warn(`[Shell] Close guard timed out for tab '${tabId}'. Tab remains open.`);
   }
 
   onShellTabClosed(tabId: string): void {

@@ -5,7 +5,9 @@ import {
   TabGroupState,
 } from './workspace.reducer';
 import {
+  registerTab,
   openTab,
+  registerAndOpenTab,
   closeTab,
   selectTab,
   reorderTab,
@@ -60,12 +62,12 @@ describe('workspace reducer', () => {
     });
   });
 
-  // ── openTab ───────────────────────────────────────────────────────────────
+  // ── registerTab ───────────────────────────────────────────────────────────
 
-  describe('openTab', () => {
+  describe('registerTab', () => {
     it('should create a new group when no group with the given groupId exists', () => {
       const tab = makeTab({ id: 'tab-1', label: 'File.ts', groupId: 'main' });
-      const state = workspaceReducer(initialWorkspaceState, openTab({ tab }));
+      const state = workspaceReducer(initialWorkspaceState, registerTab({ tab }));
 
       expect(state.tabGroups.length).toBe(1);
       expect(state.tabGroups[0].groupId).toBe('main');
@@ -73,55 +75,115 @@ describe('workspace reducer', () => {
 
     it('should default new groups to the PrimaryWorkspace zone', () => {
       const tab = makeTab({ id: 'tab-1', label: 'File.ts', groupId: 'main' });
-      const state = workspaceReducer(initialWorkspaceState, openTab({ tab }));
+      const state = workspaceReducer(initialWorkspaceState, registerTab({ tab }));
 
       expect(state.tabGroups[0].zone).toBe(DockZone.PrimaryWorkspace);
     });
 
-    it('should add the tab to a newly created group', () => {
+    it('should add the tab to a newly created group without activating it', () => {
       const tab = makeTab({ id: 'tab-1', label: 'File.ts', groupId: 'main' });
-      const state = workspaceReducer(initialWorkspaceState, openTab({ tab }));
+      const state = workspaceReducer(initialWorkspaceState, registerTab({ tab }));
 
       expect(state.tabGroups[0].tabs).toEqual([tab]);
+      expect(state.tabGroups[0].activeTabId).toBeNull();
     });
 
-    it('should make the opened tab the active tab in a new group', () => {
-      const tab = makeTab({ id: 'tab-1', label: 'File.ts', groupId: 'main' });
-      const state = workspaceReducer(initialWorkspaceState, openTab({ tab }));
-
-      expect(state.tabGroups[0].activeTabId).toBe('tab-1');
-    });
-
-    it('should append the tab to an existing group and activate it', () => {
+    it('should append the tab to an existing group without changing activeTabId', () => {
       const tab1 = makeTab({ id: 'tab-1', label: 'A.ts' });
       const tab2 = makeTab({ id: 'tab-2', label: 'B.ts' });
-      const s1 = workspaceReducer(initialWorkspaceState, openTab({ tab: tab1 }));
-      const s2 = workspaceReducer(s1, openTab({ tab: tab2 }));
+      const s1 = workspaceReducer(initialWorkspaceState, registerTab({ tab: tab1 }));
+      const s2 = workspaceReducer(s1, openTab({ tab: tab1 })); // activate tab1
+      const s3 = workspaceReducer(s2, registerTab({ tab: tab2 }));
 
-      expect(s2.tabGroups[0].tabs.map((t) => t.id)).toEqual(['tab-1', 'tab-2']);
-      expect(s2.tabGroups[0].activeTabId).toBe('tab-2');
+      expect(s3.tabGroups[0].tabs.map((t) => t.id)).toEqual(['tab-1', 'tab-2']);
+      expect(s3.tabGroups[0].activeTabId).toBe('tab-1'); // unchanged
     });
 
-    it('should only activate (not duplicate) a tab that is already open', () => {
+    it('should be a no-op for a tab already in the group', () => {
       const tab = makeTab({ id: 'tab-1', label: 'A.ts' });
-      const tab2 = makeTab({ id: 'tab-2', label: 'B.ts' });
-      const s1 = workspaceReducer(initialWorkspaceState, openTab({ tab }));
-      const s2 = workspaceReducer(s1, openTab({ tab: tab2 }));
-      const s3 = workspaceReducer(s2, openTab({ tab })); // reopen tab-1
+      const s1 = workspaceReducer(initialWorkspaceState, registerTab({ tab }));
+      const s2 = workspaceReducer(s1, registerTab({ tab }));
 
-      expect(s3.tabGroups[0].tabs.length).toBe(2);
-      expect(s3.tabGroups[0].activeTabId).toBe('tab-1');
+      expect(s2.tabGroups[0].tabs.length).toBe(1);
+      expect(s2).toEqual(s1);
     });
 
     it('should create independent groups for different groupIds', () => {
       const tabA = makeTab({ id: 'tab-a', label: 'A.ts', groupId: 'grp-a' });
       const tabB = makeTab({ id: 'tab-b', label: 'B.ts', groupId: 'grp-b' });
-      const s1 = workspaceReducer(initialWorkspaceState, openTab({ tab: tabA }));
-      const s2 = workspaceReducer(s1, openTab({ tab: tabB }));
+      const s1 = workspaceReducer(initialWorkspaceState, registerTab({ tab: tabA }));
+      const s2 = workspaceReducer(s1, registerTab({ tab: tabB }));
 
       expect(s2.tabGroups.length).toBe(2);
       expect(s2.tabGroups.find((g) => g.groupId === 'grp-a')?.tabs.length).toBe(1);
       expect(s2.tabGroups.find((g) => g.groupId === 'grp-b')?.tabs.length).toBe(1);
+    });
+  });
+
+  // ── openTab ───────────────────────────────────────────────────────────────
+
+  describe('openTab', () => {
+    it('should activate a tab that is already in its group', () => {
+      const tab1 = makeTab({ id: 'tab-1', label: 'A.ts' });
+      const tab2 = makeTab({ id: 'tab-2', label: 'B.ts' });
+      const s1 = workspaceReducer(initialWorkspaceState, registerTab({ tab: tab1 }));
+      const s2 = workspaceReducer(s1, registerTab({ tab: tab2 }));
+      const s3 = workspaceReducer(s2, openTab({ tab: tab1 }));
+
+      expect(s3.tabGroups[0].activeTabId).toBe('tab-1');
+    });
+
+    it('should add and activate a registered tab not yet in its group', () => {
+      const tab1 = makeTab({ id: 'tab-1', label: 'A.ts', groupId: 'grp-a' });
+      const tab2 = makeTab({ id: 'tab-2', label: 'B.ts', groupId: 'grp-b' });
+      // Register tab2 in grp-b, then open it in grp-a (different group)
+      const s1 = workspaceReducer(initialWorkspaceState, registerTab({ tab: tab1 }));
+      const s2 = workspaceReducer(s1, registerTab({ tab: tab2 }));
+      const s3 = workspaceReducer(s2, openTab({ tab: tab2 }));
+
+      // tab2 added to grp-b and activated there
+      expect(s3.tabGroups.find((g) => g.groupId === 'grp-b')?.activeTabId).toBe('tab-2');
+    });
+
+    it('should be a no-op with warning for an unregistered tab', () => {
+      const tab = makeTab({ id: 'ghost', label: 'Ghost.ts' });
+      const warnSpy = spyOn(console, 'warn');
+      const state = workspaceReducer(initialWorkspaceState, openTab({ tab }));
+
+      expect(state).toEqual(initialWorkspaceState);
+      expect(warnSpy).toHaveBeenCalled();
+    });
+  });
+
+  // ── registerAndOpenTab ────────────────────────────────────────────────────
+
+  describe('registerAndOpenTab', () => {
+    it('should register and activate a tab in one call', () => {
+      const tab = makeTab({ id: 'tab-1', label: 'File.ts', groupId: 'main' });
+      const state = workspaceReducer(initialWorkspaceState, registerAndOpenTab({ tab }));
+
+      expect(state.tabGroups.length).toBe(1);
+      expect(state.tabGroups[0].tabs).toEqual([tab]);
+      expect(state.tabGroups[0].activeTabId).toBe('tab-1');
+    });
+
+    it('should not duplicate a tab that is already registered', () => {
+      const tab = makeTab({ id: 'tab-1', label: 'A.ts' });
+      const s1 = workspaceReducer(initialWorkspaceState, registerAndOpenTab({ tab }));
+      const s2 = workspaceReducer(s1, registerAndOpenTab({ tab }));
+
+      expect(s2.tabGroups[0].tabs.length).toBe(1);
+      expect(s2.tabGroups[0].activeTabId).toBe('tab-1');
+    });
+
+    it('should register a new tab alongside existing ones and activate it', () => {
+      const tab1 = makeTab({ id: 'tab-1', label: 'A.ts' });
+      const tab2 = makeTab({ id: 'tab-2', label: 'B.ts' });
+      const s1 = workspaceReducer(initialWorkspaceState, registerAndOpenTab({ tab: tab1 }));
+      const s2 = workspaceReducer(s1, registerAndOpenTab({ tab: tab2 }));
+
+      expect(s2.tabGroups[0].tabs.map((t) => t.id)).toEqual(['tab-1', 'tab-2']);
+      expect(s2.tabGroups[0].activeTabId).toBe('tab-2');
     });
   });
 
@@ -133,7 +195,7 @@ describe('workspace reducer', () => {
         (state, label, i) =>
           workspaceReducer(
             state,
-            openTab({ tab: makeTab({ id: `tab-${i + 1}`, label, groupId: 'main' }) })
+            registerAndOpenTab({ tab: makeTab({ id: `tab-${i + 1}`, label, groupId: 'main' }) })
           ),
         initialWorkspaceState
       );
@@ -166,7 +228,7 @@ describe('workspace reducer', () => {
     it('should set activeTabId to null when the last tab in a group is closed', () => {
       const state = workspaceReducer(
         initialWorkspaceState,
-        openTab({ tab: makeTab({ id: 'only', label: 'Solo.ts' }) })
+        registerAndOpenTab({ tab: makeTab({ id: 'only', label: 'Solo.ts' }) })
       );
       const next = workspaceReducer(state, closeTab({ tabId: 'only', groupId: 'main' }));
 
@@ -184,7 +246,7 @@ describe('workspace reducer', () => {
 
     it('should not remove a pinned tab', () => {
       const tab = makeTab({ id: 'pinned', label: 'Pinned.ts', pinned: true });
-      const state = workspaceReducer(initialWorkspaceState, openTab({ tab }));
+      const state = workspaceReducer(initialWorkspaceState, registerAndOpenTab({ tab }));
       const next = workspaceReducer(state, closeTab({ tabId: 'pinned', groupId: 'main' }));
 
       expect(next.tabGroups[0].tabs.length).toBe(1);
@@ -211,9 +273,9 @@ describe('workspace reducer', () => {
     it('should set the active tab in the specified group', () => {
       const s1 = workspaceReducer(
         initialWorkspaceState,
-        openTab({ tab: makeTab({ id: 'a', label: 'A.ts' }) })
+        registerAndOpenTab({ tab: makeTab({ id: 'a', label: 'A.ts' }) })
       );
-      const s2 = workspaceReducer(s1, openTab({ tab: makeTab({ id: 'b', label: 'B.ts' }) }));
+      const s2 = workspaceReducer(s1, registerAndOpenTab({ tab: makeTab({ id: 'b', label: 'B.ts' }) }));
       const s3 = workspaceReducer(s2, selectTab({ tabId: 'a', groupId: 'main' }));
 
       expect(s3.tabGroups[0].activeTabId).toBe('a');
@@ -222,8 +284,8 @@ describe('workspace reducer', () => {
     it('should not affect tabs in other groups', () => {
       const tabA = makeTab({ id: 'a', label: 'A.ts', groupId: 'grp-a' });
       const tabB = makeTab({ id: 'b', label: 'B.ts', groupId: 'grp-b' });
-      const s1 = workspaceReducer(initialWorkspaceState, openTab({ tab: tabA }));
-      const s2 = workspaceReducer(s1, openTab({ tab: tabB }));
+      const s1 = workspaceReducer(initialWorkspaceState, registerAndOpenTab({ tab: tabA }));
+      const s2 = workspaceReducer(s1, registerAndOpenTab({ tab: tabB }));
       const s3 = workspaceReducer(s2, selectTab({ tabId: 'a', groupId: 'grp-a' }));
 
       expect(s3.tabGroups.find((g) => g.groupId === 'grp-b')?.activeTabId).toBe('b');
@@ -232,7 +294,7 @@ describe('workspace reducer', () => {
     it('should be a no-op for an unknown groupId', () => {
       const state = workspaceReducer(
         initialWorkspaceState,
-        openTab({ tab: makeTab({ id: 'a', label: 'A.ts' }) })
+        registerAndOpenTab({ tab: makeTab({ id: 'a', label: 'A.ts' }) })
       );
       const next = workspaceReducer(state, selectTab({ tabId: 'a', groupId: 'ghost' }));
 
@@ -249,7 +311,7 @@ describe('workspace reducer', () => {
         makeTab({ id: 'tab-2', label: 'B.ts' }),
         makeTab({ id: 'tab-3', label: 'C.ts' }),
       ].reduce(
-        (state, tab) => workspaceReducer(state, openTab({ tab })),
+        (state, tab) => workspaceReducer(state, registerAndOpenTab({ tab })),
         initialWorkspaceState
       );
     }
@@ -307,7 +369,7 @@ describe('workspace reducer', () => {
     it('should set dirty to true on the target tab', () => {
       const state = workspaceReducer(
         initialWorkspaceState,
-        openTab({ tab: makeTab({ id: 'tab-1', label: 'A.ts' }) })
+        registerAndOpenTab({ tab: makeTab({ id: 'tab-1', label: 'A.ts' }) })
       );
       const next = workspaceReducer(state, setTabDirty({ tabId: 'tab-1', dirty: true }));
 
@@ -317,7 +379,7 @@ describe('workspace reducer', () => {
     it('should set dirty to false on the target tab', () => {
       const s1 = workspaceReducer(
         initialWorkspaceState,
-        openTab({ tab: makeTab({ id: 'tab-1', label: 'A.ts', dirty: true }) })
+        registerAndOpenTab({ tab: makeTab({ id: 'tab-1', label: 'A.ts', dirty: true }) })
       );
       const next = workspaceReducer(s1, setTabDirty({ tabId: 'tab-1', dirty: false }));
 
@@ -327,11 +389,11 @@ describe('workspace reducer', () => {
     it('should not affect other tabs in the same group', () => {
       const s1 = workspaceReducer(
         initialWorkspaceState,
-        openTab({ tab: makeTab({ id: 'tab-1', label: 'A.ts' }) })
+        registerAndOpenTab({ tab: makeTab({ id: 'tab-1', label: 'A.ts' }) })
       );
       const s2 = workspaceReducer(
         s1,
-        openTab({ tab: makeTab({ id: 'tab-2', label: 'B.ts' }) })
+        registerAndOpenTab({ tab: makeTab({ id: 'tab-2', label: 'B.ts' }) })
       );
       const next = workspaceReducer(s2, setTabDirty({ tabId: 'tab-1', dirty: true }));
 
@@ -341,7 +403,7 @@ describe('workspace reducer', () => {
     it('should be a no-op for an unknown tabId', () => {
       const state = workspaceReducer(
         initialWorkspaceState,
-        openTab({ tab: makeTab({ id: 'tab-1', label: 'A.ts' }) })
+        registerAndOpenTab({ tab: makeTab({ id: 'tab-1', label: 'A.ts' }) })
       );
       const next = workspaceReducer(state, setTabDirty({ tabId: 'ghost', dirty: true }));
 
@@ -355,7 +417,7 @@ describe('workspace reducer', () => {
     it('should pin a tab', () => {
       const state = workspaceReducer(
         initialWorkspaceState,
-        openTab({ tab: makeTab({ id: 'tab-1', label: 'A.ts' }) })
+        registerAndOpenTab({ tab: makeTab({ id: 'tab-1', label: 'A.ts' }) })
       );
       const next = workspaceReducer(state, setTabPinned({ tabId: 'tab-1', pinned: true }));
 
@@ -365,7 +427,7 @@ describe('workspace reducer', () => {
     it('should unpin a tab', () => {
       const s1 = workspaceReducer(
         initialWorkspaceState,
-        openTab({ tab: makeTab({ id: 'tab-1', label: 'A.ts', pinned: true }) })
+        registerAndOpenTab({ tab: makeTab({ id: 'tab-1', label: 'A.ts', pinned: true }) })
       );
       const next = workspaceReducer(s1, setTabPinned({ tabId: 'tab-1', pinned: false }));
 
@@ -375,7 +437,7 @@ describe('workspace reducer', () => {
     it('should protect a freshly pinned tab from close', () => {
       const s1 = workspaceReducer(
         initialWorkspaceState,
-        openTab({ tab: makeTab({ id: 'tab-1', label: 'A.ts' }) })
+        registerAndOpenTab({ tab: makeTab({ id: 'tab-1', label: 'A.ts' }) })
       );
       const s2 = workspaceReducer(s1, setTabPinned({ tabId: 'tab-1', pinned: true }));
       const s3 = workspaceReducer(s2, closeTab({ tabId: 'tab-1', groupId: 'main' }));
@@ -386,7 +448,7 @@ describe('workspace reducer', () => {
     it('should allow a freshly unpinned tab to be closed', () => {
       const s1 = workspaceReducer(
         initialWorkspaceState,
-        openTab({ tab: makeTab({ id: 'tab-1', label: 'A.ts', pinned: true }) })
+        registerAndOpenTab({ tab: makeTab({ id: 'tab-1', label: 'A.ts', pinned: true }) })
       );
       const s2 = workspaceReducer(s1, setTabPinned({ tabId: 'tab-1', pinned: false }));
       const s3 = workspaceReducer(s2, closeTab({ tabId: 'tab-1', groupId: 'main' }));
@@ -400,7 +462,7 @@ describe('workspace reducer', () => {
   describe('assignGroupToZone', () => {
     it('should reassign a group from PrimaryWorkspace to BottomPanel', () => {
       const tab = makeTab({ id: 'tab-1', label: 'A.ts' });
-      const s1 = workspaceReducer(initialWorkspaceState, openTab({ tab }));
+      const s1 = workspaceReducer(initialWorkspaceState, registerAndOpenTab({ tab }));
       const s2 = workspaceReducer(
         s1,
         assignGroupToZone({ groupId: 'main', zone: DockZone.BottomPanel })
@@ -411,7 +473,7 @@ describe('workspace reducer', () => {
 
     it('should reassign a group to SecondaryPanel', () => {
       const tab = makeTab({ id: 'tab-1', label: 'A.ts' });
-      const s1 = workspaceReducer(initialWorkspaceState, openTab({ tab }));
+      const s1 = workspaceReducer(initialWorkspaceState, registerAndOpenTab({ tab }));
       const s2 = workspaceReducer(
         s1,
         assignGroupToZone({ groupId: 'main', zone: DockZone.SecondaryPanel })
@@ -423,8 +485,8 @@ describe('workspace reducer', () => {
     it('should not affect other groups when assigning a zone', () => {
       const tabA = makeTab({ id: 'a', label: 'A.ts', groupId: 'grp-a' });
       const tabB = makeTab({ id: 'b', label: 'B.ts', groupId: 'grp-b' });
-      const s1 = workspaceReducer(initialWorkspaceState, openTab({ tab: tabA }));
-      const s2 = workspaceReducer(s1, openTab({ tab: tabB }));
+      const s1 = workspaceReducer(initialWorkspaceState, registerAndOpenTab({ tab: tabA }));
+      const s2 = workspaceReducer(s1, registerAndOpenTab({ tab: tabB }));
       const s3 = workspaceReducer(
         s2,
         assignGroupToZone({ groupId: 'grp-a', zone: DockZone.BottomPanel })
@@ -438,7 +500,7 @@ describe('workspace reducer', () => {
     it('should be a no-op for an unknown groupId', () => {
       const state = workspaceReducer(
         initialWorkspaceState,
-        openTab({ tab: makeTab({ id: 'tab-1', label: 'A.ts' }) })
+        registerAndOpenTab({ tab: makeTab({ id: 'tab-1', label: 'A.ts' }) })
       );
       const next = workspaceReducer(
         state,
@@ -452,15 +514,15 @@ describe('workspace reducer', () => {
   // ── full tab lifecycle sequence ───────────────────────────────────────────
 
   describe('full tab lifecycle', () => {
-    it('should support a complete open → select → dirty → close lifecycle', () => {
-      // Open two tabs
+    it('should support a complete register → open → select → dirty → close lifecycle', () => {
+      // Register and open two tabs
       let state = workspaceReducer(
         initialWorkspaceState,
-        openTab({ tab: makeTab({ id: 'tab-1', label: 'A.ts' }) })
+        registerAndOpenTab({ tab: makeTab({ id: 'tab-1', label: 'A.ts' }) })
       );
       state = workspaceReducer(
         state,
-        openTab({ tab: makeTab({ id: 'tab-2', label: 'B.ts' }) })
+        registerAndOpenTab({ tab: makeTab({ id: 'tab-2', label: 'B.ts' }) })
       );
 
       // Select first tab
@@ -477,10 +539,10 @@ describe('workspace reducer', () => {
       expect(state.tabGroups[0].activeTabId).toBe('tab-2');
     });
 
-    it('should support open → pin → attempt close (blocked) → unpin → close', () => {
+    it('should support register → open → pin → attempt close (blocked) → unpin → close', () => {
       let state = workspaceReducer(
         initialWorkspaceState,
-        openTab({ tab: makeTab({ id: 'tab-1', label: 'A.ts' }) })
+        registerAndOpenTab({ tab: makeTab({ id: 'tab-1', label: 'A.ts' }) })
       );
 
       state = workspaceReducer(state, setTabPinned({ tabId: 'tab-1', pinned: true }));
@@ -493,12 +555,12 @@ describe('workspace reducer', () => {
       expect(state.tabGroups[0].tabs.length).toBe(0);
     });
 
-    it('should preserve tab order across multiple opens and one close in the middle', () => {
+    it('should preserve tab order across multiple registerAndOpenTab and one close in the middle', () => {
       const tabs = ['A', 'B', 'C', 'D'].map((l, i) =>
         makeTab({ id: `tab-${i + 1}`, label: `${l}.ts` })
       );
       let state = tabs.reduce(
-        (s, tab) => workspaceReducer(s, openTab({ tab })),
+        (s, tab) => workspaceReducer(s, registerAndOpenTab({ tab })),
         initialWorkspaceState
       );
 

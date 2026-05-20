@@ -1,6 +1,6 @@
 import { workspaceReducer, initialWorkspaceState, WorkspaceState } from '../core/state/workspace/workspace.reducer';
 import {
-  openTab,
+  registerAndOpenTab,
   closeTab,
   selectTab,
   assignGroupToZone,
@@ -76,14 +76,14 @@ describe('Docking — MVP zone enforcement (FR-Docking)', () => {
 describe('Docking — default zone assignment', () => {
   it('should assign a new group to PrimaryWorkspace by default', () => {
     const tab = makeTab({ id: 'a', label: 'A.ts', groupId: 'grp-a' });
-    const state = workspaceReducer(initialWorkspaceState, openTab({ tab }));
+    const state = workspaceReducer(initialWorkspaceState, registerAndOpenTab({ tab }));
 
     expect(state.tabGroups[0].zone).toBe(DockZone.PrimaryWorkspace);
   });
 
   it('should place a group in the PrimaryWorkspace result set immediately after creation', () => {
     const tab = makeTab({ id: 'a', label: 'A.ts', groupId: 'grp-a' });
-    const state = workspaceReducer(initialWorkspaceState, openTab({ tab }));
+    const state = workspaceReducer(initialWorkspaceState, registerAndOpenTab({ tab }));
 
     const primaryGroups = selectGroupsByZone(DockZone.PrimaryWorkspace)(rootState(state));
     expect(primaryGroups.map((g) => g.groupId)).toContain('grp-a');
@@ -94,7 +94,7 @@ describe('Docking — zone reassignment', () => {
   it('should move a group from PrimaryWorkspace to BottomPanel', () => {
     let state = workspaceReducer(
       initialWorkspaceState,
-      openTab({ tab: makeTab({ id: 'a', label: 'A.ts', groupId: 'grp-a' }) })
+      registerAndOpenTab({ tab: makeTab({ id: 'a', label: 'A.ts', groupId: 'grp-a' }) })
     );
     state = workspaceReducer(
       state,
@@ -109,7 +109,7 @@ describe('Docking — zone reassignment', () => {
   it('should move a group from PrimaryWorkspace to SecondaryPanel', () => {
     let state = workspaceReducer(
       initialWorkspaceState,
-      openTab({ tab: makeTab({ id: 'a', label: 'A.ts', groupId: 'grp-a' }) })
+      registerAndOpenTab({ tab: makeTab({ id: 'a', label: 'A.ts', groupId: 'grp-a' }) })
     );
     state = workspaceReducer(
       state,
@@ -122,7 +122,7 @@ describe('Docking — zone reassignment', () => {
 
   it('should move a group from BottomPanel back to PrimaryWorkspace', () => {
     const state = applyActions([
-      openTab({ tab: makeTab({ id: 'a', label: 'A.ts', groupId: 'grp-a' }) }),
+      registerAndOpenTab({ tab: makeTab({ id: 'a', label: 'A.ts', groupId: 'grp-a' }) }),
       assignGroupToZone({ groupId: 'grp-a', zone: DockZone.BottomPanel }),
       assignGroupToZone({ groupId: 'grp-a', zone: DockZone.PrimaryWorkspace }),
     ]);
@@ -132,8 +132,8 @@ describe('Docking — zone reassignment', () => {
 
   it('should not affect groups in other zones when one group is reassigned', () => {
     const state = applyActions([
-      openTab({ tab: makeTab({ id: 'a', label: 'A.ts', groupId: 'grp-a' }) }),
-      openTab({ tab: makeTab({ id: 'b', label: 'B.ts', groupId: 'grp-b' }) }),
+      registerAndOpenTab({ tab: makeTab({ id: 'a', label: 'A.ts', groupId: 'grp-a' }) }),
+      registerAndOpenTab({ tab: makeTab({ id: 'b', label: 'B.ts', groupId: 'grp-b' }) }),
       assignGroupToZone({ groupId: 'grp-a', zone: DockZone.BottomPanel }),
     ]);
 
@@ -145,8 +145,8 @@ describe('Docking — zone reassignment', () => {
 describe('Docking — multiple groups per zone', () => {
   it('should allow multiple groups to coexist in the same zone', () => {
     const state = applyActions([
-      openTab({ tab: makeTab({ id: 'a', label: 'A.ts', groupId: 'grp-a' }) }),
-      openTab({ tab: makeTab({ id: 'b', label: 'B.ts', groupId: 'grp-b' }) }),
+      registerAndOpenTab({ tab: makeTab({ id: 'a', label: 'A.ts', groupId: 'grp-a' }) }),
+      registerAndOpenTab({ tab: makeTab({ id: 'b', label: 'B.ts', groupId: 'grp-b' }) }),
     ]);
 
     const primaryGroups = selectGroupsByZone(DockZone.PrimaryWorkspace)(rootState(state));
@@ -155,9 +155,9 @@ describe('Docking — multiple groups per zone', () => {
 
   it('should correctly list one group per zone when each is assigned differently', () => {
     const state = applyActions([
-      openTab({ tab: makeTab({ id: 'a', label: 'A.ts', groupId: 'grp-a' }) }),
-      openTab({ tab: makeTab({ id: 'b', label: 'B.ts', groupId: 'grp-b' }) }),
-      openTab({ tab: makeTab({ id: 'c', label: 'C.ts', groupId: 'grp-c' }) }),
+      registerAndOpenTab({ tab: makeTab({ id: 'a', label: 'A.ts', groupId: 'grp-a' }) }),
+      registerAndOpenTab({ tab: makeTab({ id: 'b', label: 'B.ts', groupId: 'grp-b' }) }),
+      registerAndOpenTab({ tab: makeTab({ id: 'c', label: 'C.ts', groupId: 'grp-c' }) }),
       assignGroupToZone({ groupId: 'grp-b', zone: DockZone.BottomPanel }),
       assignGroupToZone({ groupId: 'grp-c', zone: DockZone.SecondaryPanel }),
     ]);
@@ -171,8 +171,8 @@ describe('Docking — multiple groups per zone', () => {
 describe('Docking — tab lifecycle within non-primary zones', () => {
   it('should support opening and selecting a tab in the BottomPanel zone', () => {
     const state = applyActions([
-      openTab({ tab: makeTab({ id: 'a', label: 'A.ts', groupId: 'panel' }) }),
-      openTab({ tab: makeTab({ id: 'b', label: 'B.ts', groupId: 'panel' }) }),
+      registerAndOpenTab({ tab: makeTab({ id: 'a', label: 'A.ts', groupId: 'panel' }) }),
+      registerAndOpenTab({ tab: makeTab({ id: 'b', label: 'B.ts', groupId: 'panel' }) }),
       assignGroupToZone({ groupId: 'panel', zone: DockZone.BottomPanel }),
       selectTab({ tabId: 'a', groupId: 'panel' }),
     ]);
@@ -183,8 +183,8 @@ describe('Docking — tab lifecycle within non-primary zones', () => {
 
   it('should support closing a tab in the SecondaryPanel zone and activating the adjacent tab', () => {
     const state = applyActions([
-      openTab({ tab: makeTab({ id: 'a', label: 'A.ts', groupId: 'secondary' }) }),
-      openTab({ tab: makeTab({ id: 'b', label: 'B.ts', groupId: 'secondary' }) }),
+      registerAndOpenTab({ tab: makeTab({ id: 'a', label: 'A.ts', groupId: 'secondary' }) }),
+      registerAndOpenTab({ tab: makeTab({ id: 'b', label: 'B.ts', groupId: 'secondary' }) }),
       assignGroupToZone({ groupId: 'secondary', zone: DockZone.SecondaryPanel }),
       selectTab({ tabId: 'b', groupId: 'secondary' }),
       closeTab({ tabId: 'b', groupId: 'secondary' }),
@@ -196,9 +196,9 @@ describe('Docking — tab lifecycle within non-primary zones', () => {
 
   it('should preserve zone assignment after tabs are added and closed', () => {
     const state = applyActions([
-      openTab({ tab: makeTab({ id: 'a', label: 'A.ts', groupId: 'grp' }) }),
+      registerAndOpenTab({ tab: makeTab({ id: 'a', label: 'A.ts', groupId: 'grp' }) }),
       assignGroupToZone({ groupId: 'grp', zone: DockZone.BottomPanel }),
-      openTab({ tab: makeTab({ id: 'b', label: 'B.ts', groupId: 'grp' }) }),
+      registerAndOpenTab({ tab: makeTab({ id: 'b', label: 'B.ts', groupId: 'grp' }) }),
       closeTab({ tabId: 'a', groupId: 'grp' }),
     ]);
 
@@ -207,9 +207,9 @@ describe('Docking — tab lifecycle within non-primary zones', () => {
 
   it('should preserve SecondaryPanel assignment across tab close/open operations', () => {
     const state = applyActions([
-      openTab({ tab: makeTab({ id: 's1', label: 'S1.ts', groupId: 'secondary-live' }) }),
+      registerAndOpenTab({ tab: makeTab({ id: 's1', label: 'S1.ts', groupId: 'secondary-live' }) }),
       assignGroupToZone({ groupId: 'secondary-live', zone: DockZone.SecondaryPanel }),
-      openTab({ tab: makeTab({ id: 's2', label: 'S2.ts', groupId: 'secondary-live' }) }),
+      registerAndOpenTab({ tab: makeTab({ id: 's2', label: 'S2.ts', groupId: 'secondary-live' }) }),
       closeTab({ tabId: 's1', groupId: 'secondary-live' }),
     ]);
 

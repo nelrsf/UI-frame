@@ -9,10 +9,10 @@ import {
 import {
   addBottomPanelEntry,
   addSecondaryPanelEntry,
-  addShellTab,
   addSidebarEntry,
   addToolbarAction,
 } from '../core/state/shell-content';
+import { registerAndOpenTab } from '../core/state/workspace';
 import { commandTelemetryReducer, selectLastExecution } from '../core/state/command-telemetry';
 import { ShellManager } from './shell-manager.service';
 import { TabCloseGuard } from './models/tab-item.model';
@@ -40,7 +40,7 @@ describe('ShellManager', () => {
     registerSpy = spyOn(commandRegistry, 'register').and.callThrough();
   });
 
-  it('addTab dispatches addShellTab', () => {
+  it('addTab dispatches registerAndOpenTab', () => {
     const componentType = class {};
 
     shellManager.addTab({
@@ -52,8 +52,8 @@ describe('ShellManager', () => {
     });
 
     expect(dispatchSpy).toHaveBeenCalledWith(
-      addShellTab({
-        tabItem: {
+      registerAndOpenTab({
+        tab: {
           id: 'dashboard',
           label: 'Dashboard',
           icon: 'dashboard',
@@ -61,40 +61,8 @@ describe('ShellManager', () => {
           dirty: false,
           pinned: false,
           groupId: 'main',
+          componentType,
         },
-        componentType,
-        guard: undefined,
-      })
-    );
-  });
-
-  it('addTab with guard dispatches addShellTab including the guard', () => {
-    const componentType = class {};
-    const guard: TabCloseGuard = { beforeClose: () => false };
-
-    shellManager.addTab(
-      {
-        id: 'editor',
-        label: 'Editor',
-        component: componentType,
-        closable: true,
-      },
-      guard
-    );
-
-    expect(dispatchSpy).toHaveBeenCalledWith(
-      addShellTab({
-        tabItem: {
-          id: 'editor',
-          label: 'Editor',
-          icon: undefined,
-          closable: true,
-          dirty: false,
-          pinned: false,
-          groupId: 'main',
-        },
-        componentType,
-        guard,
       })
     );
   });
