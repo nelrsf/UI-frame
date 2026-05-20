@@ -1,6 +1,6 @@
 import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { ShellContentState } from './shell-content.reducer';
-import { TabItem } from '../../../shell/models/tab-item.model';
+import { TabItem, TabCloseGuard } from '../../../shell/models/tab-item.model';
 
 /**
  * Select the root shell content state.
@@ -89,5 +89,21 @@ export const selectActiveSecondaryPanelComponentType = createSelector(
 
     const activeEntry = entries.find((entry) => entry.id === activeId);
     return activeEntry?.component ?? null;
+  }
+);
+
+/**
+ * Select a map of tabId to TabCloseGuard for all registered tabs that have a guard.
+ */
+export const selectShellCloseGuards = createSelector(
+  selectShellContentState,
+  (state: ShellContentState): Record<string, TabCloseGuard> => {
+    const guards: Record<string, TabCloseGuard> = {};
+    for (const shellTab of state.tabs) {
+      if (shellTab.guard) {
+        guards[shellTab.tabItem.id] = shellTab.guard;
+      }
+    }
+    return guards;
   }
 );

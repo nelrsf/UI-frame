@@ -1,6 +1,6 @@
 import { createAction, props } from '@ngrx/store';
 import { Type } from '@angular/core';
-import { TabItem } from '../../../shell/models/tab-item.model';
+import { TabItem, TabCloseGuard } from '../../../shell/models/tab-item.model';
 import { SidebarItem } from '../../../shell/models/sidebar-item.model';
 import { ToolbarAction } from '../../../shell/models/toolbar-action.model';
 import { PanelTab } from '../../../shell/models/panel-tab.model';
@@ -8,11 +8,12 @@ import { SecondaryPanelEntry } from '../../../shell/models/secondary-panel-entry
 
 /**
  * Add a tab to the shell's central content region.
- * Props include the TabItem and the Angular component Type to render.
+ * Props include the TabItem, the Angular component Type to render,
+ * and an optional TabCloseGuard for dirty-tab close interception.
  */
 export const addShellTab = createAction(
   '[Shell Content] Add Shell Tab',
-  props<{ tabItem: TabItem; componentType: Type<unknown> }>()
+  props<{ tabItem: TabItem; componentType: Type<unknown>; guard?: TabCloseGuard }>()
 );
 
 /**

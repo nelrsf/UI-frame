@@ -1,6 +1,6 @@
 import { createReducer, on, Action } from '@ngrx/store';
 import { Type } from '@angular/core';
-import { TabItem } from '../../../shell/models/tab-item.model';
+import { TabItem, TabCloseGuard } from '../../../shell/models/tab-item.model';
 import { SidebarItem } from '../../../shell/models/sidebar-item.model';
 import { ToolbarAction } from '../../../shell/models/toolbar-action.model';
 import { PanelTab } from '../../../shell/models/panel-tab.model';
@@ -8,11 +8,12 @@ import { SecondaryPanelEntry } from '../../../shell/models/secondary-panel-entry
 import * as ShellContentActions from './shell-content.actions';
 
 /**
- * Internal wrapper for a tab with its component type.
+ * Internal wrapper for a tab with its component type and optional close guard.
  */
 export interface ShellTab {
   tabItem: TabItem;
   componentType: Type<unknown>;
+  guard?: TabCloseGuard;
 }
 
 /**
@@ -56,7 +57,7 @@ function pickSecondaryDefault(entries: SecondaryPanelEntry[]): string | null {
 const shellContentReducerFn = createReducer(
   initialShellContentState,
 
-  on(ShellContentActions.addShellTab, (state, { tabItem, componentType }) => {
+  on(ShellContentActions.addShellTab, (state, { tabItem, componentType, guard }) => {
     // Guard against duplicate tab IDs
     const idExists = state.tabs.some((tab) => tab.tabItem.id === tabItem.id);
     if (idExists) {
@@ -67,7 +68,7 @@ const shellContentReducerFn = createReducer(
     const newActiveTabId = state.activeShellTabId || tabItem.id;
     return {
       ...state,
-      tabs: [...state.tabs, { tabItem, componentType }],
+      tabs: [...state.tabs, { tabItem, componentType, guard }],
       activeShellTabId: newActiveTabId,
     };
   }),

@@ -6,6 +6,7 @@ import { PlatformAdapter } from '../core/infrastructure/electron/adapters/platfo
 import { CommandRegistryService } from '../core/services/command-registry.service';
 import { PlatformName } from '../core/application/ports/platform.port';
 import { setBottomPanelHeight, setSecondaryPanelWidth, toggleSecondaryPanel, toggleBottomPanel } from '../core/state/layout/layout.actions';
+import { closeTab, openTab } from '../core/state/workspace';
 
 function makePlatformAdapter(platform: PlatformName): PlatformAdapter {
   return {
@@ -439,6 +440,38 @@ describe('ShellComponent', () => {
       await commandRegistry.execute('shell.panel.toggleSecondary');
 
       expect(dispatchSpy).toHaveBeenCalledWith(toggleSecondaryPanel());
+    });
+  });
+
+  describe('tab close and add handlers', () => {
+    it('onShellTabClosed should dispatch closeTab with the tab id and main group', () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      fixture.detectChanges();
+      const store = TestBed.inject(Store);
+      const dispatchSpy = spyOn(store, 'dispatch');
+
+      fixture.componentInstance.onShellTabClosed('tab-1');
+
+      expect(dispatchSpy).toHaveBeenCalledWith(closeTab({ tabId: 'tab-1', groupId: 'main' }));
+    });
+
+    it('onNewTabRequested should set showTabAddModal to true', () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      fixture.detectChanges();
+
+      fixture.componentInstance.onNewTabRequested();
+
+      expect(fixture.componentInstance.showTabAddModal).toBeTrue();
+    });
+
+    it('onTabAddModalDismissed should set showTabAddModal to false', () => {
+      const fixture = TestBed.createComponent(ShellComponent);
+      fixture.detectChanges();
+      fixture.componentInstance.showTabAddModal = true;
+
+      fixture.componentInstance.onTabAddModalDismissed();
+
+      expect(fixture.componentInstance.showTabAddModal).toBeFalse();
     });
   });
 });
