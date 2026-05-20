@@ -10,6 +10,7 @@ import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { TabBarComponent } from './components/tab-bar/tab-bar.component';
 import { BottomPanelComponent } from './components/bottom-panel/bottom-panel.component';
 import { SecondaryPanelComponent } from './components/secondary-panel/secondary-panel.component';
+import { TabAddModalComponent } from './components/tab-add-modal/tab-add-modal.component';
 import { PlatformService } from '../core/services/platform.service';
 import { CommandRegistryService } from '../core/services/command-registry.service';
 import { setPlatform, shellReady } from '../core/state/session';
@@ -47,6 +48,7 @@ import {
   selectShellSecondaryPanelEntries,
   selectShellSidebarItems,
   selectShellToolbarActions,
+  selectShellCloseGuards,
   setActiveSecondaryPanelEntry,
 } from '../core/state/shell-content';
 import {
@@ -59,7 +61,8 @@ import {
 } from '../core/state/workspace';
 import { setPreference } from '../core/state/preferences/preferences.actions';
 import { AppTheme, THEME_PREFERENCE_KEY } from '../core/models/theme.model';
-import { TabItem } from './models/tab-item.model';
+import { TabCloseGuard, TabItem } from './models/tab-item.model';
+import { closeTab, openTab, selectTabsForGroup } from '../core/state/workspace';
 
 @Component({
   selector: 'app-shell',
@@ -73,6 +76,7 @@ import { TabItem } from './models/tab-item.model';
     TabBarComponent,
     BottomPanelComponent,
     SecondaryPanelComponent,
+    TabAddModalComponent,
   ],
   templateUrl: './shell.component.html',
   styleUrl: './shell.component.css',
@@ -115,6 +119,9 @@ export class ShellComponent implements OnInit, AfterViewInit {
   /** Draft width during secondary splitter drag (null = use committed NgRx value). */
   private readonly _draftSecondaryWidth$ = new BehaviorSubject<number | null>(null);
 
+  /** Controls visibility of the tab-add modal dialog. */
+  showTabAddModal = false;
+
   activeBottomPanelId = '';
 
   /** Observable of the sidebar visibility flag from the layout state. */
@@ -151,6 +158,19 @@ export class ShellComponent implements OnInit, AfterViewInit {
   readonly activeSecondaryPanelEntryId$ = this.store.select(selectActiveSecondaryPanelEntryId);
   /** Observable of active secondary panel component type for dynamic rendering. */
   readonly activeSecondaryPanelComponentType$ = this.store.select(selectActiveSecondaryPanelComponentType);
+  /** Observable mapping tab IDs to their registered TabCloseGuard instances. */
+  readonly closeGuards$ = this.store.select(selectShellCloseGuards);
+  /** Observable of open tab IDs in the main workspace group (for modal picker). */
+  readonly openTabIds$ = this.store.select(selectTabsForGroup('main')).pipe(
+    map((tabs) => new Set(tabs.map((t) => t.id)))
+  );
+  /** Observable of registered tabs not currently open (for the tab-add modal). */
+  readonly availableTabsForModal$ = combineLatest([
+    this.shellTabs$,
+    this.openTabIds$,
+  ]).pipe(
+    map(([registered, openIds]) => registered.filter((tab) => !openIds.has(tab.id)))
+  );
   /** Derived observable for the active tab metadata consumed by ContentArea. */
   readonly activeShellTab$: Observable<TabItem | null> = combineLatest([
     this.shellTabs$,
@@ -339,6 +359,28 @@ export class ShellComponent implements OnInit, AfterViewInit {
 
   onCloseGuardTimeout(tabId: string): void {
     console.warn(`[Shell] Close guard timed out for tab '${tabId}'. Tab remains open.`);
+  }
+
+  onShellTabClosed(tabId: string): void {
+    this.store.dispatch(closeTab({ tabId, groupId: 'main' }));
+  }
+
+  onNewTabRequested(): void {
+    this.showTabAddModal = true;
+  }
+
+  onTabAddModalSelected(tabId: string): void {
+    this.shellTabs$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((tabs) => {
+      const found = tabs.find((t) => t.id === tabId);
+      if (found) {
+        this.store.dispatch(openTab({ tab: found }));
+      }
+    });
+    this.showTabAddModal = false;
+  }
+
+  onTabAddModalDismissed(): void {
+    this.showTabAddModal = false;
   }
 
   onBottomPanelVisibilityChange(_visible: boolean): void {

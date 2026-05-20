@@ -1,0 +1,27 @@
+<div
+  class="tab-add-modal__backdrop"
+  (click)="onBackdropClick($event)"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Select a tab to open"
+>
+  <div class="tab-add-modal__panel">
+    @if (availableTabs.length > 0) {
+      @for (tab of availableTabs; track tab.id) {
+        <div
+          class="tab-add-modal__item"
+          (click)="onSelectTab(tab.id)"
+          tabindex="0"
+          role="option"
+        >
+          @if (tab.icon) {
+            <span class="tab-add-modal__item-icon" aria-hidden="true">{{ tab.icon }}</span>
+          }
+          <span class="tab-add-modal__item-label">{{ tab.label }}</span>
+        </div>
+      }
+    } @else {
+      <p class="tab-add-modal__empty">No additional tabs available to open.</p>
+    }
+  </div>
+</div>

@@ -1,4 +1,6 @@
 import { createAction, props } from '@ngrx/store';
+import { Type } from '@angular/core';
+import { TabItem, TabCloseGuard } from '../../../shell/models/tab-item.model';
 import { SidebarItem } from '../../../shell/models/sidebar-item.model';
 import { ToolbarAction } from '../../../shell/models/toolbar-action.model';
 import { PanelTab } from '../../../shell/models/panel-tab.model';

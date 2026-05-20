@@ -30,6 +30,13 @@
       (tabClosed)="onShellTabClosed($event)"
       (closeGuardTimeout)="onCloseGuardTimeout($event)"
     ></app-tab-bar>
+    @if (showTabAddModal) {
+      <app-tab-add-modal
+        [availableTabs]="(availableTabsForModal$ | async) ?? []"
+        (tabSelected)="onTabAddModalSelected($event)"
+        (dismissed)="onTabAddModalDismissed()"
+      ></app-tab-add-modal>
+    }
     <app-content-area
       class="shell-content-area"
       [activeTab]="activeShellTab$ | async"

@@ -24,7 +24,7 @@ import {
 import { PanelTab } from './models/panel-tab.model';
 import { SecondaryPanelEntry } from './models/secondary-panel-entry.model';
 import { SidebarItem } from './models/sidebar-item.model';
-import { TabItem } from './models/tab-item.model';
+import { TabCloseGuard, TabItem } from './models/tab-item.model';
 import { ToolbarAction } from './models/toolbar-action.model';
 
 /**
@@ -43,7 +43,7 @@ export class ShellManager {
     private readonly commandRegistry: CommandRegistryService
   ) {}
 
-  addTab(tab: ICentralRegionTab): void {
+  addTab(tab: ICentralRegionTab, guard?: TabCloseGuard): void {
     if (this.tabIds.has(tab.id)) {
       console.warn(`[ShellManager] Duplicate tab id '${tab.id}' ignored.`);
       return;

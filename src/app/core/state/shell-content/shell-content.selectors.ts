@@ -61,3 +61,19 @@ export const selectActiveSecondaryPanelComponentType = createSelector(
     return activeEntry?.component ?? null;
   }
 );
+
+/**
+ * Select a map of tabId to TabCloseGuard for all registered tabs that have a guard.
+ */
+export const selectShellCloseGuards = createSelector(
+  selectShellContentState,
+  (state: ShellContentState): Record<string, TabCloseGuard> => {
+    const guards: Record<string, TabCloseGuard> = {};
+    for (const shellTab of state.tabs) {
+      if (shellTab.guard) {
+        guards[shellTab.tabItem.id] = shellTab.guard;
+      }
+    }
+    return guards;
+  }
+);

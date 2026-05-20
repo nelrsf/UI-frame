@@ -678,3 +678,31 @@ describe('TabBarComponent — guarded close', () => {
     expect(fixture.componentInstance.closeGuardTimeout).toBeDefined();
   });
 });
+
+// ---------------------------------------------------------------------------
+// TabBarComponent — new tab request tests
+// ---------------------------------------------------------------------------
+
+describe('TabBarComponent — new tab request', () => {
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [TabBarComponent],
+    }).compileComponents();
+  });
+
+  it('should emit newTabRequested when the "+" button is clicked', () => {
+    const fixture = TestBed.createComponent(TabBarComponent);
+    fixture.detectChanges();
+    const spy = spyOn(fixture.componentInstance.newTabRequested, 'emit');
+
+    const btn = fixture.nativeElement.querySelector('[data-testid="tab-bar-new-tab"]') as HTMLElement;
+    btn.click();
+
+    expect(spy).toHaveBeenCalled();
+  });
+
+  it('should expose newTabRequested as an EventEmitter', () => {
+    const fixture = TestBed.createComponent(TabBarComponent);
+    expect(fixture.componentInstance.newTabRequested).toBeDefined();
+  });
+});

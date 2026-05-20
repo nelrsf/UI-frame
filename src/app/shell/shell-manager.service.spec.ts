@@ -15,6 +15,7 @@ import {
 import { registerAndOpenTab } from '../core/state/workspace';
 import { commandTelemetryReducer, selectLastExecution } from '../core/state/command-telemetry';
 import { ShellManager } from './shell-manager.service';
+import { TabCloseGuard } from './models/tab-item.model';
 
 describe('ShellManager', () => {
   let shellManager: ShellManager;
