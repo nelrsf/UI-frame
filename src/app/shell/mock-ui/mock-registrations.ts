@@ -25,7 +25,7 @@ export const MOCK_DASHBOARD_TAB: ICentralRegionTab = {
   label: 'Dashboard',
   component: MockDashboardComponent,
   icon: '📄',
-  closable: false,
+  closable: true,
 };
 
 export const MOCK_REPORTS_TAB: ICentralRegionTab = {
@@ -33,7 +33,7 @@ export const MOCK_REPORTS_TAB: ICentralRegionTab = {
   label: 'Reports',
   component: MockReportsComponent,
   icon: '📊',
-  closable: false,
+  closable: true,
 };
 
 export const MOCK_ALERT_INFO: IToolbarAction = {

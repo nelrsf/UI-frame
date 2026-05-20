@@ -15,7 +15,7 @@ body[data-theme="light"] {
   --color-bg-overlay:      #ffffff;   /* dropdowns, tooltips, modales */
   --color-bg-input:        #f3f3f3;   /* campos de texto */
   --color-bg-hover:        #e8e8e8;   /* hover state */
-  --color-bg-active:       #0078d4;   /* elemento seleccionado/activo */
+  --color-bg-active:       #50abf1;   /* elemento seleccionado/activo */
 
   /* Bordes */
   --color-border-subtle:   #e1e1e1;
@@ -79,8 +79,8 @@ body[data-theme="light"] {
   /* TabBar */
   --color-tabbar-bg:        #f3f3f3;
   --color-tab-inactive-text: #6e6e6e;
-  --color-tab-hover-bg:     #e8e8e8;
-  --color-tab-hover-text:   #1e1e1e;
+  --color-tab-hover-bg:     #d5edff;
+  --color-tab-hover-text:   #000000;
   --color-tab-active-text:  #1e1e1e;
   --color-tab-dirty:        #c19c00;
   --color-tab-close-hover:  rgba(0, 0, 0, 0.1);
