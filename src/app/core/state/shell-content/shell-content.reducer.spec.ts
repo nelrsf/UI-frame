@@ -1,12 +1,24 @@
 import { Action } from '@ngrx/store';
 import {
+  addShellTab,
   addSecondaryPanelEntry,
   setActiveSecondaryPanelEntry,
 } from './shell-content.actions';
 import { shellContentReducer, initialShellContentState } from './shell-content.reducer';
+import { TabCloseGuard, TabItem } from '../../../shell/models/tab-item.model';
 
 class WeatherComp {}
 class MarketComp {}
+class MockTabComp {}
+
+const makeTabItem = (id: string, label: string): TabItem => ({
+  id,
+  label,
+  closable: true,
+  dirty: false,
+  pinned: false,
+  groupId: 'main',
+});
 
 describe('shellContentReducer secondary panel behavior', () => {
   it('should default active entry to weather when weather and market entries are present', () => {
@@ -64,5 +76,32 @@ describe('shellContentReducer secondary panel behavior', () => {
   it('should be a valid reducer function', () => {
     const state = shellContentReducer(undefined, { type: 'UNKNOWN' } as Action);
     expect(state).toEqual(initialShellContentState);
+  });
+});
+
+describe('shellContentReducer tab guard support', () => {
+  it('should store the guard alongside tabItem and componentType', () => {
+    const guard: TabCloseGuard = { beforeClose: () => false };
+    const tabItem = makeTabItem('editor', 'Editor');
+    const state = shellContentReducer(
+      initialShellContentState,
+      addShellTab({ tabItem, componentType: MockTabComp, guard })
+    );
+
+    expect(state.tabs.length).toBe(1);
+    expect(state.tabs[0].guard).toBe(guard);
+    expect(state.tabs[0].tabItem.id).toBe('editor');
+    expect(state.tabs[0].componentType).toBe(MockTabComp);
+  });
+
+  it('should store undefined guard when no guard is provided', () => {
+    const tabItem = makeTabItem('dashboard', 'Dashboard');
+    const state = shellContentReducer(
+      initialShellContentState,
+      addShellTab({ tabItem, componentType: MockTabComp })
+    );
+
+    expect(state.tabs.length).toBe(1);
+    expect(state.tabs[0].guard).toBeUndefined();
   });
 });
