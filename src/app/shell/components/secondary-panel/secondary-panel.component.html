@@ -7,17 +7,19 @@
     [style.width.px]="width"
   >
     <header class="secondary-panel__header" data-testid="secondary-panel-header">
-      <div class="secondary-panel__tabs" role="tablist" aria-label="Panel tabs">
+      <div class="secondary-panel__tabs" role="tablist" aria-label="Panel tabs" #tabList>
         @for (entry of entries; track entry.id) {
           <button
             class="secondary-panel__tab"
             [class.secondary-panel__tab--active]="entry.id === activeEntryId"
+            [class.dragging]="dragDropService.isDragging()"
             role="tab"
             [attr.id]="'secondary-panel-tab-btn-' + entry.id"
             [attr.aria-selected]="entry.id === activeEntryId"
             aria-controls="secondary-panel-content"
             [attr.data-testid]="'secondary-panel-tab-' + entry.id"
             (click)="onEntrySelect(entry.id)"
+            (pointerdown)="onEntryPointerDown($event, entry)"
           >
             @if (entry.icon) {
               <span class="secondary-panel__tab-icon" aria-hidden="true">{{ entry.icon }}</span>

@@ -61,3 +61,19 @@ export const removeSecondaryPanelEntry = createAction(
   '[Shell Content] Remove Secondary Panel Entry',
   props<{ entryId: string }>()
 );
+
+/**
+ * Reorders bottom panel tabs by moving a tab from one index to another.
+ */
+export const reorderBottomPanelTabs = createAction(
+  '[Shell Content] Reorder Bottom Panel Tabs',
+  props<{ fromIndex: number; toIndex: number }>()
+);
+
+/**
+ * Reorders secondary panel entries by moving an entry from one index to another.
+ */
+export const reorderSecondaryPanelEntries = createAction(
+  '[Shell Content] Reorder Secondary Panel Entries',
+  props<{ fromIndex: number; toIndex: number }>()
+);

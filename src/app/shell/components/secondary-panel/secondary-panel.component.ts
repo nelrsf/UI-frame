@@ -1,7 +1,12 @@
-import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, Type, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
 import { NgComponentOutlet } from '@angular/common';
-import { Type } from '@angular/core';
+import { Store } from '@ngrx/store';
+import { DragDropService } from '../../services/drag-drop.service';
+import { DraggableTab, RegionInterface } from '../../../core/models/drag-drop.model';
+import { DockZone } from '../../../core/models/dock-zone-assignment.model';
 import { SecondaryPanelEntry } from '../../models/secondary-panel-entry.model';
+import { AppState } from '../../../core/state/app.state';
+import * as ShellContentActions from '../../../core/state/shell-content/shell-content.actions';
 
 /**
  * SecondaryPanelComponent — right-side collapsible dock zone (SecondaryPanel).
@@ -19,7 +24,7 @@ import { SecondaryPanelEntry } from '../../models/secondary-panel-entry.model';
   styleUrl: './secondary-panel.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SecondaryPanelComponent {
+export class SecondaryPanelComponent implements AfterViewInit {
   /** Whether the secondary panel is currently shown. */
   @Input() visible: boolean = false;
   /** Current panel width in pixels. */
@@ -38,6 +43,22 @@ export class SecondaryPanelComponent {
   /** Emits the selected secondary entry id. */
   @Output() activeEntryChange = new EventEmitter<string>();
 
+  @ViewChild('tabList', { static: false }) tabListRef!: ElementRef<HTMLElement>;
+
+  constructor(
+    public readonly dragDropService: DragDropService,
+    private readonly store: Store<AppState>
+  ) {}
+
+  ngAfterViewInit(): void {
+    this.dragDropService.registerReorderSource(
+      this.tabListRef.nativeElement,
+      (fromIndex: number, toIndex: number) => {
+        this.store.dispatch(ShellContentActions.reorderSecondaryPanelEntries({ fromIndex, toIndex }));
+      }
+    );
+  }
+
   onEntrySelect(entryId: string): void {
     this.activeEntryChange.emit(entryId);
   }
@@ -48,5 +69,26 @@ export class SecondaryPanelComponent {
 
   onClose(): void {
     this.visibilityChange.emit(false);
+  }
+
+  onEntryPointerDown(event: PointerEvent, entry: SecondaryPanelEntry): void {
+    if (event.button !== 0) return;
+
+    const componentInterfaces = this.dragDropService.getComponentInterfaces(entry.component);
+
+    const draggableTab: DraggableTab = {
+      id: entry.id,
+      label: entry.label,
+      icon: entry.icon,
+      componentType: entry.component,
+      implementedInterfaces: componentInterfaces,
+      sourceZone: DockZone.SecondaryPanel,
+      sourceGroupId: '',
+      pinned: false,
+      dirty: false,
+      closable: true,
+    };
+
+    this.dragDropService.startDrag(draggableTab, event);
   }
 }

@@ -140,6 +140,55 @@ const shellContentReducerFn = createReducer(
         : state.activeSecondaryPanelEntryId;
 
     return { ...state, secondaryPanelEntries, activeSecondaryPanelEntryId };
+  }),
+
+  on(ShellContentActions.reorderBottomPanelTabs, (state, { fromIndex, toIndex }) => {
+    if (
+      fromIndex < 0 ||
+      fromIndex >= state.bottomPanelTabs.length ||
+      toIndex < 0 ||
+      toIndex >= state.bottomPanelTabs.length ||
+      fromIndex === toIndex
+    ) {
+      return state;
+    }
+
+    const bottomPanelTabs = [...state.bottomPanelTabs];
+    const [moved] = bottomPanelTabs.splice(fromIndex, 1);
+    bottomPanelTabs.splice(toIndex, 0, moved);
+
+    const activePanelId = state.bottomPanelTabs[fromIndex]?.id;
+    const newActivePanelId =
+      activePanelId === moved.id
+        ? bottomPanelTabs[toIndex]?.id ?? null
+        : state.bottomPanelTabs.find((tab) => tab.id === state.activeSecondaryPanelEntryId)?.id ??
+          state.bottomPanelTabs[0]?.id ??
+          null;
+
+    return { ...state, bottomPanelTabs };
+  }),
+
+  on(ShellContentActions.reorderSecondaryPanelEntries, (state, { fromIndex, toIndex }) => {
+    if (
+      fromIndex < 0 ||
+      fromIndex >= state.secondaryPanelEntries.length ||
+      toIndex < 0 ||
+      toIndex >= state.secondaryPanelEntries.length ||
+      fromIndex === toIndex
+    ) {
+      return state;
+    }
+
+    const secondaryPanelEntries = [...state.secondaryPanelEntries];
+    const [moved] = secondaryPanelEntries.splice(fromIndex, 1);
+    secondaryPanelEntries.splice(toIndex, 0, moved);
+
+    const activeSecondaryPanelEntryId =
+      state.activeSecondaryPanelEntryId === moved.id
+        ? secondaryPanelEntries[toIndex]?.id ?? null
+        : state.activeSecondaryPanelEntryId;
+
+    return { ...state, secondaryPanelEntries, activeSecondaryPanelEntryId };
   })
 );
 

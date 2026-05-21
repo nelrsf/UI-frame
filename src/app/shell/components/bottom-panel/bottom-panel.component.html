@@ -7,17 +7,19 @@
     [style.height.px]="height"
   >
     <header class="bottom-panel__header" data-testid="bottom-panel-header">
-      <div class="bottom-panel__tabs" role="tablist" aria-label="Panel tabs">
+      <div class="bottom-panel__tabs" role="tablist" aria-label="Panel tabs" #tabList>
         @for (panel of panels; track panel.id) {
           <button
             class="bottom-panel__tab"
             [class.bottom-panel__tab--active]="panel.id === activePanelId"
+            [class.dragging]="dragDropService.isDragging()"
             role="tab"
             [attr.id]="'panel-tab-btn-' + panel.id"
             [attr.aria-selected]="panel.id === activePanelId"
             aria-controls="bottom-panel-content"
             [attr.data-testid]="'panel-tab-' + panel.id"
             (click)="onPanelSelect(panel.id)"
+            (pointerdown)="onTabPointerDown($event, panel)"
           >
             @if (panel.icon) {
               <span class="bottom-panel__tab-icon" aria-hidden="true">{{ panel.icon }}</span>
