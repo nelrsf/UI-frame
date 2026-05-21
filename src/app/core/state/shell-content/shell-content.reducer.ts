@@ -119,6 +119,27 @@ const shellContentReducerFn = createReducer(
       ...state,
       activeSecondaryPanelEntryId: pickSecondaryDefault(state.secondaryPanelEntries),
     };
+  }),
+
+  on(ShellContentActions.removeBottomPanelEntry, (state, { entryId }) => {
+    const exists = state.bottomPanelTabs.some((tab) => tab.id === entryId);
+    if (!exists) return state;
+
+    const bottomPanelTabs = state.bottomPanelTabs.filter((tab) => tab.id !== entryId);
+    return { ...state, bottomPanelTabs };
+  }),
+
+  on(ShellContentActions.removeSecondaryPanelEntry, (state, { entryId }) => {
+    const exists = state.secondaryPanelEntries.some((entry) => entry.id === entryId);
+    if (!exists) return state;
+
+    const secondaryPanelEntries = state.secondaryPanelEntries.filter((entry) => entry.id !== entryId);
+    const activeSecondaryPanelEntryId =
+      state.activeSecondaryPanelEntryId === entryId
+        ? pickSecondaryDefault(secondaryPanelEntries)
+        : state.activeSecondaryPanelEntryId;
+
+    return { ...state, secondaryPanelEntries, activeSecondaryPanelEntryId };
   })
 );
 

@@ -159,3 +159,18 @@
   outline: 1px solid var(--color-border-focus, #007fd4);
   outline-offset: -1px;
 }
+
+/* Drag-and-drop reorder visual feedback */
+.tab-bar__tab.drag-source {
+  opacity: 0.5;
+}
+
+.tab-bar__tab.reorder-insert-before::before {
+  content: '';
+  position: absolute;
+  left: -2px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: var(--color-accent-primary, #0078d4);
+}

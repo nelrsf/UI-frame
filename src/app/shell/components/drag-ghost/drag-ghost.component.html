@@ -1,0 +1,18 @@
+@if (isVisible && draggedTab) {
+  <div
+    class="drag-ghost"
+    [class]="compatibilityClass"
+    [style]="ghostStyle"
+    aria-hidden="true"
+  >
+    @if (draggedTab.icon) {
+      <span class="drag-ghost__icon" aria-hidden="true">{{ draggedTab.icon }}</span>
+    }
+    <span class="drag-ghost__label">{{ draggedTab.label }}</span>
+    @if (compatibilityClass === 'drag-ghost--compatible') {
+      <span class="drag-ghost__indicator drag-ghost__indicator--accept" aria-label="Compatible drop zone">&#10003;</span>
+    } @else if (compatibilityClass === 'drag-ghost--incompatible') {
+      <span class="drag-ghost__indicator drag-ghost__indicator--reject" aria-label="Incompatible drop zone">&#10007;</span>
+    }
+  </div>
+}

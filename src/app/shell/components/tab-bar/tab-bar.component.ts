@@ -1,5 +1,11 @@
-import { Component, Input, Output, EventEmitter, inject, NgZone } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, NgZone, ElementRef } from '@angular/core';
 import { TabItem, TabCloseGuard } from '../../models/tab-item.model';
+import { DragDropService } from '../../services/drag-drop.service';
+import { DraggableTab, RegionInterface } from '../../../core/models/drag-drop.model';
+import { DockZone } from '../../../core/models/dock-zone-assignment.model';
+import { reorderTab } from '../../../core/state/workspace';
+import { Store } from '@ngrx/store';
+import { AppState } from '../../../core/state/app.state';
 
 /** Duration (ms) after which an unresolved async `beforeClose()` guard times out. */
 const CLOSE_GUARD_TIMEOUT_MS = 10_000;
@@ -13,6 +19,9 @@ const CLOSE_GUARD_TIMEOUT_MS = 10_000;
 })
 export class TabBarComponent {
   private readonly zone = inject(NgZone);
+  private readonly dragDropService = inject(DragDropService);
+  private readonly store = inject(Store<AppState>);
+  private readonly elementRef = inject(ElementRef);
 
   @Input() tabs: TabItem[] = [];
   @Input() activeTabId: string = '';
@@ -100,6 +109,37 @@ export class TabBarComponent {
 
   onNewTab(): void {
     this.newTabRequested.emit();
+  }
+
+  onTabPointerDown(event: PointerEvent, tab: TabItem): void {
+    // Only left mouse button initiates drag.
+    if (event.button !== 0) return;
+
+    const componentInterfaces = this.dragDropService.getComponentInterfaces(tab.componentType!);
+
+    const draggableTab: DraggableTab = {
+      id: tab.id,
+      label: tab.label,
+      icon: tab.icon,
+      componentType: tab.componentType!,
+      implementedInterfaces: componentInterfaces,
+      sourceZone: DockZone.PrimaryWorkspace,
+      sourceGroupId: tab.groupId,
+      pinned: tab.pinned,
+      dirty: tab.dirty,
+      closable: tab.closable,
+    };
+
+    // Register this tab bar as a reorder source.
+    const tabBarEl = this.elementRef?.nativeElement?.querySelector('.tab-bar') as HTMLElement | null;
+    if (tabBarEl) {
+      this.dragDropService.registerReorderSource(tabBarEl, (fromIndex, toIndex) => {
+        this.tabReordered.emit({ fromIndex, toIndex });
+        this.store.dispatch(reorderTab({ groupId: this.groupId, fromIndex, toIndex }));
+      });
+    }
+
+    this.dragDropService.startDrag(draggableTab, event);
   }
 
   private _timeoutGuard(tabId: string): { promise: Promise<false>; cancel: () => void } {

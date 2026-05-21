@@ -10,6 +10,7 @@
       [attr.tabindex]="tab.id === activeTabId ? 0 : -1"
       [attr.data-testid]="'tab-' + tab.id"
       (click)="onTabSelect(tab.id)"
+      (pointerdown)="onTabPointerDown($event, tab)"
     >
       @if (tab.icon) {
         <span class="tab-bar__tab-icon" aria-hidden="true">{{ tab.icon }}</span>

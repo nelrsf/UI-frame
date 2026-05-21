@@ -215,7 +215,7 @@ export const workspaceReducer = createReducer(
     updateGroup(state, groupId, (group) => {
       const tabs = [...group.tabs] as TabItem[];
       if (fromIndex < 0 || fromIndex >= tabs.length) return group;
-      if (toIndex < 0 || toIndex >= tabs.length) return group;
+      if (toIndex < 0 || toIndex > tabs.length) return group;
       const [moved] = tabs.splice(fromIndex, 1);
       tabs.splice(toIndex, 0, moved);
       return { ...group, tabs };
@@ -245,5 +245,105 @@ export const workspaceReducer = createReducer(
   // ── assignGroupToZone ────────────────────────────────────────────────────
   on(WorkspaceActions.assignGroupToZone, (state, { groupId, zone }) =>
     updateGroup(state, groupId, (g) => ({ ...g, zone }))
-  )
+  ),
+
+  // ── removeTab ────────────────────────────────────────────────────────────
+  on(WorkspaceActions.removeTab, (state, { tabId, groupId }) => {
+    const idx = groupIndex(state, groupId);
+    if (idx < 0) return state;
+
+    const group = state.tabGroups[idx];
+    const tabIdx = group.tabs.findIndex((t) => t.id === tabId);
+    if (tabIdx < 0) return state;
+
+    const newTabs = group.tabs.filter((t) => t.id !== tabId);
+    const newRegisteredTabs = group.registeredTabs.filter((t) => t.id !== tabId);
+
+    // Resolve the next active tab.
+    let newActiveTabId = group.activeTabId;
+    if (group.activeTabId === tabId) {
+      if (newTabs.length === 0) {
+        newActiveTabId = null;
+      } else if (tabIdx > 0) {
+        newActiveTabId = newTabs[tabIdx - 1].id;
+      } else {
+        newActiveTabId = newTabs[0].id;
+      }
+    }
+
+    const groups = [...state.tabGroups] as TabGroupState[];
+    groups[idx] = { ...group, tabs: newTabs, registeredTabs: newRegisteredTabs, activeTabId: newActiveTabId };
+    return { ...state, tabGroups: groups };
+  }),
+
+  // ── moveTabToZone ────────────────────────────────────────────────────────
+  on(WorkspaceActions.moveTabToZone, (state, { tabId, sourceGroupId, sourceZone, targetZone, tabMetadata }) => {
+    // Step 1: Remove the tab from the source group (inline removeTab logic).
+    const srcIdx = groupIndex(state, sourceGroupId);
+    if (srcIdx < 0) return state;
+
+    const srcGroup = state.tabGroups[srcIdx];
+    const tabIdx = srcGroup.tabs.findIndex((t) => t.id === tabId);
+    if (tabIdx < 0) return state;
+
+    const newTabs = srcGroup.tabs.filter((t) => t.id !== tabId);
+    const newRegisteredTabs = srcGroup.registeredTabs.filter((t) => t.id !== tabId);
+
+    let newActiveTabId = srcGroup.activeTabId;
+    if (srcGroup.activeTabId === tabId) {
+      if (newTabs.length === 0) {
+        newActiveTabId = null;
+      } else if (tabIdx > 0) {
+        newActiveTabId = newTabs[tabIdx - 1].id;
+      } else {
+        newActiveTabId = newTabs[0].id;
+      }
+    }
+
+    const groupsAfterRemove = [...state.tabGroups] as TabGroupState[];
+    groupsAfterRemove[srcIdx] = { ...srcGroup, tabs: newTabs, registeredTabs: newRegisteredTabs, activeTabId: newActiveTabId };
+    let intermediate: WorkspaceState = { ...state, tabGroups: groupsAfterRemove };
+
+    // Step 2: If target is PrimaryWorkspace, add the tab to the target group.
+    if (targetZone === DockZone.PrimaryWorkspace) {
+      const targetIdx = groupIndex(intermediate, tabMetadata.groupId);
+      if (targetIdx >= 0) {
+        const targetGroup = intermediate.tabGroups[targetIdx];
+        if (!targetGroup.tabs.some((t) => t.id === tabMetadata.id)) {
+          const groups = [...intermediate.tabGroups] as TabGroupState[];
+          groups[targetIdx] = {
+            ...targetGroup,
+            registeredTabs: targetGroup.registeredTabs.some((t) => t.id === tabMetadata.id)
+              ? targetGroup.registeredTabs
+              : [...targetGroup.registeredTabs, tabMetadata],
+            tabs: [...targetGroup.tabs, tabMetadata],
+            activeTabId: tabMetadata.id,
+          };
+          intermediate = { ...intermediate, tabGroups: groups };
+        } else {
+          const groups = [...intermediate.tabGroups] as TabGroupState[];
+          groups[targetIdx] = { ...targetGroup, activeTabId: tabMetadata.id };
+          intermediate = { ...intermediate, tabGroups: groups };
+        }
+      } else {
+        intermediate = {
+          ...intermediate,
+          tabGroups: [
+            ...intermediate.tabGroups,
+            {
+              groupId: tabMetadata.groupId,
+              registeredTabs: [tabMetadata],
+              tabs: [tabMetadata],
+              activeTabId: tabMetadata.id,
+              zone: DockZone.PrimaryWorkspace,
+            },
+          ],
+        };
+      }
+    }
+    // For BottomPanel/SecondaryPanel targets, the caller (DragDropService)
+    // must register the tab in the target region via ShellManager.
+
+    return intermediate;
+  })
 );

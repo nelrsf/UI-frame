@@ -78,3 +78,29 @@ export const assignGroupToZone = createAction(
   '[Workspace] Assign Group To Zone',
   props<{ groupId: string; zone: DockZone }>()
 );
+
+/**
+ * Removes a tab from both the `tabs` and `registeredTabs` arrays of its group.
+ * If the removed tab was active, the adjacent tab (preferring left) becomes active.
+ */
+export const removeTab = createAction(
+  '[Workspace] Remove Tab',
+  props<{ tabId: string; groupId: string }>()
+);
+
+/**
+ * Moves a tab from its source zone to a target zone.
+ * The tab is removed from the source group and, if the target is PrimaryWorkspace,
+ * added to the target group. For BottomPanel/SecondaryPanel targets, the caller
+ * must register the tab in the target region via ShellManager.
+ */
+export const moveTabToZone = createAction(
+  '[Workspace] Move Tab To Zone',
+  props<{
+    tabId: string;
+    sourceGroupId: string;
+    sourceZone: DockZone;
+    targetZone: DockZone;
+    tabMetadata: TabItem;
+  }>()
+);
