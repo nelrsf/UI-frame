@@ -1,0 +1,20 @@
+@if ((dragState$ | async); as state) {
+  @if (state.draggedTab) {
+    <div
+      class="drag-ghost"
+      [class]="state.activeDropZone ? (state.dropCompatible ? 'drag-ghost--compatible' : 'drag-ghost--incompatible') : ''"
+      [style]="{ left: state.pointerX + 12 + 'px', top: state.pointerY - 8 + 'px' }"
+      aria-hidden="true"
+    >
+      @if (state.draggedTab.icon) {
+        <span class="drag-ghost__icon" aria-hidden="true">{{ state.draggedTab.icon }}</span>
+      }
+      <span class="drag-ghost__label">{{ state.draggedTab.label }}</span>
+      @if (state.activeDropZone && state.dropCompatible) {
+        <span class="drag-ghost__indicator drag-ghost__indicator--accept" aria-label="Compatible drop zone">&#10003;</span>
+      } @else if (state.activeDropZone && !state.dropCompatible) {
+        <span class="drag-ghost__indicator drag-ghost__indicator--reject" aria-label="Incompatible drop zone">&#10007;</span>
+      }
+    </div>
+  }
+}

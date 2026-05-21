@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Injector } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { CommandRegistryService } from '../core/services/command-registry.service';
 import { AppState } from '../core/state/app.state';
@@ -12,8 +12,10 @@ import {
   addSecondaryPanelEntry,
   addSidebarEntry,
   addToolbarAction,
+  removeBottomPanelEntry,
+  removeSecondaryPanelEntry,
 } from '../core/state/shell-content';
-import { registerAndOpenTab } from '../core/state/workspace';
+import { registerAndOpenTab, removeTab } from '../core/state/workspace';
 import {
   IBottomPanelEntry,
   ICentralRegionTab,
@@ -26,6 +28,8 @@ import { SecondaryPanelEntry } from './models/secondary-panel-entry.model';
 import { SidebarItem } from './models/sidebar-item.model';
 import { TabCloseGuard, TabItem } from './models/tab-item.model';
 import { ToolbarAction } from './models/toolbar-action.model';
+import { DragDropService } from './services/drag-drop.service';
+import { RegionInterface } from '../core/models/drag-drop.model';
 
 /**
  * Composition root for shell content registration.
@@ -40,8 +44,13 @@ export class ShellManager {
 
   constructor(
     private readonly store: Store<AppState>,
-    private readonly commandRegistry: CommandRegistryService
+    private readonly commandRegistry: CommandRegistryService,
+    private readonly injector: Injector
   ) {}
+
+  private get dragDropService(): DragDropService {
+    return this.injector.get(DragDropService);
+  }
 
   addTab(tab: ICentralRegionTab, guard?: TabCloseGuard): void {
     if (this.tabIds.has(tab.id)) {
@@ -63,6 +72,7 @@ export class ShellManager {
     };
 
     this.store.dispatch(registerAndOpenTab({ tab: tabItem }));
+    this.dragDropService.registerComponentInterface(tab.component, RegionInterface.CentralRegionTab);
   }
 
   addSidebarEntry(entry: ISidebarEntry): void {
@@ -129,6 +139,7 @@ export class ShellManager {
     };
 
     this.store.dispatch(addBottomPanelEntry(panelTab));
+    this.dragDropService.registerComponentInterface(panel.component, RegionInterface.BottomPanelEntry);
   }
 
   addSecondaryPanelEntry(entry: ISecondaryPanelEntry): void {
@@ -147,6 +158,7 @@ export class ShellManager {
     };
 
     this.store.dispatch(addSecondaryPanelEntry({ entry: secondaryEntry }));
+    this.dragDropService.registerComponentInterface(entry.component, RegionInterface.SecondaryPanelEntry);
   }
 
   setSidebarVisible(visible: boolean): void {
@@ -159,5 +171,20 @@ export class ShellManager {
 
   setSecondaryPanelVisible(visible: boolean): void {
     this.store.dispatch(setSecondaryPanelVisible({ visible }));
+  }
+
+  removeTab(tabId: string, groupId: string): void {
+    this.tabIds.delete(tabId);
+    this.store.dispatch(removeTab({ tabId, groupId }));
+  }
+
+  removeBottomPanelEntry(entryId: string): void {
+    this.bottomPanelIds.delete(entryId);
+    this.store.dispatch(removeBottomPanelEntry({ entryId }));
+  }
+
+  removeSecondaryPanelEntry(entryId: string): void {
+    this.secondaryPanelIds.delete(entryId);
+    this.store.dispatch(removeSecondaryPanelEntry({ entryId }));
   }
 }

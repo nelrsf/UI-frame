@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, HostBinding, inject, ChangeDetectionStrategy, NgZone, DestroyRef, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, AfterViewInit, HostBinding, inject, ChangeDetectionStrategy, NgZone, DestroyRef, ElementRef, ViewChild, Renderer2 } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Store } from '@ngrx/store';
@@ -11,12 +11,12 @@ import { TabBarComponent } from './components/tab-bar/tab-bar.component';
 import { BottomPanelComponent } from './components/bottom-panel/bottom-panel.component';
 import { SecondaryPanelComponent } from './components/secondary-panel/secondary-panel.component';
 import { TabAddModalComponent } from './components/tab-add-modal/tab-add-modal.component';
+import { DragGhostComponent } from './components/drag-ghost/drag-ghost.component';
 import { PlatformService } from '../core/services/platform.service';
 import { CommandRegistryService } from '../core/services/command-registry.service';
 import { setPlatform, shellReady } from '../core/state/session';
 import { WorkspaceSessionService } from '../core/services/workspace-session.service';
 import { FALLBACK_WORKSPACE_ID } from '../core/utils/workspace-id.util';
-import { DockZone } from '../core/models/dock-zone-assignment.model';
 import {
   restoreLayout,
   toggleSidebar,
@@ -60,6 +60,7 @@ import {
   openTab,
   selectTab,
   selectTabsForGroup,
+  reorderTab,
 } from '../core/state/workspace';
 import { setPreference } from '../core/state/preferences/preferences.actions';
 import { AppTheme, THEME_PREFERENCE_KEY } from '../core/models/theme.model';
@@ -68,6 +69,10 @@ import {
   selectStatusBarLeftItems,
   selectStatusBarRightItems,
 } from '../core/state/status-bar';
+import { DragDropService } from './services/drag-drop.service';
+import { ShellManager } from './shell-manager.service';
+import { RegionInterface } from '../core/models/drag-drop.model';
+import { DockZone } from '../core/models/dock-zone-assignment.model';
 
 @Component({
   selector: 'app-shell',
@@ -82,6 +87,7 @@ import {
     BottomPanelComponent,
     SecondaryPanelComponent,
     TabAddModalComponent,
+    DragGhostComponent,
   ],
   templateUrl: './shell.component.html',
   styleUrl: './shell.component.css',
@@ -95,6 +101,9 @@ export class ShellComponent implements OnInit, AfterViewInit {
   private readonly zone = inject(NgZone);
   private readonly destroyRef = inject(DestroyRef);
   private readonly elementRef = inject(ElementRef);
+  private readonly renderer = inject(Renderer2);
+  private readonly dragDropService = inject(DragDropService);
+  private readonly shellManager = inject(ShellManager);
 
   /** Reference to the shell-root div for direct CSS-var updates during drag. */
   @ViewChild('shellRoot') private shellRootRef!: ElementRef<HTMLDivElement>;
@@ -334,12 +343,72 @@ export class ShellComponent implements OnInit, AfterViewInit {
         })
       );
     }
+
+    // Register drop zones for drag-and-drop after view init.
+    // We defer to ngAfterViewInit to ensure DOM elements are available.
+  }
+
+  private _registerDropZones(): void {
+    // Use setTimeout to ensure the view is fully rendered.
+    setTimeout(() => {
+      const bottomPanelEl = this.elementRef.nativeElement.querySelector('.shell-bottom-panel');
+      const secondaryPanelEl = this.elementRef.nativeElement.querySelector('.shell-secondary-panel');
+
+      if (bottomPanelEl) {
+        this.dragDropService.registerDropZone(
+          DockZone.BottomPanel,
+          bottomPanelEl as HTMLElement,
+          RegionInterface.BottomPanelEntry
+        );
+      }
+
+      if (secondaryPanelEl) {
+        this.dragDropService.registerDropZone(
+          DockZone.SecondaryPanel,
+          secondaryPanelEl as HTMLElement,
+          RegionInterface.SecondaryPanelEntry
+        );
+      }
+    }, 0);
+  }
+
+  private _setupEscapeKeyHandler(): void {
+    this.renderer.listen('document', 'keydown', (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && this.dragDropService.isDragging()) {
+        this.dragDropService.cancelDrag();
+      }
+    });
   }
 
   ngAfterViewInit(): void {
     // Persist platform and shell-readiness in the transversal session slice.
     this.store.dispatch(setPlatform({ platform: this.platformService.platform }));
     this.store.dispatch(shellReady({ timestamp: Date.now() }));
+
+    // Register drop zones and setup escape key handler for drag-and-drop.
+    this._registerDropZones();
+    this._setupEscapeKeyHandler();
+
+    // Handle cross-region drop events — register tab in target region.
+    this.dragDropService.crossRegionDrop$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((drop) => {
+        if (drop.targetZone === DockZone.BottomPanel) {
+          this.shellManager.addBottomPanelEntry({
+            id: drop.tabId,
+            label: drop.label,
+            icon: drop.icon,
+            component: drop.componentType,
+          });
+        } else if (drop.targetZone === DockZone.SecondaryPanel) {
+          this.shellManager.addSecondaryPanelEntry({
+            id: drop.tabId,
+            label: drop.label,
+            icon: drop.icon,
+            component: drop.componentType,
+          });
+        }
+      });
   }
 
   // ---------------------------------------------------------------------------
@@ -358,6 +427,10 @@ export class ShellComponent implements OnInit, AfterViewInit {
 
   onShellTabSelected(tabId: string): void {
     this.store.dispatch(selectTab({ tabId, groupId: 'main' }));
+  }
+
+  onShellTabReordered(event: { fromIndex: number; toIndex: number }): void {
+    this.store.dispatch(reorderTab({ groupId: 'main', fromIndex: event.fromIndex, toIndex: event.toIndex }));
   }
 
   onShellTabClosed(tabId: string): void {

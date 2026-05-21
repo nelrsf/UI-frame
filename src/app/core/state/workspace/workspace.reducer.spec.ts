@@ -14,6 +14,8 @@ import {
   setTabDirty,
   setTabPinned,
   assignGroupToZone,
+  removeTab,
+  moveTabToZone,
 } from './workspace.actions';
 import {
   selectTabGroups,
@@ -518,6 +520,211 @@ describe('workspace reducer', () => {
       const next = workspaceReducer(
         state,
         assignGroupToZone({ groupId: 'ghost', zone: DockZone.BottomPanel })
+      );
+
+      expect(next).toEqual(state);
+    });
+  });
+
+  // ── removeTab ─────────────────────────────────────────────────────────────
+
+  describe('removeTab', () => {
+    function stateWithTabs(...labels: string[]): WorkspaceState {
+      return labels.reduce(
+        (state, label, i) =>
+          workspaceReducer(
+            state,
+            registerAndOpenTab({ tab: makeTab({ id: `tab-${i + 1}`, label, groupId: 'main' }) })
+          ),
+        initialWorkspaceState
+      );
+    }
+
+    it('should remove the tab from both tabs and registeredTabs', () => {
+      const state = stateWithTabs('A.ts', 'B.ts', 'C.ts');
+      const next = workspaceReducer(state, removeTab({ tabId: 'tab-2', groupId: 'main' }));
+
+      expect(next.tabGroups[0].tabs.map((t) => t.id)).toEqual(['tab-1', 'tab-3']);
+      expect(next.tabGroups[0].registeredTabs.map((t) => t.id)).toEqual(['tab-1', 'tab-3']);
+    });
+
+    it('should activate the left-adjacent tab when the active tab is removed', () => {
+      const state = stateWithTabs('A.ts', 'B.ts', 'C.ts');
+      const withActive = workspaceReducer(state, selectTab({ tabId: 'tab-2', groupId: 'main' }));
+      const next = workspaceReducer(withActive, removeTab({ tabId: 'tab-2', groupId: 'main' }));
+
+      expect(next.tabGroups[0].activeTabId).toBe('tab-1');
+    });
+
+    it('should activate the right-adjacent tab when removing the first tab', () => {
+      const state = stateWithTabs('A.ts', 'B.ts', 'C.ts');
+      const withActive = workspaceReducer(state, selectTab({ tabId: 'tab-1', groupId: 'main' }));
+      const next = workspaceReducer(withActive, removeTab({ tabId: 'tab-1', groupId: 'main' }));
+
+      expect(next.tabGroups[0].activeTabId).toBe('tab-2');
+    });
+
+    it('should set activeTabId to null when the last tab is removed', () => {
+      const state = workspaceReducer(
+        initialWorkspaceState,
+        registerAndOpenTab({ tab: makeTab({ id: 'only', label: 'Solo.ts' }) })
+      );
+      const next = workspaceReducer(state, removeTab({ tabId: 'only', groupId: 'main' }));
+
+      expect(next.tabGroups[0].activeTabId).toBeNull();
+      expect(next.tabGroups[0].tabs.length).toBe(0);
+      expect(next.tabGroups[0].registeredTabs.length).toBe(0);
+    });
+
+    it('should be a no-op for an unknown tabId', () => {
+      const state = stateWithTabs('A.ts');
+      const next = workspaceReducer(state, removeTab({ tabId: 'ghost', groupId: 'main' }));
+
+      expect(next).toEqual(state);
+    });
+
+    it('should be a no-op for an unknown groupId', () => {
+      const state = stateWithTabs('A.ts');
+      const next = workspaceReducer(state, removeTab({ tabId: 'tab-1', groupId: 'nonexistent' }));
+
+      expect(next).toEqual(state);
+    });
+  });
+
+  // ── moveTabToZone ─────────────────────────────────────────────────────────
+
+  describe('moveTabToZone', () => {
+    function stateWithTabs(...labels: string[]): WorkspaceState {
+      return labels.reduce(
+        (state, label, i) =>
+          workspaceReducer(
+            state,
+            registerAndOpenTab({ tab: makeTab({ id: `tab-${i + 1}`, label, groupId: 'main' }) })
+          ),
+        initialWorkspaceState
+      );
+    }
+
+    it('should remove the tab from the source group when moving to BottomPanel', () => {
+      const state = stateWithTabs('A.ts', 'B.ts');
+      const tabToMove = state.tabGroups[0].tabs[0];
+      const next = workspaceReducer(
+        state,
+        moveTabToZone({
+          tabId: 'tab-1',
+          sourceGroupId: 'main',
+          sourceZone: DockZone.PrimaryWorkspace,
+          targetZone: DockZone.BottomPanel,
+          tabMetadata: tabToMove,
+        })
+      );
+
+      expect(next.tabGroups[0].tabs.map((t) => t.id)).toEqual(['tab-2']);
+      expect(next.tabGroups[0].registeredTabs.map((t) => t.id)).toEqual(['tab-2']);
+    });
+
+    it('should add the tab to the target group when moving to PrimaryWorkspace', () => {
+      // Create a source group and a target group.
+      let state = workspaceReducer(
+        initialWorkspaceState,
+        registerAndOpenTab({ tab: makeTab({ id: 'tab-1', label: 'A.ts', groupId: 'grp-a' }) })
+      );
+      state = workspaceReducer(
+        state,
+        registerAndOpenTab({ tab: makeTab({ id: 'tab-2', label: 'B.ts', groupId: 'grp-b' }) })
+      );
+
+      const tabToMove = state.tabGroups[0].tabs[0];
+      const next = workspaceReducer(
+        state,
+        moveTabToZone({
+          tabId: 'tab-1',
+          sourceGroupId: 'grp-a',
+          sourceZone: DockZone.PrimaryWorkspace,
+          targetZone: DockZone.PrimaryWorkspace,
+          tabMetadata: { ...tabToMove, groupId: 'grp-b' },
+        })
+      );
+
+      // Source group should have the tab removed.
+      expect(next.tabGroups.find((g) => g.groupId === 'grp-a')?.tabs.length).toBe(0);
+      // Target group should have the tab added.
+      const targetGroup = next.tabGroups.find((g) => g.groupId === 'grp-b');
+      expect(targetGroup?.tabs.map((t) => t.id)).toEqual(['tab-2', 'tab-1']);
+      expect(targetGroup?.activeTabId).toBe('tab-1');
+    });
+
+    it('should create a new target group if it does not exist', () => {
+      const state = workspaceReducer(
+        initialWorkspaceState,
+        registerAndOpenTab({ tab: makeTab({ id: 'tab-1', label: 'A.ts', groupId: 'main' }) })
+      );
+
+      const tabToMove = state.tabGroups[0].tabs[0];
+      const next = workspaceReducer(
+        state,
+        moveTabToZone({
+          tabId: 'tab-1',
+          sourceGroupId: 'main',
+          sourceZone: DockZone.PrimaryWorkspace,
+          targetZone: DockZone.PrimaryWorkspace,
+          tabMetadata: { ...tabToMove, groupId: 'new-group' },
+        })
+      );
+
+      expect(next.tabGroups.length).toBe(2);
+      const newGroup = next.tabGroups.find((g) => g.groupId === 'new-group');
+      expect(newGroup).toBeTruthy();
+      expect(newGroup?.tabs.length).toBe(1);
+      expect(newGroup?.tabs[0].id).toBe('tab-1');
+    });
+
+    it('should resolve next active tab when the active tab is moved', () => {
+      const state = stateWithTabs('A.ts', 'B.ts', 'C.ts');
+      const withActive = workspaceReducer(state, selectTab({ tabId: 'tab-1', groupId: 'main' }));
+      const tabToMove = withActive.tabGroups[0].tabs[0];
+
+      const next = workspaceReducer(
+        withActive,
+        moveTabToZone({
+          tabId: 'tab-1',
+          sourceGroupId: 'main',
+          sourceZone: DockZone.PrimaryWorkspace,
+          targetZone: DockZone.BottomPanel,
+          tabMetadata: tabToMove,
+        })
+      );
+
+      expect(next.tabGroups[0].activeTabId).toBe('tab-2');
+    });
+
+    it('should be a no-op for an unknown source group', () => {
+      const state = stateWithTabs('A.ts');
+      const next = workspaceReducer(
+        state,
+        moveTabToZone({
+          tabId: 'tab-1',
+          sourceGroupId: 'ghost',
+          sourceZone: DockZone.PrimaryWorkspace,
+          targetZone: DockZone.BottomPanel,
+          tabMetadata: state.tabGroups[0].tabs[0],
+        })
+      );
+
+      expect(next).toEqual(state);
+    });
+
+    it('should be a no-op for a tab not in the source group', () => {
+      const state = stateWithTabs('A.ts', 'B.ts');
+      const next = workspaceReducer(
+        state,
+        moveTabToZone({
+          tabId: 'ghost',
+          sourceGroupId: 'main',
+          sourceZone: DockZone.PrimaryWorkspace,
+          targetZone: DockZone.BottomPanel,
+          tabMetadata: makeTab({ id: 'ghost', label: 'Ghost.ts' }),
+        })
       );
 
       expect(next).toEqual(state);

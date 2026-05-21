@@ -30,6 +30,7 @@
       (tabClosed)="onShellTabClosed($event)"
       (closeGuardTimeout)="onCloseGuardTimeout($event)"
       (newTabRequested)="onNewTabRequested()"
+      (tabReordered)="onShellTabReordered($event)"
     ></app-tab-bar>
     @if (showTabAddModal) {
       <app-tab-add-modal
@@ -95,3 +96,6 @@
     ></app-status-bar>
   </footer>
 </div>
+
+<!-- Drag ghost overlay — outside shell-root to avoid overflow clipping -->
+<app-drag-ghost></app-drag-ghost>

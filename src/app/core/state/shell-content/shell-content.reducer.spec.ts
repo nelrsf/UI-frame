@@ -1,7 +1,10 @@
 import { Action } from '@ngrx/store';
 import {
   addSecondaryPanelEntry,
+  addBottomPanelEntry,
   setActiveSecondaryPanelEntry,
+  removeBottomPanelEntry,
+  removeSecondaryPanelEntry,
 } from './shell-content.actions';
 import { shellContentReducer, initialShellContentState } from './shell-content.reducer';
 
@@ -64,5 +67,112 @@ describe('shellContentReducer secondary panel behavior', () => {
   it('should be a valid reducer function', () => {
     const state = shellContentReducer(undefined, { type: 'UNKNOWN' } as Action);
     expect(state).toEqual(initialShellContentState);
+  });
+});
+
+describe('shellContentReducer remove behavior', () => {
+  class TestComp {}
+
+  describe('removeBottomPanelEntry', () => {
+    it('should remove a bottom panel entry by id', () => {
+      const state1 = shellContentReducer(
+        initialShellContentState,
+        addBottomPanelEntry({ id: 'problems', label: 'Problems', component: TestComp, closable: true })
+      );
+      const state2 = shellContentReducer(
+        state1,
+        addBottomPanelEntry({ id: 'output', label: 'Output', component: TestComp, closable: true })
+      );
+
+      const next = shellContentReducer(state2, removeBottomPanelEntry({ entryId: 'problems' }));
+
+      expect(next.bottomPanelTabs.length).toBe(1);
+      expect(next.bottomPanelTabs[0].id).toBe('output');
+    });
+
+    it('should be a no-op for a non-existent entry id', () => {
+      const state = shellContentReducer(
+        initialShellContentState,
+        addBottomPanelEntry({ id: 'problems', label: 'Problems', component: TestComp, closable: true })
+      );
+
+      const next = shellContentReducer(state, removeBottomPanelEntry({ entryId: 'ghost' }));
+
+      expect(next).toEqual(state);
+    });
+
+    it('should remove the only bottom panel entry', () => {
+      const state = shellContentReducer(
+        initialShellContentState,
+        addBottomPanelEntry({ id: 'problems', label: 'Problems', component: TestComp, closable: true })
+      );
+
+      const next = shellContentReducer(state, removeBottomPanelEntry({ entryId: 'problems' }));
+
+      expect(next.bottomPanelTabs.length).toBe(0);
+    });
+  });
+
+  describe('removeSecondaryPanelEntry', () => {
+    it('should remove a secondary panel entry by id', () => {
+      const state1 = shellContentReducer(
+        initialShellContentState,
+        addSecondaryPanelEntry({ entry: { id: 'secondary-explorer', label: 'Explorer', component: TestComp } })
+      );
+      const state2 = shellContentReducer(
+        state1,
+        addSecondaryPanelEntry({ entry: { id: 'secondary-search', label: 'Search', component: TestComp } })
+      );
+
+      const next = shellContentReducer(state2, removeSecondaryPanelEntry({ entryId: 'secondary-explorer' }));
+
+      expect(next.secondaryPanelEntries.length).toBe(1);
+      expect(next.secondaryPanelEntries[0].id).toBe('secondary-search');
+    });
+
+    it('should fallback to default active entry when the active entry is removed', () => {
+      const state1 = shellContentReducer(
+        initialShellContentState,
+        addSecondaryPanelEntry({ entry: { id: 'secondary-weather', label: 'Weather', component: TestComp } })
+      );
+      const state2 = shellContentReducer(
+        state1,
+        addSecondaryPanelEntry({ entry: { id: 'secondary-market', label: 'Market', component: TestComp } })
+      );
+
+      // weather is active by default
+      expect(state2.activeSecondaryPanelEntryId).toBe('secondary-weather');
+
+      const next = shellContentReducer(state2, removeSecondaryPanelEntry({ entryId: 'secondary-weather' }));
+
+      expect(next.secondaryPanelEntries.length).toBe(1);
+      expect(next.activeSecondaryPanelEntryId).toBe('secondary-market');
+    });
+
+    it('should be a no-op for a non-existent entry id', () => {
+      const state = shellContentReducer(
+        initialShellContentState,
+        addSecondaryPanelEntry({ entry: { id: 'secondary-weather', label: 'Weather', component: TestComp } })
+      );
+
+      const next = shellContentReducer(state, removeSecondaryPanelEntry({ entryId: 'ghost' }));
+
+      expect(next).toEqual(state);
+    });
+
+    it('should not change active entry when a non-active entry is removed', () => {
+      const state1 = shellContentReducer(
+        initialShellContentState,
+        addSecondaryPanelEntry({ entry: { id: 'secondary-weather', label: 'Weather', component: TestComp } })
+      );
+      const state2 = shellContentReducer(
+        state1,
+        addSecondaryPanelEntry({ entry: { id: 'secondary-market', label: 'Market', component: TestComp } })
+      );
+
+      const next = shellContentReducer(state2, removeSecondaryPanelEntry({ entryId: 'secondary-market' }));
+
+      expect(next.activeSecondaryPanelEntryId).toBe('secondary-weather');
+    });
   });
 });

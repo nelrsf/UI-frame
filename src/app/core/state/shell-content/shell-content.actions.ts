@@ -45,3 +45,19 @@ export const setActiveSecondaryPanelEntry = createAction(
   '[Shell Content] Set Active Secondary Panel Entry',
   props<{ id: string }>()
 );
+
+/**
+ * Removes a bottom panel entry by id.
+ */
+export const removeBottomPanelEntry = createAction(
+  '[Shell Content] Remove Bottom Panel Entry',
+  props<{ entryId: string }>()
+);
+
+/**
+ * Removes a secondary panel entry by id.
+ */
+export const removeSecondaryPanelEntry = createAction(
+  '[Shell Content] Remove Secondary Panel Entry',
+  props<{ entryId: string }>()
+);
