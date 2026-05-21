@@ -1,7 +1,12 @@
+:host {
+  position: static;
+  display: block;
+}
+
 .drag-ghost {
   position: fixed;
   pointer-events: none;
-  z-index: 1000;
+  z-index: 10000;
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-1, 4px);
@@ -12,8 +17,8 @@
   border-radius: var(--radius-sm, 3px);
   font-family: var(--font-family-ui, "Segoe UI", system-ui, sans-serif);
   font-size: var(--font-size-sm, 13px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  opacity: 0.9;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  opacity: 0.92;
   transition: border-color 80ms ease, background-color 80ms ease;
 }
 

@@ -95,7 +95,7 @@
       [rightItems]="(statusBarRightItems$ | async) ?? []"
     ></app-status-bar>
   </footer>
-
-  <!-- Drag ghost overlay -->
-  <app-drag-ghost></app-drag-ghost>
 </div>
+
+<!-- Drag ghost overlay — outside shell-root to avoid overflow clipping -->
+<app-drag-ghost></app-drag-ghost>

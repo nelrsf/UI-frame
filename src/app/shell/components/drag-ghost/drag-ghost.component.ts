@@ -1,8 +1,8 @@
-import { Component, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
-import { Subscription } from 'rxjs';
+import { Observable } from 'rxjs';
 import { DragDropService } from '../../services/drag-drop.service';
-import { DragState, DragPhase, DraggableTab } from '../../../core/models/drag-drop.model';
+import { DragState } from '../../../core/models/drag-drop.model';
 
 @Component({
   selector: 'app-drag-ghost',
@@ -12,40 +12,8 @@ import { DragState, DragPhase, DraggableTab } from '../../../core/models/drag-dr
   styleUrl: './drag-ghost.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DragGhostComponent implements OnDestroy {
-  private _subscription: Subscription;
+export class DragGhostComponent {
+  readonly dragState$: Observable<DragState | null> = this.dragDropService.activeDragState$;
 
-  dragState: DragState | null = null;
-
-  constructor(private readonly dragDropService: DragDropService) {
-    this._subscription = this.dragDropService.activeDragState$.subscribe((state) => {
-      this.dragState = state;
-    });
-  }
-
-  ngOnDestroy(): void {
-    this._subscription.unsubscribe();
-  }
-
-  get isVisible(): boolean {
-    return this.dragState !== null && this.dragState.phase === DragPhase.Dragging;
-  }
-
-  get draggedTab(): DraggableTab | null {
-    return this.dragState?.draggedTab ?? null;
-  }
-
-  get ghostStyle(): Record<string, string> {
-    if (!this.dragState) return {};
-    return {
-      left: `${this.dragState.pointerX + 12}px`,
-      top: `${this.dragState.pointerY - 8}px`,
-    };
-  }
-
-  get compatibilityClass(): string {
-    if (!this.dragState) return '';
-    if (this.dragState.activeDropZone === null) return '';
-    return this.dragState.dropCompatible ? 'drag-ghost--compatible' : 'drag-ghost--incompatible';
-  }
+  constructor(private readonly dragDropService: DragDropService) {}
 }
