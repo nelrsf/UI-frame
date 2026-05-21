@@ -86,9 +86,9 @@ Single project (Angular/Electron desktop app). All paths relative to repository 
 
 ## Phase 5: User Story 4 — Shell component reads all tab state from workspace slice (Priority: P2)
 
-**Goal**: ShellComponent sources all tab-related observables from workspace selectors. The shellContent slice is completely removed from the application.
+**Goal**: ShellComponent sources all tab-related observables from workspace selectors. The shellContent slice is retained for non-tab concerns (sidebar, toolbar, bottom panel, secondary panel).
 
-**Independent Test**: After the refactor, verify that no selectors from shellContent are imported or used by ShellComponent for tab-related concerns, and that shellContent slice no longer exists.
+**Independent Test**: After the refactor, verify that no tab-related selectors from shellContent are imported or used by ShellComponent, and that all tab observables are sourced from workspace selectors.
 
 ### Implementation for User Story 4
 
@@ -96,25 +96,25 @@ Single project (Angular/Electron desktop app). All paths relative to repository 
 - [x] T019 [P] [US4] Add `selectActiveShellTabId(groupId: string)` selector in `src/app/core/state/workspace/workspace.selectors.ts` — returns `string | null`
 - [x] T020 [P] [US4] Add `selectActiveShellComponentType(groupId: string)` selector in `src/app/core/state/workspace/workspace.selectors.ts` — returns `Type<unknown> | null` from active tab's `componentType`
 - [x] T021 [US4] Add unit tests for new selectors in `src/app/core/state/workspace/workspace.reducer.spec.ts` — test `selectShellTabs`, `selectActiveShellTabId`, `selectActiveShellComponentType` return correct values
-- [x] T022 [US4] Update `ShellComponent` imports in `src/app/shell/shell.component.ts` — replace shellContent imports (`selectShellTabs`, `selectActiveShellTabId`, `selectActiveShellComponentType`, `setActiveShellTab`) with workspace equivalents; update `onShellTabSelected` to dispatch workspace `selectTab` action
+- [x] T022 [US4] Update `ShellComponent` imports in `src/app/shell/shell.component.ts` — add workspace imports (`selectShellTabs`, `selectActiveShellTabId`, `selectActiveShellComponentType`, `selectCloseGuardsForGroup`, `closeTab`, `openTab`, `selectTab`); update `onShellTabSelected` to dispatch workspace `selectTab` action
 - [x] T023 [US4] Update `ShellComponent` observable declarations in `src/app/shell/shell.component.ts` — change `shellTabs$`, `activeShellTabId$`, `activeShellComponentType$` to use workspace selectors with `groupId: 'main'`
-- [x] T024 [US4] Remove `provideState('shellContent', shellContentReducer)` from `src/app/app.config.ts`
-- [x] T025 [US4] Remove `shellContent?: ShellContentState` property and `ShellContentState` import from `src/app/core/state/app.state.ts`
-- [x] T026 [US4] Delete entire `src/app/core/state/shell-content/` directory (reducer, actions, selectors, index, spec files)
-- [x] T027 [US4] Update `ShellComponent` tests in `src/app/shell/shell.component.spec.ts` — verify no shellContent imports, verify tab observables work with workspace selectors
+- [x] T024 [US4] Add `selectRegisteredTabsForGroup` selector in `src/app/core/state/workspace/workspace.selectors.ts` — returns all registered tabs (including closed) for the tab-add modal
+- [x] T025 [US4] Update `ShellComponent` to use `selectRegisteredTabsForGroup` for `availableTabsForModal$` and `onTabAddModalSelected`
+- [x] T026 [US4] Create `TabAddModalComponent` in `src/app/shell/components/tab-add-modal/` — displays closed tabs for reopening
+- [x] T027 [US4] Wire tab-add modal in `ShellComponent` template and handlers (`onNewTabRequested`, `onTabAddModalSelected`, `onTabAddModalDismissed`)
 
-**Checkpoint**: ShellComponent reads all tab state from workspace. shellContent slice is completely removed. No shellContent imports remain in the codebase.
+**Checkpoint**: ShellComponent reads all tab state from workspace. shellContent slice is retained for non-tab concerns. No tab-related imports from shellContent remain in ShellComponent.
 
 ---
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-**Purpose**: Migration of remaining shellContent tests, verification, and cleanup.
+**Purpose**: Verification, and cleanup.
 
-- [x] T028 [P] Verify secondary panel state (sidebar, toolbar, bottom panel, secondary panel entries) remains functional after shellContent deletion — these are managed by a separate slice and are out-of-scope for this refactor
-- [x] T029 [P] Verify no secondary panel selectors were imported from shellContent by ShellComponent — confirm they are sourced from the correct slice (if any)
+- [x] T028 [P] Verify secondary panel state (sidebar, toolbar, bottom panel, secondary panel entries) remains functional — these are managed by shellContent and are out-of-scope for this refactor
+- [x] T029 [P] Verify no tab-related selectors were imported from shellContent by ShellComponent — confirm they are sourced from workspace
 - [x] T030 Run full test suite (`ng test`) and verify all tests pass with zero failures
-- [x] T031 Verify no `shellContent` or `shell-content` imports remain in the codebase (run `rg "shell-content" src/` and `rg "shellContent" src/`)
+- [x] T031 Verify no tab-related `shellContent` imports remain in ShellComponent (run `rg "selectShellTabs\|selectActiveShellTabId\|selectActiveShellComponentType" src/app/shell/`)
 - [x] T032 Verify build succeeds (`ng build`)
 - [x] T033 Verify mock content initialization works — run app and confirm dashboard and reports tabs appear and are closable
 - [x] T034 [P] Verify tab switch performance with 10+ tabs — measure time from tab click to content render; confirm < 120 ms per SC-005
@@ -194,7 +194,7 @@ Task: "Delete shell-content directory"
 2. Add US1 → registerTab/openTab/registerAndOpenTab work in reducer
 3. Add US2 → ShellManager uses registerAndOpenTab
 4. Add US3 → Close guard selectors available
-5. Add US4 → ShellComponent reads from workspace, shellContent deleted
+5. Add US4 → ShellComponent reads from workspace, tab-add modal implemented
 6. Polish → Tests migrated, full suite passes, build succeeds
 
 ### Parallel Team Strategy

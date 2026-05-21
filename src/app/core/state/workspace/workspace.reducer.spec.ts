@@ -21,6 +21,7 @@ import {
   selectTabsForGroup,
   selectActiveTabId,
   selectGroupsByZone,
+  selectRegisteredTabsForGroup,
 } from './workspace.selectors';
 import { TabItem } from '../../../shell/models/tab-item.model';
 import { DockZone } from '../../models/dock-zone-assignment.model';
@@ -234,6 +235,18 @@ describe('workspace reducer', () => {
 
       expect(next.tabGroups[0].activeTabId).toBeNull();
       expect(next.tabGroups[0].tabs.length).toBe(0);
+    });
+
+    it('should keep the tab in registeredTabs after closing', () => {
+      const state = workspaceReducer(
+        initialWorkspaceState,
+        registerAndOpenTab({ tab: makeTab({ id: 'tab-1', label: 'A.ts' }) })
+      );
+      const next = workspaceReducer(state, closeTab({ tabId: 'tab-1', groupId: 'main' }));
+
+      expect(next.tabGroups[0].tabs.length).toBe(0);
+      expect(next.tabGroups[0].registeredTabs.length).toBe(1);
+      expect(next.tabGroups[0].registeredTabs[0].id).toBe('tab-1');
     });
 
     it('should not change the active tab when a non-active tab is closed', () => {
@@ -581,12 +594,14 @@ describe('workspace selectors', () => {
 
   const groupA: TabGroupState = {
     groupId: 'grp-a',
+    registeredTabs: [tabA],
     tabs: [tabA],
     activeTabId: 'a',
     zone: DockZone.PrimaryWorkspace,
   };
   const groupB: TabGroupState = {
     groupId: 'grp-b',
+    registeredTabs: [tabB],
     tabs: [tabB],
     activeTabId: 'b',
     zone: DockZone.BottomPanel,
@@ -636,5 +651,25 @@ describe('workspace selectors', () => {
 
   it('selectGroupsByZone should return an empty array for a zone with no groups', () => {
     expect(selectGroupsByZone(DockZone.SecondaryPanel)(rootState)).toEqual([]);
+  });
+
+  it('selectRegisteredTabsForGroup should return all registered tabs including closed ones', () => {
+    expect(selectRegisteredTabsForGroup('grp-a')(rootState)).toEqual([tabA]);
+  });
+
+  it('selectRegisteredTabsForGroup should return an empty array for an unknown groupId', () => {
+    expect(selectRegisteredTabsForGroup('ghost')(rootState)).toEqual([]);
+  });
+
+  it('should keep closed tabs in registeredTabs but not in tabs', () => {
+    const tab1 = makeTab({ id: 'tab-1', label: 'A.ts' });
+    const tab2 = makeTab({ id: 'tab-2', label: 'B.ts' });
+    let state = workspaceReducer(initialWorkspaceState, registerAndOpenTab({ tab: tab1 }));
+    state = workspaceReducer(state, registerAndOpenTab({ tab: tab2 }));
+    state = workspaceReducer(state, closeTab({ tabId: 'tab-1', groupId: 'main' }));
+
+    const group = state.tabGroups[0];
+    expect(group.tabs.map((t) => t.id)).toEqual(['tab-2']);
+    expect(group.registeredTabs.map((t) => t.id)).toEqual(['tab-1', 'tab-2']);
   });
 });

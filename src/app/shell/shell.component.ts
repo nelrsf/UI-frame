@@ -2,7 +2,7 @@ import { Component, OnInit, AfterViewInit, HostBinding, inject, ChangeDetectionS
 import { AsyncPipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Store } from '@ngrx/store';
-import { combineLatest, map, Observable, BehaviorSubject } from 'rxjs';
+import { combineLatest, map, Observable, BehaviorSubject, first } from 'rxjs';
 import { StatusBarComponent } from './components/status-bar/status-bar.component';
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { ContentAreaComponent } from './components/content-area/content-area.component';
@@ -48,21 +48,22 @@ import {
   selectShellSecondaryPanelEntries,
   selectShellSidebarItems,
   selectShellToolbarActions,
-  selectShellCloseGuards,
   setActiveSecondaryPanelEntry,
 } from '../core/state/shell-content';
 import {
   selectActiveShellComponentType,
   selectActiveShellTabId,
   selectCloseGuardsForGroup,
+  selectRegisteredTabsForGroup,
   selectShellTabs,
   closeTab,
+  openTab,
   selectTab,
+  selectTabsForGroup,
 } from '../core/state/workspace';
 import { setPreference } from '../core/state/preferences/preferences.actions';
 import { AppTheme, THEME_PREFERENCE_KEY } from '../core/models/theme.model';
 import { TabCloseGuard, TabItem } from './models/tab-item.model';
-import { closeTab, openTab, selectTabsForGroup } from '../core/state/workspace';
 
 @Component({
   selector: 'app-shell',
@@ -158,15 +159,13 @@ export class ShellComponent implements OnInit, AfterViewInit {
   readonly activeSecondaryPanelEntryId$ = this.store.select(selectActiveSecondaryPanelEntryId);
   /** Observable of active secondary panel component type for dynamic rendering. */
   readonly activeSecondaryPanelComponentType$ = this.store.select(selectActiveSecondaryPanelComponentType);
-  /** Observable mapping tab IDs to their registered TabCloseGuard instances. */
-  readonly closeGuards$ = this.store.select(selectShellCloseGuards);
   /** Observable of open tab IDs in the main workspace group (for modal picker). */
   readonly openTabIds$ = this.store.select(selectTabsForGroup('main')).pipe(
     map((tabs) => new Set(tabs.map((t) => t.id)))
   );
   /** Observable of registered tabs not currently open (for the tab-add modal). */
   readonly availableTabsForModal$ = combineLatest([
-    this.shellTabs$,
+    this.store.select(selectRegisteredTabsForGroup('main')),
     this.openTabIds$,
   ]).pipe(
     map(([registered, openIds]) => registered.filter((tab) => !openIds.has(tab.id)))
@@ -361,16 +360,12 @@ export class ShellComponent implements OnInit, AfterViewInit {
     console.warn(`[Shell] Close guard timed out for tab '${tabId}'. Tab remains open.`);
   }
 
-  onShellTabClosed(tabId: string): void {
-    this.store.dispatch(closeTab({ tabId, groupId: 'main' }));
-  }
-
   onNewTabRequested(): void {
     this.showTabAddModal = true;
   }
 
   onTabAddModalSelected(tabId: string): void {
-    this.shellTabs$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((tabs) => {
+    this.store.select(selectRegisteredTabsForGroup('main')).pipe(first()).subscribe((tabs) => {
       const found = tabs.find((t) => t.id === tabId);
       if (found) {
         this.store.dispatch(openTab({ tab: found }));

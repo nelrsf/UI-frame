@@ -5,7 +5,7 @@
 
 ## Summary
 
-Refactor to eliminate the `shellContent` NgRx slice and unify all tab management into the `workspace` slice. The workspace slice will store `componentType` and `closeGuard` directly on each `TabItem`, and three actions (`registerTab`, `openTab`, `registerAndOpenTab` facade) will handle tab lifecycle. ShellComponent will source all tab observables from workspace selectors. The `shellContent` directory (reducer, actions, selectors, index, tests) will be deleted entirely.
+Refactor to eliminate tab management from the `shellContent` NgRx slice and unify all tab state into the `workspace` slice. The workspace slice will store `componentType` and `closeGuard` directly on each `TabItem`, and three actions (`registerTab`, `openTab`, `registerAndOpenTab` facade) will handle tab lifecycle. A `registeredTabs` array in `TabGroupState` persists all registered tabs (never removed by `closeTab`) so closed tabs can be reopened via the tab-add modal. ShellComponent will source all tab observables from workspace selectors. The `shellContent` slice is retained for non-tab concerns (sidebar entries, toolbar actions, bottom panel tabs, secondary panel entries).
 
 ## Technical Context
 
@@ -51,31 +51,37 @@ src/app/
 ├── core/
 │   └── state/
 │       ├── workspace/
-│       │   ├── workspace.reducer.ts        # MODIFIED: extend TabGroupState.tabs with componentType/closeGuard
-│       │   ├── workspace.actions.ts        # MODIFIED: add registerTab, registerAndOpenTab; modify openTab
-│       │   ├── workspace.selectors.ts      # MODIFIED: add selectShellTabs, selectActiveShellTabId, selectActiveShellComponentType, selectShellCloseGuards
+│       │   ├── workspace.reducer.ts        # MODIFIED: add registeredTabs, registerTab handler
+│       │   ├── workspace.actions.ts        # MODIFIED: add registerTab, registerAndOpenTab
+│       │   ├── workspace.selectors.ts      # MODIFIED: add selectShellTabs, selectRegisteredTabsForGroup, selectActiveShellTabId, selectActiveShellComponentType, selectShellCloseGuards
 │       │   ├── workspace.reducer.spec.ts   # MODIFIED: add tests for new actions/selectors
 │       │   └── index.ts                    # MODIFIED: export new actions/selectors
-│       ├── shell-content/                  # DELETED: entire directory
-│       │   ├── shell-content.reducer.ts
-│       │   ├── shell-content.actions.ts
-│       │   ├── shell-content.selectors.ts
-│       │   ├── shell-content.reducer.spec.ts
-│       │   ├── shell-content.selectors.spec.ts
-│       │   └── index.ts
-│       ├── app.state.ts                    # MODIFIED: remove ShellContentState
-│       └── index.ts                        # NO CHANGE (shellContent not re-exported here)
+│       ├── shell-content/                  # RETAINED: non-tab shell content only (sidebar, toolbar, bottom panel, secondary panel)
+│       │   ├── shell-content.reducer.ts    # UNCHANGED: tab state removed, non-tab state retained
+│       │   ├── shell-content.actions.ts    # UNCHANGED
+│       │   ├── shell-content.selectors.ts  # UNCHANGED
+│       │   ├── shell-content.reducer.spec.ts # UNCHANGED
+│       │   ├── shell-content.selectors.spec.ts # UNCHANGED
+│       │   └── index.ts                    # UNCHANGED
+│       ├── app.state.ts                    # UNCHANGED: shellContent retained for non-tab state
+│       └── index.ts                        # NO CHANGE
 ├── shell/
-│   ├── shell.component.ts                  # MODIFIED: change imports from shellContent to workspace
+│   ├── shell.component.ts                  # MODIFIED: add workspace imports for tab observables, use selectRegisteredTabsForGroup for modal
 │   ├── shell.component.spec.ts             # MODIFIED: update imports if needed
-│   ├── shell.component.html                # NO CHANGE (template bindings unchanged)
+│   ├── shell.component.html                # MODIFIED: add tab-add modal binding
 │   ├── shell-manager.service.ts            # MODIFIED: dispatch registerAndOpenTab instead of addShellTab
 │   ├── shell-manager.service.spec.ts       # MODIFIED: update expected dispatched action
-│   └── models/
-│       └── tab-item.model.ts               # MODIFIED: add componentType and closeGuard properties
+│   ├── models/
+│   │   └── tab-item.model.ts               # MODIFIED: add componentType and closeGuard properties
+│   └── components/
+│       └── tab-add-modal/                  # NEW: modal for selecting closed tabs to reopen
+│           ├── tab-add-modal.component.ts
+│           ├── tab-add-modal.component.html
+│           ├── tab-add-modal.component.css
+│           └── tab-add-modal.component.spec.ts
 ```
 
-**Structure Decision**: Single project (Angular/Electron desktop app). Files marked MODIFIED will be changed in-place. The `shell-content/` directory will be deleted entirely. No new directories created.
+**Structure Decision**: Single project (Angular/Electron desktop app). Files marked MODIFIED will be changed in-place. The `shell-content/` directory is RETAINED for non-tab concerns. New `tab-add-modal/` component added for reopening closed tabs.
 
 ## Complexity Tracking
 

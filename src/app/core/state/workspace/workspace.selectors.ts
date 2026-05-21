@@ -29,6 +29,10 @@ export const selectGroupsByZone = (zone: DockZone) =>
 export const selectShellTabs = (groupId: string) =>
   createSelector(selectTabGroupById(groupId), (group): TabItem[] => [...(group?.tabs ?? [])]);
 
+/** All registered tabs for a group (including closed ones, for the add-tab modal). */
+export const selectRegisteredTabsForGroup = (groupId: string) =>
+  createSelector(selectTabGroupById(groupId), (group): TabItem[] => [...(group?.registeredTabs ?? [])]);
+
 /** Active tab ID for the primary tab group. */
 export const selectActiveShellTabId = (groupId: string) =>
   createSelector(selectTabGroupById(groupId), (group) => group?.activeTabId ?? null);

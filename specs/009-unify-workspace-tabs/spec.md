@@ -92,7 +92,7 @@ As the application shell, I expect to derive all tab-related display data (tab l
 
 ### Functional Requirements
 
-- **FR-001**: The shellContent NgRx slice (reducer, actions, selectors, initial state, and state registration) MUST be completely removed from the application
+- **FR-001**: The shellContent NgRx slice MUST no longer manage tab state. Tab-related actions, selectors, and state have been moved to the workspace slice. The shellContent slice remains for non-tab shell content (sidebar entries, toolbar actions, bottom panel tabs, secondary panel entries).
 - **FR-002**: The workspace slice MUST store, for each registered tab, optional metadata including the Angular component type needed for dynamic rendering and an optional TabCloseGuard for dirty-tab close protection (previously stored only in shellContent)
 - **FR-003**: A new `registerTab` action MUST add a tab to the workspace state without making it active or visible
 - **FR-004**: The existing `openTab` action MUST activate and display a tab that is already registered in the workspace state
@@ -121,7 +121,7 @@ As the application shell, I expect to derive all tab-related display data (tab l
 ### Measurable Outcomes
 
 - **SC-001**: All tabs registered via ShellManager.addTab() are visible in the tab bar and closable via the tab bar's close button within a single release cycle
-- **SC-002**: Zero imports of shellContent (actions, reducers, selectors) remain in the codebase after the refactor
+- **SC-002**: Zero imports of shellContent tab-related selectors (selectShellTabs, selectActiveShellTabId, selectActiveShellComponentType, selectShellCloseGuards) remain in ShellComponent; all tab concerns are sourced from workspace selectors
 - **SC-003**: All existing unit tests pass after the refactor with no test failures related to tab management
 - **SC-004**: Tab close operations complete successfully (tab removed, adjacent tab activated) in 100% of test scenarios covering: close non-active tab, close active tab, close last tab, close pinned tab (blocked), close dirty tab with guard allowing, close dirty tab with guard denying
 - **SC-005**: The workspace slice handles at least 10 concurrent tabs without performance degradation observable to the user (tab switch < 120 ms)
@@ -130,7 +130,7 @@ As the application shell, I expect to derive all tab-related display data (tab l
 
 - The primary tab group uses groupId 'main' consistently across the codebase
 - Component types (Type<unknown>) stored in NgRx state are acceptable despite NgRx immutability checks (the app already disables strictStateImmutability for this reason)
-- The sidebar, toolbar, bottom panel, and secondary panel registration flows (addSidebarEntry, addToolbarAction, addBottomPanelEntry, addSecondaryPanelEntry) remain in a separate slice or are migrated in a future refactor — this feature focuses only on central tab management
+- The sidebar, toolbar, bottom panel, and secondary panel registration flows (addSidebarEntry, addToolbarAction, addBottomPanelEntry, addSecondaryPanelEntry) remain in the shellContent slice — this feature only migrates tab management to the workspace slice
 - The mock content initializer (registerMockContent) will continue to work without changes to its public API (ShellManager.addTab signature remains the same)
 - The existing `openTab` action is repurposed to open (activate/display) a tab that is already registered; it no longer creates new groups from unregistered tabs
 - No runtime data migration is needed since tabs are ephemeral (in-memory only, not persisted)

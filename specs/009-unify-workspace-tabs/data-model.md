@@ -45,12 +45,13 @@ export interface TabCloseGuard {
 
 ## Workspace State Shape (Modified)
 
-The `TabGroupState` and `WorkspaceState` remain structurally unchanged. The difference is that `TabItem[]` within `TabGroupState.tabs` now carries `componentType` and `closeGuard` on each tab.
+The `TabGroupState` and `WorkspaceState` are extended with a `registeredTabs` array that persists all tabs ever registered in a group. This array is never modified by `closeTab`, enabling the tab-add modal to show closed tabs that can be reopened.
 
 ```typescript
 export interface TabGroupState {
   readonly groupId: string;
-  readonly tabs: readonly TabItem[];  // TabItem now includes componentType + closeGuard
+  readonly registeredTabs: readonly TabItem[];  // All tabs ever registered (never removed by closeTab)
+  readonly tabs: readonly TabItem[];            // Currently open tabs (modified by closeTab)
   readonly activeTabId: string | null;
   readonly zone: DockZone;
 }
@@ -68,8 +69,8 @@ export interface WorkspaceState {
 - **Active tab**: NOT changed by this action.
 
 ### openTab
-- **Input**: `TabItem` (or just `{ tabId, groupId }` — see Decision 3 in research.md)
-- **Effect**: If tab exists in group → set as activeTabId. If tab exists in state but not in group → add to group and activate. If tab not registered → no-op.
+- **Input**: `TabItem` (must already be in `registeredTabs`)
+- **Effect**: If tab exists in `tabs` → set as activeTabId. If tab exists in `registeredTabs` but not in `tabs` (was closed) → add to `tabs` and activate. If tab not registered → no-op.
 - **Active tab**: Set to the opened tab's ID.
 
 ### registerAndOpenTab (facade)
@@ -77,9 +78,9 @@ export interface WorkspaceState {
 - **Effect**: Dispatches `registerTab` then `openTab` in sequence.
 - **Active tab**: Set to the registered tab's ID (via openTab).
 
-### closeTab (unchanged)
+### closeTab
 - **Input**: `{ tabId, groupId }`
-- **Effect**: Removes tab from group. Resolves next active tab. Removes group if empty.
+- **Effect**: Removes tab from `tabs` array only. The tab remains in `registeredTabs` so it can be reopened via the tab-add modal. Resolves next active tab. Removes group if empty.
 - **Active tab**: Set to adjacent tab or null.
 
 ### selectTab (unchanged)
@@ -90,7 +91,8 @@ export interface WorkspaceState {
 
 | Selector | Input | Output | Purpose |
 |----------|-------|--------|---------|
-| `selectShellTabs` | `groupId: string` | `TabItem[]` | Flat list of tabs for tab bar rendering |
+| `selectShellTabs` | `groupId: string` | `TabItem[]` | Flat list of currently open tabs for tab bar rendering |
+| `selectRegisteredTabsForGroup` | `groupId: string` | `TabItem[]` | All registered tabs (including closed) for the tab-add modal |
 | `selectActiveShellTabId` | `groupId: string` | `string \| null` | Active tab ID for tab bar highlighting |
 | `selectActiveShellComponentType` | `groupId: string` | `Type<unknown> \| null` | Component type for ContentArea rendering |
 | `selectCloseGuardsForGroup` | `groupId: string` | `Record<string, TabCloseGuard>` | Close guards map for TabBarComponent |

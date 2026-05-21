@@ -16,7 +16,9 @@ import * as WorkspaceActions from './workspace.actions';
 export interface TabGroupState {
   /** Stable identifier for this group (matches `TabItem.groupId`). */
   readonly groupId: string;
-  /** Ordered list of open tabs. Order matches the visual display order. */
+  /** All tabs ever registered in this group (never removed by closeTab). */
+  readonly registeredTabs: readonly TabItem[];
+  /** Ordered list of currently open tabs. Order matches the visual display order. */
   readonly tabs: readonly TabItem[];
   /** Id of the currently active tab, or `null` when the group is empty. */
   readonly activeTabId: string | null;
@@ -71,13 +73,19 @@ export const workspaceReducer = createReducer(
 
     if (idx >= 0) {
       const group = state.tabGroups[idx];
-      // Tab already present in group — no-op (do not change activeTabId).
+      // Tab already present in group — no-op.
       if (group.tabs.some((t) => t.id === tab.id)) {
         return state;
       }
       // Append to existing group without activating.
       const groups = [...state.tabGroups] as TabGroupState[];
-      groups[idx] = { ...group, tabs: [...group.tabs, tab] };
+      groups[idx] = {
+        ...group,
+        registeredTabs: group.registeredTabs.some((t) => t.id === tab.id)
+          ? group.registeredTabs
+          : [...group.registeredTabs, tab],
+        tabs: [...group.tabs, tab],
+      };
       return { ...state, tabGroups: groups };
     }
 
@@ -88,6 +96,7 @@ export const workspaceReducer = createReducer(
         ...state.tabGroups,
         {
           groupId: tab.groupId,
+          registeredTabs: [tab],
           tabs: [tab],
           activeTabId: null,
           zone: DockZone.PrimaryWorkspace,
@@ -106,7 +115,7 @@ export const workspaceReducer = createReducer(
       if (group.tabs.some((t) => t.id === tab.id)) {
         return updateGroup(state, tab.groupId, (g) => ({ ...g, activeTabId: tab.id }));
       }
-      // Tab registered but not yet in this group — add and activate.
+      // Tab registered but not currently open — add to tabs and activate.
       const groups = [...state.tabGroups] as TabGroupState[];
       groups[idx] = { ...group, tabs: [...group.tabs, tab], activeTabId: tab.id };
       return { ...state, tabGroups: groups };
@@ -129,7 +138,13 @@ export const workspaceReducer = createReducer(
       const group = intermediate.tabGroups[groupIdx];
       if (!group.tabs.some((t) => t.id === tab.id)) {
         const groups = [...intermediate.tabGroups] as TabGroupState[];
-        groups[groupIdx] = { ...group, tabs: [...group.tabs, tab] };
+        groups[groupIdx] = {
+          ...group,
+          registeredTabs: group.registeredTabs.some((t) => t.id === tab.id)
+            ? group.registeredTabs
+            : [...group.registeredTabs, tab],
+          tabs: [...group.tabs, tab],
+        };
         intermediate = { ...intermediate, tabGroups: groups };
       }
     } else {
@@ -139,6 +154,7 @@ export const workspaceReducer = createReducer(
           ...intermediate.tabGroups,
           {
             groupId: tab.groupId,
+            registeredTabs: [tab],
             tabs: [tab],
             activeTabId: null,
             zone: DockZone.PrimaryWorkspace,
