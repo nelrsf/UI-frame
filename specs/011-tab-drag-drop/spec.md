@@ -1,6 +1,6 @@
 # Feature Specification: Tab Drag-and-Drop Across Regions
 
-**Feature Branch**: `011-description-tab-dragr`  
+**Feature Branch**: `011-description-tab-drag`  
 **Created**: 2026-05-20  
 **Status**: Draft  
 **Input**: User description: "Vamos a crear la funcionalidad de drag en la aplicacion. Debes considerar un servicio que maneje el drag and drop en el shell. Cuando se arrastra una tab de una region a otra la tab se traslada pero con la condicion de cumplir la interfaz, por ejemplo: Si se suelta una tab desde el central region tab hacia el bottom panel, entonces la tab tambien debe implementar IBottomPanelEntry. Es decir para que el elemento tab pase a otra region debe implementar la respectiva interfaz."
@@ -105,7 +105,7 @@ A user drags a tab and drops it at a different position within the same tab bar,
 - The existing `DockZone` enum (`PrimaryWorkspace`, `BottomPanel`, `SecondaryPanel`) defines all target regions for drag-and-drop.
 - The existing `reorderTab` action in the workspace state will be reused for same-region reordering.
 - Cross-region tab movement uses the target region's native registration method (e.g., `addBottomPanelEntry`, `addTab`) rather than a zone assignment overlay.
-- Each region provides or will provide an unregister/remove method for its entries (e.g., `removeTab`, `removeBottomPanelEntry`) to support the unregister-before-reregister lifecycle.
+- Each region provides unregister/remove methods (`removeTab`, `removeBottomPanelEntry`, `removeSecondaryPanelEntry`) to support the unregister-before-reregister lifecycle.
 - The shell already has splitter drag functionality for resizing panels; this feature builds on similar pointer-event patterns but targets tab movement.
 - Pinned tabs can be moved between regions and retain their pinned status.
 - The drag-and-drop implementation uses native pointer events (not HTML5 Drag and Drop API) for consistency with existing splitter drag behavior.

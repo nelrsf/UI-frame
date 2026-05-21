@@ -127,8 +127,10 @@
 - [ ] T041 Integration test: full cross-region drag from central to bottom panel with mock components in `tests/integration/drag-drop.integration.spec.ts` (depends on T009, T023, T032)
 - [ ] T042 Integration test: rejected drop on incompatible zone with visual feedback in `tests/integration/drag-drop.integration.spec.ts` (depends on T041)
 - [ ] T043 Integration test: same-region reorder with position verification in `tests/integration/drag-drop.integration.spec.ts` (depends on T041)
-- [x] T044 Update workspace selectors to expose `activeDropZone$` and `dropCompatible$` if needed in `src/app/core/state/workspace/workspace.selectors.ts` (depends on T004) — Not needed; DragDropService exposes these directly
+- [x] T044 [N/A] Update workspace selectors to expose `activeDropZone$` and `dropCompatible$` if needed in `src/app/core/state/workspace/workspace.selectors.ts` — Not needed; DragDropService exposes these directly
 - [x] T045 Run quickstart.md validation: execute `ng build` to verify compilation passes
+- [ ] T046 [P] Unit test for multi-interface tab drop validation (tab implementing both `IBottomPanelEntry` and `ICentralRegionTab`) in `src/app/shell/services/drag-drop.service.spec.ts`
+- [ ] T047 [P] Performance validation: measure drag response time under 16ms frame delay using DevTools performance marks
 
 ---
 
