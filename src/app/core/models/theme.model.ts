@@ -9,7 +9,7 @@
 export type AppTheme = 'dark' | 'light';
 
 /** Default theme on first launch. */
-export const DEFAULT_THEME: AppTheme = 'dark';
+export const DEFAULT_THEME: AppTheme = 'light';
 
 /** NgRx preferences key for theme storage. */
 export const THEME_PREFERENCE_KEY = 'shell.theme';

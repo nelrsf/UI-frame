@@ -26,8 +26,8 @@ function registerIpcHandlers(): void {
 function createWindow(theme: AppTheme): void {
   mainWindow = new BrowserWindow({
     backgroundColor: THEME_METADATA[theme].backgroundColor,
-    minWidth: 1280,
-    minHeight: 800,
+    minWidth: 1050,
+    minHeight: 680,
     show: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
