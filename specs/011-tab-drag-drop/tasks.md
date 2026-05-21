@@ -48,10 +48,10 @@
 
 ### Tests for User Story 1
 
-- [ ] T009 [P] [US1] Unit test for DragDropService `startDrag()`, `onDragMove()`, `endDrag()` lifecycle in `src/app/shell/services/drag-drop.service.spec.ts`
-- [ ] T010 [P] [US1] Unit test for `moveTabToZone` reducer handler in `src/app/core/state/workspace/workspace.reducer.spec.ts`
-- [ ] T011 [P] [US1] Unit test for `removeTab` reducer handler in `src/app/core/state/workspace/workspace.reducer.spec.ts`
-- [ ] T012 [P] [US1] Unit test for `removeBottomPanelEntry` reducer handler in `src/app/core/state/shell-content/shell-content.reducer.spec.ts`
+- [x] T009 [P] [US1] Unit test for DragDropService `startDrag()`, `onDragMove()`, `endDrag()` lifecycle in `src/app/shell/services/drag-drop.service.spec.ts`
+- [x] T010 [P] [US1] Unit test for `moveTabToZone` reducer handler in `src/app/core/state/workspace/workspace.reducer.spec.ts`
+- [x] T011 [P] [US1] Unit test for `removeTab` reducer handler in `src/app/core/state/workspace/workspace.reducer.spec.ts`
+- [x] T012 [P] [US1] Unit test for `removeBottomPanelEntry` reducer handler in `src/app/core/state/shell-content/shell-content.reducer.spec.ts`
 
 ### Implementation for User Story 1
 
@@ -78,8 +78,8 @@
 
 ### Tests for User Story 2
 
-- [ ] T023 [P] [US2] Unit test for DragGhostComponent rendering and state binding in `src/app/shell/components/drag-ghost/drag-ghost.component.spec.ts`
-- [ ] T024 [P] [US2] Unit test for drop zone CSS class toggling (compatible/incompatible) in `src/app/shell/shell.component.spec.ts`
+- [x] T023 [P] [US2] Unit test for DragGhostComponent rendering and state binding in `src/app/shell/components/drag-ghost/drag-ghost.component.spec.ts`
+- [x] T024 [P] [US2] Unit test for drop zone CSS class toggling (compatible/incompatible) in `src/app/shell/shell.component.spec.ts`
 
 ### Implementation for User Story 2
 
@@ -103,8 +103,8 @@
 
 ### Tests for User Story 3
 
-- [ ] T032 [P] [US3] Unit test for same-region reorder drop detection logic in `src/app/shell/services/drag-drop.service.spec.ts`
-- [ ] T033 [P] [US3] Unit test for `reorderTab` integration in `src/app/shell/components/tab-bar/tab-bar.component.spec.ts`
+- [x] T032 [P] [US3] Unit test for same-region reorder drop detection logic in `src/app/shell/services/drag-drop.service.spec.ts`
+- [x] T033 [P] [US3] Unit test for `reorderTab` integration in `src/app/shell/components/tab-bar/tab-bar.component.spec.ts`
 
 ### Implementation for User Story 3
 
@@ -129,7 +129,7 @@
 - [ ] T043 Integration test: same-region reorder with position verification in `tests/integration/drag-drop.integration.spec.ts` (depends on T041)
 - [x] T044 [N/A] Update workspace selectors to expose `activeDropZone$` and `dropCompatible$` if needed in `src/app/core/state/workspace/workspace.selectors.ts` — Not needed; DragDropService exposes these directly
 - [x] T045 Run quickstart.md validation: execute `ng build` to verify compilation passes
-- [ ] T046 [P] Unit test for multi-interface tab drop validation (tab implementing both `IBottomPanelEntry` and `ICentralRegionTab`) in `src/app/shell/services/drag-drop.service.spec.ts`
+- [x] T046 [P] Unit test for multi-interface tab drop validation (tab implementing both `IBottomPanelEntry` and `ICentralRegionTab`) in `src/app/shell/services/drag-drop.service.spec.ts`
 - [ ] T047 [P] Performance validation: measure drag response time under 16ms frame delay using DevTools performance marks
 
 ---

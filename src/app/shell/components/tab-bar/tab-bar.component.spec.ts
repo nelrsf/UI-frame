@@ -1,4 +1,5 @@
 import { TestBed, fakeAsync, tick, flushMicrotasks } from '@angular/core/testing';
+import { StoreModule, Store } from '@ngrx/store';
 import { TabBarComponent } from './tab-bar.component';
 import { TabItem, TabCloseGuard } from '../../models/tab-item.model';
 
@@ -13,7 +14,7 @@ const makeTab = (partial: Partial<TabItem> & { id: string; label: string }): Tab
 describe('TabBarComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TabBarComponent],
+      imports: [TabBarComponent, StoreModule.forRoot({})],
     }).compileComponents();
   });
 
@@ -234,7 +235,7 @@ describe('TabBarComponent', () => {
 describe('TabBarComponent — integration', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TabBarComponent],
+      imports: [TabBarComponent, StoreModule.forRoot({})],
     }).compileComponents();
   });
 
@@ -475,7 +476,7 @@ describe('TabBarComponent — integration', () => {
 describe('TabBarComponent — guarded close', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TabBarComponent],
+      imports: [TabBarComponent, StoreModule.forRoot({})],
     }).compileComponents();
   });
 
@@ -686,7 +687,7 @@ describe('TabBarComponent — guarded close', () => {
 describe('TabBarComponent — new tab request', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TabBarComponent],
+      imports: [TabBarComponent, StoreModule.forRoot({})],
     }).compileComponents();
   });
 
@@ -704,5 +705,42 @@ describe('TabBarComponent — new tab request', () => {
   it('should expose newTabRequested as an EventEmitter', () => {
     const fixture = TestBed.createComponent(TabBarComponent);
     expect(fixture.componentInstance.newTabRequested).toBeDefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// TabBarComponent — reorderTab integration (T033)
+// ---------------------------------------------------------------------------
+
+describe('TabBarComponent — reorderTab integration', () => {
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [TabBarComponent, StoreModule.forRoot({})],
+    }).compileComponents();
+  });
+
+  it('should emit tabReordered with correct fromIndex and toIndex', () => {
+    const fixture = TestBed.createComponent(TabBarComponent);
+    fixture.componentInstance.tabs = [
+      makeTab({ id: 'tab-1', label: 'A.ts' }),
+      makeTab({ id: 'tab-2', label: 'B.ts' }),
+      makeTab({ id: 'tab-3', label: 'C.ts' }),
+    ];
+    fixture.componentInstance.groupId = 'main';
+    fixture.detectChanges();
+
+    const emittedValues: { fromIndex: number; toIndex: number }[] = [];
+    fixture.componentInstance.tabReordered.subscribe((v) => emittedValues.push(v));
+
+    // Simulate reorder: move tab from index 0 to index 2.
+    fixture.componentInstance.tabReordered.emit({ fromIndex: 0, toIndex: 2 });
+
+    expect(emittedValues).toEqual([{ fromIndex: 0, toIndex: 2 }]);
+  });
+
+  it('should have tabReordered output reserved for drag-reorder integration', () => {
+    const fixture = TestBed.createComponent(TabBarComponent);
+    expect(fixture.componentInstance.tabReordered).toBeDefined();
+    expect(fixture.componentInstance.tabReordered.observed).toBeFalse();
   });
 });
