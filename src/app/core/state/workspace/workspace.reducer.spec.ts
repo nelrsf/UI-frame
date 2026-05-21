@@ -333,21 +333,21 @@ describe('workspace reducer', () => {
 
     it('should move a tab from fromIndex to toIndex', () => {
       const state = stateWithThreeTabs();
-      const next = workspaceReducer(state, reorderTab({ groupId: 'main', fromIndex: 0, toIndex: 2 }));
+      const next = workspaceReducer(state, reorderTab({ workspaceId: 'ws-default', groupId: 'main', fromIndex: 0, toIndex: 2 }));
 
       expect(next.tabGroups[0].tabs.map((t) => t.id)).toEqual(['tab-2', 'tab-3', 'tab-1']);
     });
 
     it('should move a tab right to left', () => {
       const state = stateWithThreeTabs();
-      const next = workspaceReducer(state, reorderTab({ groupId: 'main', fromIndex: 2, toIndex: 0 }));
+      const next = workspaceReducer(state, reorderTab({ workspaceId: 'ws-default', groupId: 'main', fromIndex: 2, toIndex: 0 }));
 
       expect(next.tabGroups[0].tabs.map((t) => t.id)).toEqual(['tab-3', 'tab-1', 'tab-2']);
     });
 
     it('should be a no-op when fromIndex equals toIndex', () => {
       const state = stateWithThreeTabs();
-      const next = workspaceReducer(state, reorderTab({ groupId: 'main', fromIndex: 1, toIndex: 1 }));
+      const next = workspaceReducer(state, reorderTab({ workspaceId: 'ws-default', groupId: 'main', fromIndex: 1, toIndex: 1 }));
 
       expect(next.tabGroups[0].tabs.map((t) => t.id)).toEqual(['tab-1', 'tab-2', 'tab-3']);
     });
@@ -357,7 +357,7 @@ describe('workspace reducer', () => {
       const withActive = workspaceReducer(state, selectTab({ tabId: 'tab-2', groupId: 'main' }));
       const next = workspaceReducer(
         withActive,
-        reorderTab({ groupId: 'main', fromIndex: 1, toIndex: 0 })
+        reorderTab({ workspaceId: 'ws-default', groupId: 'main', fromIndex: 1, toIndex: 0 })
       );
 
       expect(next.tabGroups[0].activeTabId).toBe('tab-2');
@@ -365,14 +365,14 @@ describe('workspace reducer', () => {
 
     it('should be a no-op for an out-of-range fromIndex', () => {
       const state = stateWithThreeTabs();
-      const next = workspaceReducer(state, reorderTab({ groupId: 'main', fromIndex: 99, toIndex: 0 }));
+      const next = workspaceReducer(state, reorderTab({ workspaceId: 'ws-default', groupId: 'main', fromIndex: 99, toIndex: 0 }));
 
       expect(next.tabGroups[0].tabs.map((t) => t.id)).toEqual(['tab-1', 'tab-2', 'tab-3']);
     });
 
     it('should be a no-op for an out-of-range toIndex', () => {
       const state = stateWithThreeTabs();
-      const next = workspaceReducer(state, reorderTab({ groupId: 'main', fromIndex: 0, toIndex: 99 }));
+      const next = workspaceReducer(state, reorderTab({ workspaceId: 'ws-default', groupId: 'main', fromIndex: 0, toIndex: 99 }));
 
       expect(next.tabGroups[0].tabs.map((t) => t.id)).toEqual(['tab-1', 'tab-2', 'tab-3']);
     });

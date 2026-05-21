@@ -6,7 +6,7 @@ import { DraggableTab, RegionInterface } from '../../../core/models/drag-drop.mo
 import { DockZone } from '../../../core/models/dock-zone-assignment.model';
 import { SecondaryPanelEntry } from '../../models/secondary-panel-entry.model';
 import { AppState } from '../../../core/state/app.state';
-import * as ShellContentActions from '../../../core/state/shell-content/shell-content.actions';
+import * as WorkspaceActions from '../../../core/state/workspace';
 
 /**
  * SecondaryPanelComponent — right-side collapsible dock zone (SecondaryPanel).
@@ -25,12 +25,14 @@ import * as ShellContentActions from '../../../core/state/shell-content/shell-co
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SecondaryPanelComponent implements AfterViewInit {
+  /** Workspace ID for reorder actions (uses fallback for single-workspace mode). */
+  @Input() workspaceId: string = 'ws-default';
   /** Whether the secondary panel is currently shown. */
   @Input() visible: boolean = false;
   /** Current panel width in pixels. */
   @Input() width: number = 300;
   /** Entries hosted in this panel zone. */
-  @Input() entries: SecondaryPanelEntry[] = [];
+  @Input() entries: readonly SecondaryPanelEntry[] = [];
   /** Id of the currently active entry. */
   @Input() activeEntryId: string = '';
   /** Active entry component type rendered in the panel content. */
@@ -54,7 +56,11 @@ export class SecondaryPanelComponent implements AfterViewInit {
     this.dragDropService.registerReorderSource(
       this.tabListRef.nativeElement,
       (fromIndex: number, toIndex: number) => {
-        this.store.dispatch(ShellContentActions.reorderSecondaryPanelEntries({ fromIndex, toIndex }));
+        this.store.dispatch(WorkspaceActions.reorderSecondaryPanelEntries({
+          workspaceId: this.workspaceId,
+          fromIndex,
+          toIndex
+        }));
       }
     );
   }

@@ -23,6 +23,7 @@
     <app-toolbar class="shell-toolbar" [actions]="(toolbarActions$ | async) ?? []"></app-toolbar>
     <app-tab-bar
       class="shell-tabbar"
+      [groupId]="'main'"
       [tabs]="(shellTabs$ | async) ?? []"
       [activeTabId]="(activeShellTabId$ | async) ?? ''"
       [closeGuards]="(closeGuards$ | async) ?? {}"
@@ -57,6 +58,7 @@
     ></div>
     <app-secondary-panel
       class="shell-secondary-panel"
+      [workspaceId]="workspaceId"
       [visible]="(secondaryPanelVisible$ | async) ?? false"
       [width]="(secondaryPanelWidth$ | async) ?? 300"
       [entries]="(secondaryPanelEntries$ | async) ?? []"
@@ -79,6 +81,7 @@
     ></div>
     <app-bottom-panel
       class="shell-bottom-panel"
+      [workspaceId]="workspaceId"
       [visible]="(bottomPanelVisible$ | async) ?? false"
       [height]="(bottomPanelHeight$ | async) ?? 220"
       [panels]="(bottomPanelTabs$ | async) ?? []"

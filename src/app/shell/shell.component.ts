@@ -42,13 +42,8 @@ import {
   SECONDARY_PANEL_WIDTH_MAX,
 } from '../core/state/layout/layout.reducer';
 import {
-  selectActiveSecondaryPanelComponentType,
-  selectActiveSecondaryPanelEntryId,
-  selectShellBottomPanelTabs,
-  selectShellSecondaryPanelEntries,
   selectShellSidebarItems,
   selectShellToolbarActions,
-  setActiveSecondaryPanelEntry,
 } from '../core/state/shell-content';
 import {
   selectActiveShellComponentType,
@@ -61,6 +56,11 @@ import {
   selectTab,
   selectTabsForGroup,
   reorderTab,
+  selectBottomPanelTabs,
+  selectSecondaryPanelEntries,
+  selectActiveSecondaryPanelEntryId,
+  selectActiveSecondaryPanelComponentType,
+  setActiveSecondaryPanelEntry,
 } from '../core/state/workspace';
 import { setPreference } from '../core/state/preferences/preferences.actions';
 import { AppTheme, THEME_PREFERENCE_KEY } from '../core/models/theme.model';
@@ -164,10 +164,12 @@ export class ShellComponent implements OnInit, AfterViewInit {
   readonly activeShellComponentType$ = this.store.select(selectActiveShellComponentType('main'));
   /** Observable of close guards map for TabBarComponent. */
   readonly closeGuards$ = this.store.select(selectCloseGuardsForGroup('main'));
+  /** Workspace ID for panel reorder actions (uses fallback for single-workspace mode). */
+  readonly workspaceId = FALLBACK_WORKSPACE_ID;
   /** Observable of registered bottom panel tabs. */
-  readonly bottomPanelTabs$ = this.store.select(selectShellBottomPanelTabs);
-  /** Observable of secondary panel entries. */
-  readonly secondaryPanelEntries$ = this.store.select(selectShellSecondaryPanelEntries);
+  readonly bottomPanelTabs$ = this.store.select(selectBottomPanelTabs);
+
+  readonly secondaryPanelEntries$ = this.store.select(selectSecondaryPanelEntries);
   /** Observable of active secondary panel entry id. */
   readonly activeSecondaryPanelEntryId$ = this.store.select(selectActiveSecondaryPanelEntryId);
   /** Observable of active secondary panel component type for dynamic rendering. */
@@ -430,7 +432,12 @@ export class ShellComponent implements OnInit, AfterViewInit {
   }
 
   onShellTabReordered(event: { fromIndex: number; toIndex: number }): void {
-    this.store.dispatch(reorderTab({ groupId: 'main', fromIndex: event.fromIndex, toIndex: event.toIndex }));
+    this.store.dispatch(reorderTab({
+      workspaceId: this.workspaceId,
+      groupId: 'main',
+      fromIndex: event.fromIndex,
+      toIndex: event.toIndex
+    }));
   }
 
   onShellTabClosed(tabId: string): void {
@@ -488,7 +495,7 @@ export class ShellComponent implements OnInit, AfterViewInit {
     this.activeBottomPanelId = panelId;
   }
 
-  private syncActiveBottomPanel(panels: Array<{ id: string }>): void {
+  private syncActiveBottomPanel(panels: readonly { id: string }[]): void {
     if (panels.length === 0) {
       this.activeBottomPanelId = '';
       return;

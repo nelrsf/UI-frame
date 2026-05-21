@@ -2,6 +2,7 @@ import { createSelector, createFeatureSelector } from '@ngrx/store';
 import { Type } from '@angular/core';
 import { WorkspaceState, TabGroupState } from './workspace.reducer';
 import { TabItem, TabCloseGuard } from '../../../shell/models/tab-item.model';
+import { SecondaryPanelEntry } from '../../../shell/models/secondary-panel-entry.model';
 import { DockZone } from '../../models/dock-zone-assignment.model';
 
 export const selectWorkspaceState = createFeatureSelector<WorkspaceState>('workspace');
@@ -64,3 +65,37 @@ export const selectCloseGuardsForGroup = (groupId: string) =>
     }
     return guards;
   });
+
+// ── Panel selectors (bottom panel & secondary panel) ────────────────────────
+
+/** All bottom panel tabs. */
+export const selectBottomPanelTabs = createSelector(
+  selectWorkspaceState,
+  (state) => state.bottomPanelTabs
+);
+
+/** All secondary panel entries. */
+export const selectSecondaryPanelEntries = createSelector(
+  selectWorkspaceState,
+  (state) => state.secondaryPanelEntries
+);
+
+/** Active secondary panel entry ID. */
+export const selectActiveSecondaryPanelEntryId = createSelector(
+  selectWorkspaceState,
+  (state) => state.activeSecondaryPanelEntryId
+);
+
+/** Component type of the active secondary panel entry. */
+export const selectActiveSecondaryPanelComponentType = createSelector(
+  selectSecondaryPanelEntries,
+  selectActiveSecondaryPanelEntryId,
+  (entries, activeId) => {
+    if (!activeId) {
+      return null;
+    }
+
+    const activeEntry = entries.find((entry) => entry.id === activeId);
+    return activeEntry?.component ?? null;
+  }
+);

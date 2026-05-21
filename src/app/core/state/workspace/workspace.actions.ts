@@ -1,5 +1,7 @@
 import { createAction, props } from '@ngrx/store';
 import { TabItem } from '../../../shell/models/tab-item.model';
+import { PanelTab } from '../../../shell/models/panel-tab.model';
+import { SecondaryPanelEntry } from '../../../shell/models/secondary-panel-entry.model';
 import { DockZone } from '../../models/dock-zone-assignment.model';
 
 /**
@@ -47,11 +49,12 @@ export const selectTab = createAction(
 
 /**
  * Reorders a tab within a group by moving it from `fromIndex` to `toIndex`.
+ * The workspaceId is included for future multi-workspace support.
  * No-ops when either index is out of range.
  */
 export const reorderTab = createAction(
   '[Workspace] Reorder Tab',
-  props<{ groupId: string; fromIndex: number; toIndex: number }>()
+  props<{ workspaceId: string; groupId: string; fromIndex: number; toIndex: number }>()
 );
 
 /**
@@ -103,4 +106,62 @@ export const moveTabToZone = createAction(
     targetZone: DockZone;
     tabMetadata: TabItem;
   }>()
+);
+
+/**
+ * Adds a bottom panel entry to the workspace state.
+ */
+export const addBottomPanelEntry = createAction(
+  '[Workspace] Add Bottom Panel Entry',
+  props<PanelTab>()
+);
+
+/**
+ * Removes a bottom panel entry by id.
+ */
+export const removeBottomPanelEntry = createAction(
+  '[Workspace] Remove Bottom Panel Entry',
+  props<{ entryId: string }>()
+);
+
+/**
+ * Reorders bottom panel tabs within the workspace.
+ * The workspaceId is included for future multi-workspace support.
+ */
+export const reorderBottomPanelTabs = createAction(
+  '[Workspace] Reorder Bottom Panel Tabs',
+  props<{ workspaceId: string; fromIndex: number; toIndex: number }>()
+);
+
+/**
+ * Adds a secondary panel entry to the workspace state.
+ */
+export const addSecondaryPanelEntry = createAction(
+  '[Workspace] Add Secondary Panel Entry',
+  props<{ entry: SecondaryPanelEntry }>()
+);
+
+/**
+ * Removes a secondary panel entry by id.
+ */
+export const removeSecondaryPanelEntry = createAction(
+  '[Workspace] Remove Secondary Panel Entry',
+  props<{ entryId: string }>()
+);
+
+/**
+ * Sets the active secondary panel entry by id.
+ */
+export const setActiveSecondaryPanelEntry = createAction(
+  '[Workspace] Set Active Secondary Panel Entry',
+  props<{ id: string }>()
+);
+
+/**
+ * Reorders secondary panel entries within the workspace.
+ * The workspaceId is included for future multi-workspace support.
+ */
+export const reorderSecondaryPanelEntries = createAction(
+  '[Workspace] Reorder Secondary Panel Entries',
+  props<{ workspaceId: string; fromIndex: number; toIndex: number }>()
 );

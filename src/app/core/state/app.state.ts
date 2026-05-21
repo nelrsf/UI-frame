@@ -14,7 +14,8 @@ import { CommandTelemetryState } from './command-telemetry/command-telemetry.red
  *
  * Slice boundaries (per speckit.plan.md §3):
  *   - layout    : sidebar/panel visibility, widths, heights, active sidebar item.
- *   - workspace : open tabs, active tab, dirty/pinned metadata per tab group.
+ *   - workspace : open tabs, active tab, dirty/pinned metadata per tab group,
+ *                 bottom panel tabs, secondary panel entries.
  *   - session   : platform, window-maximized flag, shell readiness.
  *   - uiContext : breadcrumbs, available actions, status-bar items.
  *   - preferences: versioned user-preference snapshot, isolated per workspace.

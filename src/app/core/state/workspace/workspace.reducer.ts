@@ -1,5 +1,7 @@
 import { createReducer, on } from '@ngrx/store';
 import { TabItem } from '../../../shell/models/tab-item.model';
+import { PanelTab } from '../../../shell/models/panel-tab.model';
+import { SecondaryPanelEntry } from '../../../shell/models/secondary-panel-entry.model';
 import { DockZone } from '../../models/dock-zone-assignment.model';
 import * as WorkspaceActions from './workspace.actions';
 
@@ -30,6 +32,12 @@ export interface TabGroupState {
 export interface WorkspaceState {
   /** All known tab groups, in the order they were first created. */
   readonly tabGroups: readonly TabGroupState[];
+  /** Bottom panel tabs registered in this workspace. */
+  readonly bottomPanelTabs: readonly PanelTab[];
+  /** Secondary panel entries registered in this workspace. */
+  readonly secondaryPanelEntries: readonly SecondaryPanelEntry[];
+  /** ID of the currently active secondary panel entry. */
+  readonly activeSecondaryPanelEntryId: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -38,6 +46,9 @@ export interface WorkspaceState {
 
 export const initialWorkspaceState: WorkspaceState = {
   tabGroups: [],
+  bottomPanelTabs: [],
+  secondaryPanelEntries: [],
+  activeSecondaryPanelEntryId: null,
 };
 
 // ---------------------------------------------------------------------------
@@ -58,6 +69,15 @@ function updateGroup(
   const groups = [...state.tabGroups] as TabGroupState[];
   groups[idx] = updater(groups[idx]);
   return { ...state, tabGroups: groups };
+}
+
+function pickSecondaryDefault(entries: readonly SecondaryPanelEntry[]): string | null {
+  if (entries.length === 0) {
+    return null;
+  }
+
+  const weather = entries.find((entry) => entry.id === 'secondary-weather');
+  return weather?.id ?? entries[0].id;
 }
 
 // ---------------------------------------------------------------------------
@@ -211,8 +231,12 @@ export const workspaceReducer = createReducer(
   ),
 
   // ── reorderTab ───────────────────────────────────────────────────────────
-  on(WorkspaceActions.reorderTab, (state, { groupId, fromIndex, toIndex }) =>
-    updateGroup(state, groupId, (group) => {
+  on(WorkspaceActions.reorderTab, (state, { workspaceId, groupId, fromIndex, toIndex }) => {
+    // workspaceId is received for future multi-workspace support;
+    // currently a single workspace is used so it does not affect logic.
+    void workspaceId;
+
+    return updateGroup(state, groupId, (group) => {
       const tabs = [...group.tabs] as TabItem[];
       if (fromIndex < 0 || fromIndex >= tabs.length) return group;
       if (toIndex < 0 || toIndex > tabs.length) return group;
@@ -220,7 +244,7 @@ export const workspaceReducer = createReducer(
       tabs.splice(toIndex, 0, moved);
       return { ...group, tabs };
     })
-  ),
+  }),
 
   // ── setTabDirty ──────────────────────────────────────────────────────────
   on(WorkspaceActions.setTabDirty, (state, { tabId, dirty }) => {
@@ -345,5 +369,133 @@ export const workspaceReducer = createReducer(
     // must register the tab in the target region via ShellManager.
 
     return intermediate;
+  }),
+
+  // ── addBottomPanelEntry ───────────────────────────────────────────────────
+  on(WorkspaceActions.addBottomPanelEntry, (state, panelTab) => {
+    const idExists = state.bottomPanelTabs.some((tab) => tab.id === panelTab.id);
+    if (idExists) {
+      console.warn(`[Workspace] Bottom panel tab with id '${panelTab.id}' already exists. Ignoring.`);
+      return state;
+    }
+    return {
+      ...state,
+      bottomPanelTabs: [...state.bottomPanelTabs, panelTab],
+    };
+  }),
+
+  // ── removeBottomPanelEntry ────────────────────────────────────────────────
+  on(WorkspaceActions.removeBottomPanelEntry, (state, { entryId }) => {
+    const exists = state.bottomPanelTabs.some((tab) => tab.id === entryId);
+    if (!exists) return state;
+
+    const bottomPanelTabs = state.bottomPanelTabs.filter((tab) => tab.id !== entryId);
+    return { ...state, bottomPanelTabs };
+  }),
+
+  // ── reorderBottomPanelTabs ────────────────────────────────────────────────
+  on(WorkspaceActions.reorderBottomPanelTabs, (state, { workspaceId, fromIndex, toIndex }) => {
+    // workspaceId is received for future multi-workspace support;
+    // currently a single workspace is used so it does not affect logic.
+    void workspaceId;
+
+    if (
+      fromIndex < 0 ||
+      fromIndex >= state.bottomPanelTabs.length ||
+      toIndex < 0 ||
+      toIndex >= state.bottomPanelTabs.length ||
+      fromIndex === toIndex
+    ) {
+      return state;
+    }
+
+    const bottomPanelTabs = [...state.bottomPanelTabs];
+    const [moved] = bottomPanelTabs.splice(fromIndex, 1);
+    bottomPanelTabs.splice(toIndex, 0, moved);
+
+    return { ...state, bottomPanelTabs };
+  }),
+
+  // ── addSecondaryPanelEntry ────────────────────────────────────────────────
+  on(WorkspaceActions.addSecondaryPanelEntry, (state, { entry }) => {
+    const idExists = state.secondaryPanelEntries.some((existing) => existing.id === entry.id);
+    if (idExists) {
+      console.warn(`[Workspace] Secondary panel entry with id '${entry.id}' already exists. Ignoring.`);
+      return state;
+    }
+
+    const secondaryPanelEntries = [...state.secondaryPanelEntries, entry];
+    const hasCurrentActive =
+      !!state.activeSecondaryPanelEntryId &&
+      secondaryPanelEntries.some((existing) => existing.id === state.activeSecondaryPanelEntryId);
+
+    const activeSecondaryPanelEntryId =
+      entry.id === 'secondary-weather'
+        ? 'secondary-weather'
+        : hasCurrentActive
+          ? state.activeSecondaryPanelEntryId
+          : pickSecondaryDefault(secondaryPanelEntries);
+
+    return {
+      ...state,
+      secondaryPanelEntries,
+      activeSecondaryPanelEntryId,
+    };
+  }),
+
+  // ── removeSecondaryPanelEntry ─────────────────────────────────────────────
+  on(WorkspaceActions.removeSecondaryPanelEntry, (state, { entryId }) => {
+    const exists = state.secondaryPanelEntries.some((entry) => entry.id === entryId);
+    if (!exists) return state;
+
+    const secondaryPanelEntries = state.secondaryPanelEntries.filter((entry) => entry.id !== entryId);
+    const activeSecondaryPanelEntryId =
+      state.activeSecondaryPanelEntryId === entryId
+        ? pickSecondaryDefault(secondaryPanelEntries)
+        : state.activeSecondaryPanelEntryId;
+
+    return { ...state, secondaryPanelEntries, activeSecondaryPanelEntryId };
+  }),
+
+  // ── setActiveSecondaryPanelEntry ──────────────────────────────────────────
+  on(WorkspaceActions.setActiveSecondaryPanelEntry, (state, { id }) => {
+    const exists = state.secondaryPanelEntries.some((entry) => entry.id === id);
+    if (exists) {
+      return { ...state, activeSecondaryPanelEntryId: id };
+    }
+
+    console.warn(`[Workspace] Secondary panel entry with id '${id}' not found. Applying fallback.`);
+    return {
+      ...state,
+      activeSecondaryPanelEntryId: pickSecondaryDefault(state.secondaryPanelEntries),
+    };
+  }),
+
+  // ── reorderSecondaryPanelEntries ──────────────────────────────────────────
+  on(WorkspaceActions.reorderSecondaryPanelEntries, (state, { workspaceId, fromIndex, toIndex }) => {
+    // workspaceId is received for future multi-workspace support;
+    // currently a single workspace is used so it does not affect logic.
+    void workspaceId;
+
+    if (
+      fromIndex < 0 ||
+      fromIndex >= state.secondaryPanelEntries.length ||
+      toIndex < 0 ||
+      toIndex >= state.secondaryPanelEntries.length ||
+      fromIndex === toIndex
+    ) {
+      return state;
+    }
+
+    const secondaryPanelEntries = [...state.secondaryPanelEntries];
+    const [moved] = secondaryPanelEntries.splice(fromIndex, 1);
+    secondaryPanelEntries.splice(toIndex, 0, moved);
+
+    const activeSecondaryPanelEntryId =
+      state.activeSecondaryPanelEntryId === moved.id
+        ? secondaryPanelEntries[toIndex]?.id ?? null
+        : state.activeSecondaryPanelEntryId;
+
+    return { ...state, secondaryPanelEntries, activeSecondaryPanelEntryId };
   })
 );

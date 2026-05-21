@@ -1,20 +1,16 @@
 import { createReducer, on, Action } from '@ngrx/store';
 import { SidebarItem } from '../../../shell/models/sidebar-item.model';
 import { ToolbarAction } from '../../../shell/models/toolbar-action.model';
-import { PanelTab } from '../../../shell/models/panel-tab.model';
-import { SecondaryPanelEntry } from '../../../shell/models/secondary-panel-entry.model';
 import * as ShellContentActions from './shell-content.actions';
 
 /**
- * Shell content state shape (sidebar, toolbar, bottom panel, secondary panel only).
- * Tab management has been moved to the workspace slice.
+ * Shell content state shape (sidebar and toolbar only).
+ * Panel state (bottom panel tabs, secondary panel entries) has been moved
+ * to the workspace slice.
  */
 export interface ShellContentState {
   sidebarItems: SidebarItem[];
   toolbarActions: ToolbarAction[];
-  bottomPanelTabs: PanelTab[];
-  secondaryPanelEntries: SecondaryPanelEntry[];
-  activeSecondaryPanelEntryId: string | null;
 }
 
 /**
@@ -23,19 +19,7 @@ export interface ShellContentState {
 export const initialShellContentState: ShellContentState = {
   sidebarItems: [],
   toolbarActions: [],
-  bottomPanelTabs: [],
-  secondaryPanelEntries: [],
-  activeSecondaryPanelEntryId: null,
 };
-
-function pickSecondaryDefault(entries: SecondaryPanelEntry[]): string | null {
-  if (entries.length === 0) {
-    return null;
-  }
-
-  const weather = entries.find((entry) => entry.id === 'secondary-weather');
-  return weather?.id ?? entries[0].id;
-}
 
 /**
  * Shell content reducer with duplicate ID guards.
@@ -67,128 +51,6 @@ const shellContentReducerFn = createReducer(
       ...state,
       toolbarActions: [...state.toolbarActions, toolbarAction],
     };
-  }),
-
-  on(ShellContentActions.addBottomPanelEntry, (state, panelTab) => {
-    // Guard against duplicate panel tab IDs
-    const idExists = state.bottomPanelTabs.some((tab) => tab.id === panelTab.id);
-    if (idExists) {
-      console.warn(`[ShellContent] Bottom panel tab with id '${panelTab.id}' already exists. Ignoring.`);
-      return state;
-    }
-    return {
-      ...state,
-      bottomPanelTabs: [...state.bottomPanelTabs, panelTab],
-    };
-  }),
-
-  on(ShellContentActions.addSecondaryPanelEntry, (state, { entry }) => {
-    const idExists = state.secondaryPanelEntries.some((existing) => existing.id === entry.id);
-    if (idExists) {
-      console.warn(`[ShellContent] Secondary panel entry with id '${entry.id}' already exists. Ignoring.`);
-      return state;
-    }
-
-    const secondaryPanelEntries = [...state.secondaryPanelEntries, entry];
-    const hasCurrentActive =
-      !!state.activeSecondaryPanelEntryId &&
-      secondaryPanelEntries.some((existing) => existing.id === state.activeSecondaryPanelEntryId);
-
-    const activeSecondaryPanelEntryId =
-      entry.id === 'secondary-weather'
-        ? 'secondary-weather'
-        : hasCurrentActive
-          ? state.activeSecondaryPanelEntryId
-          : pickSecondaryDefault(secondaryPanelEntries);
-
-    return {
-      ...state,
-      secondaryPanelEntries,
-      activeSecondaryPanelEntryId,
-    };
-  }),
-
-  on(ShellContentActions.setActiveSecondaryPanelEntry, (state, { id }) => {
-    const exists = state.secondaryPanelEntries.some((entry) => entry.id === id);
-    if (exists) {
-      return { ...state, activeSecondaryPanelEntryId: id };
-    }
-
-    console.warn(`[ShellContent] Secondary panel entry with id '${id}' not found. Applying fallback.`);
-    return {
-      ...state,
-      activeSecondaryPanelEntryId: pickSecondaryDefault(state.secondaryPanelEntries),
-    };
-  }),
-
-  on(ShellContentActions.removeBottomPanelEntry, (state, { entryId }) => {
-    const exists = state.bottomPanelTabs.some((tab) => tab.id === entryId);
-    if (!exists) return state;
-
-    const bottomPanelTabs = state.bottomPanelTabs.filter((tab) => tab.id !== entryId);
-    return { ...state, bottomPanelTabs };
-  }),
-
-  on(ShellContentActions.removeSecondaryPanelEntry, (state, { entryId }) => {
-    const exists = state.secondaryPanelEntries.some((entry) => entry.id === entryId);
-    if (!exists) return state;
-
-    const secondaryPanelEntries = state.secondaryPanelEntries.filter((entry) => entry.id !== entryId);
-    const activeSecondaryPanelEntryId =
-      state.activeSecondaryPanelEntryId === entryId
-        ? pickSecondaryDefault(secondaryPanelEntries)
-        : state.activeSecondaryPanelEntryId;
-
-    return { ...state, secondaryPanelEntries, activeSecondaryPanelEntryId };
-  }),
-
-  on(ShellContentActions.reorderBottomPanelTabs, (state, { fromIndex, toIndex }) => {
-    if (
-      fromIndex < 0 ||
-      fromIndex >= state.bottomPanelTabs.length ||
-      toIndex < 0 ||
-      toIndex >= state.bottomPanelTabs.length ||
-      fromIndex === toIndex
-    ) {
-      return state;
-    }
-
-    const bottomPanelTabs = [...state.bottomPanelTabs];
-    const [moved] = bottomPanelTabs.splice(fromIndex, 1);
-    bottomPanelTabs.splice(toIndex, 0, moved);
-
-    const activePanelId = state.bottomPanelTabs[fromIndex]?.id;
-    const newActivePanelId =
-      activePanelId === moved.id
-        ? bottomPanelTabs[toIndex]?.id ?? null
-        : state.bottomPanelTabs.find((tab) => tab.id === state.activeSecondaryPanelEntryId)?.id ??
-          state.bottomPanelTabs[0]?.id ??
-          null;
-
-    return { ...state, bottomPanelTabs };
-  }),
-
-  on(ShellContentActions.reorderSecondaryPanelEntries, (state, { fromIndex, toIndex }) => {
-    if (
-      fromIndex < 0 ||
-      fromIndex >= state.secondaryPanelEntries.length ||
-      toIndex < 0 ||
-      toIndex >= state.secondaryPanelEntries.length ||
-      fromIndex === toIndex
-    ) {
-      return state;
-    }
-
-    const secondaryPanelEntries = [...state.secondaryPanelEntries];
-    const [moved] = secondaryPanelEntries.splice(fromIndex, 1);
-    secondaryPanelEntries.splice(toIndex, 0, moved);
-
-    const activeSecondaryPanelEntryId =
-      state.activeSecondaryPanelEntryId === moved.id
-        ? secondaryPanelEntries[toIndex]?.id ?? null
-        : state.activeSecondaryPanelEntryId;
-
-    return { ...state, secondaryPanelEntries, activeSecondaryPanelEntryId };
   })
 );
 

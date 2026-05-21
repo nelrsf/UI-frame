@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, Inject, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Store } from '@ngrx/store';
 import { DragDropService } from '../../services/drag-drop.service';
@@ -6,7 +6,7 @@ import { DraggableTab, RegionInterface } from '../../../core/models/drag-drop.mo
 import { DockZone } from '../../../core/models/dock-zone-assignment.model';
 import { PanelTab } from '../../models/panel-tab.model';
 import { AppState } from '../../../core/state/app.state';
-import * as ShellContentActions from '../../../core/state/shell-content/shell-content.actions';
+import * as WorkspaceActions from '../../../core/state/workspace';
 
 @Component({
   selector: 'app-bottom-panel',
@@ -18,9 +18,10 @@ import * as ShellContentActions from '../../../core/state/shell-content/shell-co
 })
 export class BottomPanelComponent implements AfterViewInit {
 
+  @Input() workspaceId: string = 'ws-default';
   @Input() visible: boolean = false;
   @Input() height: number = 220;
-  @Input() panels: PanelTab[] = [];
+  @Input() panels: readonly PanelTab[] = [];
   @Input() activePanelId: string = '';
 
   @Output() visibilityChange = new EventEmitter<boolean>();
@@ -39,7 +40,11 @@ export class BottomPanelComponent implements AfterViewInit {
     this.dragDropService.registerReorderSource(
       this.tabListRef.nativeElement,
       (fromIndex: number, toIndex: number) => {
-        this.store.dispatch(ShellContentActions.reorderBottomPanelTabs({ fromIndex, toIndex }));
+        this.store.dispatch(WorkspaceActions.reorderBottomPanelTabs({
+          workspaceId: this.workspaceId,
+          fromIndex,
+          toIndex
+        }));
       }
     );
   }

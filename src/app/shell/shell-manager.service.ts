@@ -8,14 +8,17 @@ import {
   setSidebarVisible,
 } from '../core/state/layout';
 import {
-  addBottomPanelEntry,
-  addSecondaryPanelEntry,
   addSidebarEntry,
   addToolbarAction,
+} from '../core/state/shell-content';
+import {
+  registerAndOpenTab,
+  removeTab,
+  addBottomPanelEntry,
+  addSecondaryPanelEntry,
   removeBottomPanelEntry,
   removeSecondaryPanelEntry,
-} from '../core/state/shell-content';
-import { registerAndOpenTab, removeTab } from '../core/state/workspace';
+} from '../core/state/workspace';
 import {
   IBottomPanelEntry,
   ICentralRegionTab,

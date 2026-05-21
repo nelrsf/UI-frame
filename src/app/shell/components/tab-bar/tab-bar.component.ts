@@ -3,9 +3,6 @@ import { TabItem, TabCloseGuard } from '../../models/tab-item.model';
 import { DragDropService } from '../../services/drag-drop.service';
 import { DraggableTab, RegionInterface } from '../../../core/models/drag-drop.model';
 import { DockZone } from '../../../core/models/dock-zone-assignment.model';
-import { reorderTab } from '../../../core/state/workspace';
-import { Store } from '@ngrx/store';
-import { AppState } from '../../../core/state/app.state';
 
 /** Duration (ms) after which an unresolved async `beforeClose()` guard times out. */
 const CLOSE_GUARD_TIMEOUT_MS = 10_000;
@@ -20,7 +17,6 @@ const CLOSE_GUARD_TIMEOUT_MS = 10_000;
 export class TabBarComponent {
   private readonly zone = inject(NgZone);
   private readonly dragDropService = inject(DragDropService);
-  private readonly store = inject(Store<AppState>);
   private readonly elementRef = inject(ElementRef);
 
   @Input() tabs: TabItem[] = [];
@@ -135,7 +131,6 @@ export class TabBarComponent {
     if (tabBarEl) {
       this.dragDropService.registerReorderSource(tabBarEl, (fromIndex, toIndex) => {
         this.tabReordered.emit({ fromIndex, toIndex });
-        this.store.dispatch(reorderTab({ groupId: this.groupId, fromIndex, toIndex }));
       });
     }
 
