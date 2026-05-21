@@ -89,6 +89,9 @@
   </div>
 
   <footer class="shell-statusbar" role="contentinfo" aria-label="Status bar">
-    <app-status-bar></app-status-bar>
+    <app-status-bar
+      [leftItems]="(statusBarLeftItems$ | async) ?? []"
+      [rightItems]="(statusBarRightItems$ | async) ?? []"
+    ></app-status-bar>
   </footer>
 </div>

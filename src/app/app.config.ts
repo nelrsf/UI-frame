@@ -10,10 +10,12 @@ import { preferencesReducer, PreferencesEffects } from './core/state/preferences
 import { workspaceReducer } from './core/state/workspace';
 import { shellContentReducer } from './core/state/shell-content';
 import { commandTelemetryReducer } from './core/state/command-telemetry';
+import { statusBarReducer, StatusBarEffects } from './core/state/status-bar';
 import { ShellManager } from './shell/shell-manager.service';
 import { registerMockContent } from './shell/mock-ui/mock-content.initializer';
 import { FALLBACK_WORKSPACE_ID } from './core/utils/workspace-id.util';
 import { loadPreferences } from './core/state/preferences/preferences.actions';
+import { MockConfigLoader } from './core/infrastructure/mock-config/mock-config.loader';
 
 function initializeShellContent(shell: ShellManager): () => void {
   return () => registerMockContent(shell);
@@ -24,6 +26,10 @@ function initializePreferences(store: Store): () => void {
     store.dispatch(loadPreferences({ workspaceId: FALLBACK_WORKSPACE_ID }));
     return Promise.resolve();
   };
+}
+
+function initializeStatusBarMocks(loader: MockConfigLoader): () => Promise<void> {
+  return () => loader.load();
 }
 
 /**
@@ -59,6 +65,7 @@ export const appConfig: ApplicationConfig = {
     provideState('workspace', workspaceReducer),
     provideState('shellContent', shellContentReducer),
     provideState('commandTelemetry', commandTelemetryReducer),
+    provideState('statusBar', statusBarReducer),
     {
       provide: APP_INITIALIZER,
       useFactory: initializeShellContent,
@@ -71,7 +78,13 @@ export const appConfig: ApplicationConfig = {
       deps: [Store],
       multi: true,
     },
-    provideEffects([PreferencesEffects]),
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initializeStatusBarMocks,
+      deps: [MockConfigLoader],
+      multi: true,
+    },
+    provideEffects([PreferencesEffects, StatusBarEffects]),
     provideStoreDevtools({
       maxAge: 50,
       logOnly: false,

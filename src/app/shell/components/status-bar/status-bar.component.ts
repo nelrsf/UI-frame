@@ -1,6 +1,7 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { NgFor, NgIf, NgTemplateOutlet } from '@angular/common';
 import { StatusBarItem } from '../../models/status-bar-item.model';
+import { CommandRegistryService } from '../../../core/services/command-registry.service';
 
 @Component({
   selector: 'app-status-bar',
@@ -10,13 +11,15 @@ import { StatusBarItem } from '../../models/status-bar-item.model';
   styleUrl: './status-bar.component.css',
 })
 export class StatusBarComponent {
+  private readonly commandRegistry = inject(CommandRegistryService);
+
   @Input() leftItems: StatusBarItem[] = [];
   @Input() rightItems: StatusBarItem[] = [];
 
   onItemClick(item: StatusBarItem): void {
-    if (!item.clickable) {
+    if (!item.clickable || !item.commandId) {
       return;
     }
-    // commandId wiring is reserved for future command-registry integration
+    this.commandRegistry.execute(item.commandId);
   }
 }

@@ -64,6 +64,10 @@ import {
 import { setPreference } from '../core/state/preferences/preferences.actions';
 import { AppTheme, THEME_PREFERENCE_KEY } from '../core/models/theme.model';
 import { TabCloseGuard, TabItem } from './models/tab-item.model';
+import {
+  selectStatusBarLeftItems,
+  selectStatusBarRightItems,
+} from '../core/state/status-bar';
 
 @Component({
   selector: 'app-shell',
@@ -163,6 +167,10 @@ export class ShellComponent implements OnInit, AfterViewInit {
   readonly openTabIds$ = this.store.select(selectTabsForGroup('main')).pipe(
     map((tabs) => new Set(tabs.map((t) => t.id)))
   );
+  /** Observable of status bar items for the left section. */
+  readonly statusBarLeftItems$ = this.store.select(selectStatusBarLeftItems);
+  /** Observable of status bar items for the right section. */
+  readonly statusBarRightItems$ = this.store.select(selectStatusBarRightItems);
   /** Observable of registered tabs not currently open (for the tab-add modal). */
   readonly availableTabsForModal$ = combineLatest([
     this.store.select(selectRegisteredTabsForGroup('main')),

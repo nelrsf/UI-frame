@@ -1,0 +1,45 @@
+{
+  "items": [
+    {
+      "id": "mock-branch",
+      "label": "main",
+      "icon": "🔀",
+      "tooltip": "Current Git branch",
+      "color": "default",
+      "clickable": false,
+      "position": "left"
+    },
+    {
+      "id": "mock-errors",
+      "label": "0 Errors",
+      "icon": "⚠️",
+      "tooltip": "Click to view errors",
+      "color": "default",
+      "clickable": true,
+      "commandId": "statusbar.showErrors",
+      "position": "left"
+    },
+    {
+      "id": "mock-position",
+      "label": "Ln 12, Col 34",
+      "tooltip": "Cursor position",
+      "clickable": false,
+      "position": "right"
+    },
+    {
+      "id": "mock-encoding",
+      "label": "UTF-8",
+      "tooltip": "File encoding",
+      "clickable": false,
+      "position": "right"
+    },
+    {
+      "id": "mock-lang",
+      "label": "TypeScript",
+      "tooltip": "Language mode",
+      "clickable": true,
+      "commandId": "statusbar.changeLanguage",
+      "position": "right"
+    }
+  ]
+}

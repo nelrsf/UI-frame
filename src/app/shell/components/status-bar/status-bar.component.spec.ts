@@ -1,11 +1,19 @@
 import { TestBed } from '@angular/core/testing';
 import { StatusBarComponent } from './status-bar.component';
 import { StatusBarItem } from '../../models/status-bar-item.model';
+import { CommandRegistryService } from '../../../core/services/command-registry.service';
 
 describe('StatusBarComponent', () => {
+  let mockCommandRegistry: jasmine.SpyObj<CommandRegistryService>;
+
   beforeEach(async () => {
+    mockCommandRegistry = jasmine.createSpyObj('CommandRegistryService', ['execute']);
+
     await TestBed.configureTestingModule({
       imports: [StatusBarComponent],
+      providers: [
+        { provide: CommandRegistryService, useValue: mockCommandRegistry },
+      ],
     }).compileComponents();
   });
 
@@ -105,6 +113,7 @@ describe('StatusBarComponent', () => {
     component.leftItems = [item];
     fixture.detectChanges();
     expect(() => component.onItemClick(item)).not.toThrow();
+    expect(mockCommandRegistry.execute).not.toHaveBeenCalled();
   });
 
   it('should return early (no-op) when a non-clickable item is clicked', () => {
@@ -113,8 +122,8 @@ describe('StatusBarComponent', () => {
     const item: StatusBarItem = { id: 'noclk', label: 'No click', clickable: false };
     component.leftItems = [item];
     fixture.detectChanges();
-    // Calling onItemClick with clickable=false must not throw and must return without effect.
     expect(() => component.onItemClick(item)).not.toThrow();
+    expect(mockCommandRegistry.execute).not.toHaveBeenCalled();
   });
 
   it('should have role="contentinfo" on the container', () => {
@@ -138,5 +147,22 @@ describe('StatusBarComponent', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     const bar = compiled.querySelector('.status-bar');
     expect(bar?.getAttribute('aria-live')).toBe('polite');
+  });
+
+  it('should execute command via CommandRegistry when clickable item with commandId is clicked', () => {
+    const fixture = TestBed.createComponent(StatusBarComponent);
+    const component = fixture.componentInstance;
+    const item: StatusBarItem = {
+      id: 'cmd-item',
+      label: 'Run Command',
+      clickable: true,
+      commandId: 'test.command',
+    };
+    component.leftItems = [item];
+    fixture.detectChanges();
+
+    component.onItemClick(item);
+
+    expect(mockCommandRegistry.execute).toHaveBeenCalledWith('test.command');
   });
 });

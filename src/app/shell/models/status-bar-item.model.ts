@@ -6,4 +6,5 @@ export interface StatusBarItem {
   color?: 'default' | 'warning' | 'error' | 'success';
   clickable: boolean;
   commandId?: string;
+  position?: 'left' | 'right';
 }
