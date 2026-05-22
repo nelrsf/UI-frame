@@ -61,10 +61,10 @@ export class DragDropService implements OnDestroy {
 
   private _globalCleanup: (() => void) | null = null;
 
-  // Reorder source registration
-  private _reorderSourceElement: HTMLElement | null = null;
-  private _reorderCallback: ((fromIndex: number, toIndex: number) => void) | null = null;
+  // Reorder source registration — supports multiple tab bars (central, bottom, secondary)
+  private _reorderSources = new Map<HTMLElement, (fromIndex: number, toIndex: number) => void>();
   private _reorderTargetIndex: number | null = null;
+  private _reorderTargetElement: HTMLElement | null = null;
 
   // Drag threshold — only start dragging after pointer moves this many pixels
   private readonly DRAG_THRESHOLD = 4;
@@ -161,13 +161,13 @@ export class DragDropService implements OnDestroy {
    * Registers a tab bar element as a reorder source.
    * When a tab is dropped back onto its source tab bar at a different position,
    * the callback is invoked with the from/to indices.
+   * Multiple tab bars can be registered (central, bottom, secondary).
    */
   registerReorderSource(
     element: HTMLElement,
     callback: (fromIndex: number, toIndex: number) => void
   ): void {
-    this._reorderSourceElement = element;
-    this._reorderCallback = callback;
+    this._reorderSources.set(element, callback);
   }
 
   // ── Drag Lifecycle ─────────────────────────────────────────────────────────
@@ -234,6 +234,7 @@ export class DragDropService implements OnDestroy {
     // Already dragging — process normally.
     // Detect active drop zone via bounding box intersection.
     const { activeDropZone, dropCompatible } = this._detectDropZone(x, y, currentState.draggedTab);
+    console.log("Dragged tab:", JSON.stringify(currentState.draggedTab));
 
     // Detect reorder target index if pointer is over the source tab bar.
     const reorderTargetIndex = this._detectReorderTargetIndex(x, y, currentState.draggedTab);
@@ -280,13 +281,16 @@ export class DragDropService implements OnDestroy {
     const { draggedTab, activeDropZone, dropCompatible } = currentState;
 
     // Check for same-region reorder first.
-    if (this._reorderTargetIndex !== null && this._reorderCallback) {
-      // Find the source tab index in the tab bar.
-      const sourceIndex = this._findTabIndexInTabBar(draggedTab.id);
-      if (sourceIndex !== null && sourceIndex !== this._reorderTargetIndex) {
-        this._reorderCallback(sourceIndex, this._reorderTargetIndex);
-        this._resetState();
-        return;
+    if (this._reorderTargetIndex !== null && this._reorderTargetElement) {
+      const callback = this._reorderSources.get(this._reorderTargetElement);
+      if (callback) {
+        // Find the source tab index in the tab bar.
+        const sourceIndex = this._findTabIndexInTabBar(draggedTab.id);
+        if (sourceIndex !== null && sourceIndex !== this._reorderTargetIndex) {
+          callback(sourceIndex, this._reorderTargetIndex);
+          this._resetState();
+          return;
+        }
       }
     }
 
@@ -462,35 +466,43 @@ export class DragDropService implements OnDestroy {
     y: number,
     draggedTab: DraggableTab | null
   ): number | null {
-    if (!this._reorderSourceElement || !draggedTab) return null;
+    if (!draggedTab) return null;
 
-    const rect = this._reorderSourceElement.getBoundingClientRect();
-    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
-      return null;
-    }
-
-    // Find the tab element at the pointer position.
-    const tabElements = this._reorderSourceElement.querySelectorAll('[role="tab"]');
-    for (let i = 0; i < tabElements.length; i++) {
-      const tabRect = tabElements[i].getBoundingClientRect();
-      const midX = tabRect.left + tabRect.width / 2;
-      if (x < midX) {
-        return i;
+    for (const [element] of this._reorderSources) {
+      const rect = element.getBoundingClientRect();
+      if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+        continue;
       }
+
+      // Pointer is over this tab bar — find the target index.
+      const tabElements = element.querySelectorAll('[role="tab"]');
+      for (let i = 0; i < tabElements.length; i++) {
+        const tabRect = tabElements[i].getBoundingClientRect();
+        const midX = tabRect.left + tabRect.width / 2;
+        if (x < midX) {
+          this._reorderTargetElement = element;
+          return i;
+        }
+      }
+
+      // Pointer is past all tabs — target is the last position.
+      this._reorderTargetElement = element;
+      return tabElements.length;
     }
 
-    // Pointer is past all tabs — target is the last position.
-    return tabElements.length;
+    // Pointer is not over any registered tab bar.
+    this._reorderTargetElement = null;
+    return null;
   }
 
   private _findTabIndexInTabBar(tabId: string): number | null {
-    if (!this._reorderSourceElement) return null;
-
-    const tabElements = this._reorderSourceElement.querySelectorAll('[role="tab"]');
-    for (let i = 0; i < tabElements.length; i++) {
-      const testId = tabElements[i].getAttribute('data-testid');
-      if (testId === `tab-${tabId}`) {
-        return i;
+    for (const element of this._reorderSources.keys()) {
+      const tabElements = element.querySelectorAll('[role="tab"]');
+      for (let i = 0; i < tabElements.length; i++) {
+        const testId = tabElements[i].getAttribute('data-testid');
+        if (testId?.includes(tabId)) {
+          return i;
+        }
       }
     }
 
