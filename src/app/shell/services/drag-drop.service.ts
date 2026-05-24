@@ -16,22 +16,6 @@ import { WithCloseable, WithDraggable, WithPinnable } from '../models/tab-item.m
 import { isTabCloseable, isTabPinnable } from '../common/ShellTabGuardTypes';
 
 /**
- * Payload emitted when a cross-region drop succeeds.
- * The subscriber (ShellComponent) is responsible for calling ShellManager
- * to register the tab in the target region.
- */
-export interface CrossRegionDropPayload {
-  tabId: string;
-  label: string;
-  icon?: string;
-  componentType: Type<unknown>;
-  sourceZone: DockZone;
-  targetZone: DockZone;
-  pinned: boolean;
-  dirty: boolean;
-}
-
-/**
  * Central service that manages the lifecycle of drag-and-drop operations
  * across all shell regions.
  *
@@ -69,7 +53,7 @@ export class DragDropService implements OnDestroy {
   private _dragStartY = 0;
 
   // Cross-region drop event (avoids circular DI with ShellManager)
-  private readonly _crossRegionDrop$ = new Subject<CrossRegionDropPayload>();
+  private readonly _crossRegionDrop$ = new Subject<ShellTab & WithDraggable>();
   private readonly _destroy$ = new Subject<void>();
 
   constructor(
@@ -105,7 +89,7 @@ export class DragDropService implements OnDestroy {
    * Observable that emits when a cross-region drop succeeds.
    * Subscribers must call ShellManager to register the tab in the target region.
    */
-  readonly crossRegionDrop$: Observable<CrossRegionDropPayload> = this._crossRegionDrop$.asObservable();
+  readonly crossRegionDrop$: Observable<ShellTab & WithDraggable> = this._crossRegionDrop$.asObservable();
 
   // ── Drop Zone Management ───────────────────────────────────────────────────
 
@@ -207,7 +191,6 @@ export class DragDropService implements OnDestroy {
     // Already dragging — process normally.
     // Detect active drop zone via bounding box intersection.
     const { activeDropZone, dropCompatible } = this._detectDropZone(x, y, currentState.draggedTab);
-    console.log("Dragged tab:", JSON.stringify(currentState.draggedTab));
 
     // Detect reorder target index if pointer is over the source tab bar.
     const reorderTargetIndex = this._detectReorderTargetIndex(x, y, currentState.draggedTab);
@@ -362,16 +345,7 @@ export class DragDropService implements OnDestroy {
     );
 
     // Emit event for ShellComponent to register in target region.
-    this._crossRegionDrop$.next({
-      tabId: draggedTab.id,
-      label: draggedTab.label,
-      icon: draggedTab.icon,
-      componentType: draggedTab.component,
-      sourceZone: draggedTab.draggable.sourceZone,
-      targetZone,
-      pinned: isTabPinnable(draggedTab) ? draggedTab.pinnable?.pinned ?? false : false,
-      dirty: isTabCloseable(draggedTab) ? draggedTab.closeable?.dirty ?? false : false,
-    });
+    this._crossRegionDrop$.next(draggedTab);
   }
 
   private _resetState(): void {

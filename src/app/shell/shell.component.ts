@@ -380,21 +380,11 @@ export class ShellComponent implements OnInit, AfterViewInit {
     // Handle cross-region drop events — register tab in target region.
     this.dragDropService.crossRegionDrop$
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((drop) => {
-        if (drop.targetZone === DockZone.BottomPanel) {
-          this.shellManager.addBottomPanelEntry({
-            id: drop.tabId,
-            label: drop.label,
-            icon: drop.icon,
-            component: drop.componentType,
-          });
-        } else if (drop.targetZone === DockZone.SecondaryPanel) {
-          this.shellManager.addSecondaryPanelEntry({
-            id: drop.tabId,
-            label: drop.label,
-            icon: drop.icon,
-            component: drop.componentType,
-          });
+      .subscribe((tab) => {
+        if (tab.draggable?.targetZone === DockZone.BottomPanel) {
+          this.shellManager.addBottomPanelEntry(tab);
+        } else if (tab.draggable?.targetZone === DockZone.SecondaryPanel) {
+          this.shellManager.addSecondaryPanelEntry(tab);
         }
       });
   }

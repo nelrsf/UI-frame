@@ -29,6 +29,7 @@ export const MOCK_DASHBOARD_TAB: ShellTab & WithDraggable = {
     allowableDropTargets: [
       DockZone.BottomPanel,
       DockZone.SecondaryPanel,
+      DockZone.PrimaryWorkspace
     ],
     sourceZone: DockZone.PrimaryWorkspace,
     targetZone: DockZone.PrimaryWorkspace
@@ -104,11 +105,19 @@ export const MOCK_LOGS_PANEL: ShellTab = {
   component: MockBottomLogsComponent
 };
 
-export const MOCK_WARNINGS_PANEL: ShellTab = {
+export const MOCK_WARNINGS_PANEL: ShellTab & WithDraggable = {
   id: 'mock-warnings',
   label: 'Warnings',
   icon: '⚠️',
-  component: MockBottomWarningsComponent
+  component: MockBottomWarningsComponent,
+  draggable: {
+    allowableDropTargets: [
+      DockZone.BottomPanel,
+      DockZone.SecondaryPanel,
+    ],
+    sourceZone: DockZone.BottomPanel,
+    targetZone: DockZone.BottomPanel
+  }
 };
 
 export const MOCK_SECONDARY_WEATHER_ENTRY: ShellTab = {

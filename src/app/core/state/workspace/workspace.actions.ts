@@ -1,6 +1,7 @@
 import { createAction, props } from '@ngrx/store';
 import { ShellTab } from '../../../shell/contracts/ShellTab';
 import { DockZone } from '../../models/dock-zone-assignment.model';
+import { WithDraggable } from '../../../shell/models/tab-item.model';
 
 /**
  * Registers a tab in the workspace state without making it active or visible.
@@ -90,7 +91,7 @@ export const moveTabToZone = createAction(
     tabId: string;
     sourceZone: DockZone;
     targetZone: DockZone;
-    tabMetadata: ShellTab;
+    tabMetadata: ShellTab & WithDraggable;
   }>()
 );
 

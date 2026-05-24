@@ -2,7 +2,7 @@ import { createReducer, on } from '@ngrx/store';
 import { DockZone } from '../../models/dock-zone-assignment.model';
 import * as WorkspaceActions from './workspace.actions';
 import { ShellTab } from '../../../shell/contracts/ShellTab';
-import { isTabCloseable, isTabPinnable } from '../../../shell/common/ShellTabGuardTypes';
+import { isTabCloseable, isTabDraggable, isTabPinnable } from '../../../shell/common/ShellTabGuardTypes';
 
 export interface WorkspaceState {
   /** All central region tabs ever registered; closeTab leaves them here for reopening. */
@@ -63,15 +63,6 @@ function registerCentralTab(state: WorkspaceState, tab: ShellTab): WorkspaceStat
       : [...state.registeredTabs, tab],
     tabs: [...state.tabs, tab],
   };
-}
-
-function pickSecondaryDefault(entries: readonly ShellTab[]): string | null {
-  if (entries.length === 0) {
-    return null;
-  }
-
-  const weather = entries.find((entry) => entry.id === 'secondary-weather');
-  return weather?.id ?? entries[0].id;
 }
 
 export const workspaceReducer = createReducer(
@@ -214,11 +205,9 @@ export const workspaceReducer = createReducer(
       }
 
       const tabs = state.tabs.filter((tab) => tab.id !== tabId);
-      const registeredTabs = state.registeredTabs.filter((tab) => tab.id !== tabId);
       nextState = {
         ...state,
         tabs,
-        registeredTabs,
         activeTabId: resolveActiveAfterRemoval(state.activeTabId, tabId, tabIdx, tabs),
       };
     } else if (sourceZone === DockZone.BottomPanel) {
@@ -231,19 +220,37 @@ export const workspaceReducer = createReducer(
       nextState = {
         ...state,
         secondaryPanelEntries,
-        activeSecondaryPanelEntryId:
-          state.activeSecondaryPanelEntryId === tabId
-            ? pickSecondaryDefault(secondaryPanelEntries)
-            : state.activeSecondaryPanelEntryId,
+        activeSecondaryPanelEntryId: tabMetadata.id,
       };
     }
 
-    if (targetZone !== DockZone.PrimaryWorkspace) {
-      return nextState;
+    if (isTabDraggable(tabMetadata) && tabMetadata.draggable) {
+      tabMetadata.draggable.sourceZone = targetZone;
+    } else {
+      throw new Error(`[Workspace] moveTabToZone: Tab '${tabId}' is not draggable but received in moveTabToZone action.`);
     }
 
-    const registered = registerCentralTab(nextState, tabMetadata);
-    return { ...registered, activeTabId: tabMetadata.id };
+    if (targetZone === DockZone.PrimaryWorkspace) {
+      nextState = {
+        ...nextState,
+        tabs: [...nextState.tabs, tabMetadata],
+        activeTabId: tabMetadata.id,
+      }
+    } else if (targetZone === DockZone.BottomPanel) {
+      nextState = {
+        ...nextState,
+        bottomPanelTabs: [...nextState.bottomPanelTabs, tabMetadata],
+      };
+    } else if (targetZone === DockZone.SecondaryPanel) {
+      nextState = {
+        ...nextState,
+        secondaryPanelEntries: [...nextState.secondaryPanelEntries, tabMetadata],
+        activeSecondaryPanelEntryId: tabMetadata.id,
+      };
+    }
+
+    return nextState;
+
   }),
 
   on(WorkspaceActions.addBottomPanelEntry, (state, panelTab) => {
@@ -294,21 +301,13 @@ export const workspaceReducer = createReducer(
     }
 
     const secondaryPanelEntries = [...state.secondaryPanelEntries, entry];
-    const hasCurrentActive =
-      !!state.activeSecondaryPanelEntryId &&
-      secondaryPanelEntries.some((existing) => existing.id === state.activeSecondaryPanelEntryId);
 
-    const activeSecondaryPanelEntryId =
-      entry.id === 'secondary-weather'
-        ? 'secondary-weather'
-        : hasCurrentActive
-          ? state.activeSecondaryPanelEntryId
-          : pickSecondaryDefault(secondaryPanelEntries);
+
 
     return {
       ...state,
       secondaryPanelEntries,
-      activeSecondaryPanelEntryId,
+      activeSecondaryPanelEntryId: entry.id,
     };
   }),
 
@@ -317,10 +316,7 @@ export const workspaceReducer = createReducer(
     if (!exists) return state;
 
     const secondaryPanelEntries = state.secondaryPanelEntries.filter((entry) => entry.id !== entryId);
-    const activeSecondaryPanelEntryId =
-      state.activeSecondaryPanelEntryId === entryId
-        ? pickSecondaryDefault(secondaryPanelEntries)
-        : state.activeSecondaryPanelEntryId;
+    const activeSecondaryPanelEntryId = secondaryPanelEntries[secondaryPanelEntries.length - 1]?.id ?? null;
 
     return { ...state, secondaryPanelEntries, activeSecondaryPanelEntryId };
   }),
@@ -334,7 +330,7 @@ export const workspaceReducer = createReducer(
     console.warn(`[Workspace] Secondary panel entry with id '${id}' not found. Applying fallback.`);
     return {
       ...state,
-      activeSecondaryPanelEntryId: pickSecondaryDefault(state.secondaryPanelEntries),
+      activeSecondaryPanelEntryId: id,
     };
   }),
 
