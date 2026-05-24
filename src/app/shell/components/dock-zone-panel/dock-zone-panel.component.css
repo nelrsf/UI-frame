@@ -6,6 +6,7 @@
 }
 
 .dock-zone-panel {
+  position: relative;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -170,4 +171,19 @@
   margin: 0;
   font-size: var(--font-size-base, 14px);
   text-align: center;
+}
+
+.drop-zone-highlight {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  box-shadow: inset 0 0 0 3px transparent;
+}
+
+:host(.drop-zone-compatible) .drop-zone-highlight {
+  opacity: 1;
+  box-shadow: inset 0 0 0 3px var(--color-success, #4caf50);
 }
