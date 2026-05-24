@@ -20,9 +20,6 @@ import {
   removeSecondaryPanelEntry,
 } from '../core/state/workspace';
 import {
-  BottomPanelEntry,
-  CentralRegionTab,
-  SecondaryPanelEntry,
   ISidebarEntry,
   IToolbarAction,
 } from './contracts';
@@ -111,7 +108,7 @@ export class ShellManager {
     this.store.dispatch(addToolbarAction(toolbarAction));
   }
 
-  addBottomPanelEntry(panel: BottomPanelEntry): void {
+  addBottomPanelEntry(panel: ShellTab): void {
     if (this.bottomPanelIds.has(panel.id)) {
       console.warn(`[ShellManager] Duplicate bottom panel entry id '${panel.id}' ignored.`);
       return;
@@ -122,7 +119,7 @@ export class ShellManager {
     this.store.dispatch(addBottomPanelEntry(panel));
   }
 
-  addSecondaryPanelEntry(entry: SecondaryPanelEntry): void {
+  addSecondaryPanelEntry(entry: ShellTab): void {
     if (this.secondaryPanelIds.has(entry.id)) {
       console.warn(`[ShellManager] Duplicate secondary panel entry id '${entry.id}' ignored.`);
       return;
@@ -146,9 +143,9 @@ export class ShellManager {
     this.store.dispatch(setSecondaryPanelVisible({ visible }));
   }
 
-  removeTab(tabId: string, groupId: string): void {
+  removeTab(tabId: string): void {
     this.tabIds.delete(tabId);
-    this.store.dispatch(removeTab({ tabId, groupId }));
+    this.store.dispatch(removeTab({ tabId }));
   }
 
   removeBottomPanelEntry(entryId: string): void {

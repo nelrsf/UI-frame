@@ -3,76 +3,69 @@ import { DockZone } from '../../models/dock-zone-assignment.model';
 import * as WorkspaceActions from './workspace.actions';
 import { ShellTab } from '../../../shell/contracts/ShellTab';
 import { isTabCloseable, isTabPinnable } from '../../../shell/common/ShellTabGuardTypes';
-import { WithCloseable } from '../../../shell/models/tab-item.model';
-import { SecondaryPanelEntry } from '../../../shell/contracts';
 
-// ---------------------------------------------------------------------------
-// State shape
-// ---------------------------------------------------------------------------
-
-/**
- * In-memory state for a single tab group.
- *
- * A tab group is the unit rendered by a `TabBarComponent` instance and can be
- * assigned to one of the three MVP dock zones.
- */
-export interface TabGroupState {
-  /** Stable identifier for this group (matches `TabItem.groupId`). */
-  readonly groupId: string;
-  /** All tabs ever registered in this group (never removed by closeTab). */
-  readonly registeredTabs: readonly ShellTab[];
-  /** Ordered list of currently open tabs. Order matches the visual display order. */
-  readonly tabs: readonly ShellTab[];
-  /** Id of the currently active tab, or `null` when the group is empty. */
-  readonly activeTabId: string | null;
-  /** The dock zone this group is assigned to. */
-  readonly zone: DockZone;
-}
-
-/** Root workspace state managed by this reducer. */
 export interface WorkspaceState {
-  /** All known tab groups, in the order they were first created. */
-  readonly tabGroups: readonly TabGroupState[];
+  /** All central region tabs ever registered; closeTab leaves them here for reopening. */
+  readonly registeredTabs: readonly ShellTab[];
+  /** Ordered list of currently open central region tabs. */
+  readonly tabs: readonly ShellTab[];
+  /** Active central region tab id, or null when no central tab is open. */
+  readonly activeTabId: string | null;
   /** Bottom panel tabs registered in this workspace. */
   readonly bottomPanelTabs: readonly ShellTab[];
   /** Secondary panel entries registered in this workspace. */
-  readonly secondaryPanelEntries: readonly SecondaryPanelEntry[];
+  readonly secondaryPanelEntries: readonly ShellTab[];
   /** ID of the currently active secondary panel entry. */
   readonly activeSecondaryPanelEntryId: string | null;
 }
 
-// ---------------------------------------------------------------------------
-// Initial state
-// ---------------------------------------------------------------------------
-
 export const initialWorkspaceState: WorkspaceState = {
-  tabGroups: [],
+  registeredTabs: [],
+  tabs: [],
+  activeTabId: null,
   bottomPanelTabs: [],
   secondaryPanelEntries: [],
   activeSecondaryPanelEntryId: null,
 };
 
-// ---------------------------------------------------------------------------
-// Internal helpers (pure, not exported)
-// ---------------------------------------------------------------------------
+function resolveActiveAfterRemoval(
+  currentActiveId: string | null,
+  removedTabId: string,
+  removedIndex: number,
+  remainingTabs: readonly ShellTab[]
+): string | null {
+  if (currentActiveId !== removedTabId) {
+    return currentActiveId;
+  }
 
-function groupIndex(state: WorkspaceState, groupId: string): number {
-  return state.tabGroups.findIndex((g) => g.groupId === groupId);
+  if (remainingTabs.length === 0) {
+    return null;
+  }
+
+  return removedIndex > 0
+    ? remainingTabs[removedIndex - 1].id
+    : remainingTabs[0].id;
 }
 
-function updateGroup(
-  state: WorkspaceState,
-  groupId: string,
-  updater: (group: TabGroupState) => TabGroupState
-): WorkspaceState {
-  const idx = groupIndex(state, groupId);
-  if (idx < 0) return state;
-  const groups = [...state.tabGroups] as TabGroupState[];
-  groups[idx] = updater(groups[idx]);
-  return { ...state, tabGroups: groups };
+function registerCentralTab(state: WorkspaceState, tab: ShellTab): WorkspaceState {
+  if (!tab) {
+    return state;
+  }
+
+  if (state.tabs.some((existing) => existing.id === tab.id)) {
+    return state;
+  }
+
+  return {
+    ...state,
+    registeredTabs: state.registeredTabs.some((existing) => existing.id === tab.id)
+      ? state.registeredTabs
+      : [...state.registeredTabs, tab],
+    tabs: [...state.tabs, tab],
+  };
 }
 
-function pickSecondaryDefault(entries: readonly SecondaryPanelEntry[]): string | null {
+function pickSecondaryDefault(entries: readonly ShellTab[]): string | null {
   if (entries.length === 0) {
     return null;
   }
@@ -81,308 +74,178 @@ function pickSecondaryDefault(entries: readonly SecondaryPanelEntry[]): string |
   return weather?.id ?? entries[0].id;
 }
 
-// ---------------------------------------------------------------------------
-// Reducer
-// ---------------------------------------------------------------------------
-
 export const workspaceReducer = createReducer(
   initialWorkspaceState,
 
-  // ── registerTab ───────────────────────────────────────────────────────────
-  on(WorkspaceActions.registerTab, (state, { tab }) => {
-    if (!tab || !tab.groupId) return state; // groupId is required for this action.
-    const idx = groupIndex(state, tab.groupId);
+  on(WorkspaceActions.registerTab, (state, { tab }) => registerCentralTab(state, tab)),
 
-    if (idx >= 0) {
-      const group = state.tabGroups[idx];
-      // Tab already present in group — no-op.
-      if (group.tabs.some((t) => t.id === tab.id)) {
-        return state;
-      }
-      // Append to existing group without activating.
-      const groups = [...state.tabGroups] as TabGroupState[];
-      groups[idx] = {
-        ...group,
-        registeredTabs: group.registeredTabs.some((t) => t.id === tab.id)
-          ? group.registeredTabs
-          : [...group.registeredTabs, tab],
-        tabs: [...group.tabs, tab],
-      };
-      return { ...state, tabGroups: groups };
+  on(WorkspaceActions.openTab, (state, { tab }) => {
+    if (!tab) {
+      return state;
     }
 
-    // Create a new group assigned to PrimaryWorkspace by default.
+    if (state.tabs.some((existing) => existing.id === tab.id)) {
+      return { ...state, activeTabId: tab.id };
+    }
+
+    if (!state.registeredTabs.some((existing) => existing.id === tab.id)) {
+      console.warn(
+        `[Workspace] openTab: tab '${tab.id}' not registered. Call registerTab first.`
+      );
+      return state;
+    }
+
     return {
       ...state,
-      tabGroups: [
-        ...state.tabGroups,
-        {
-          groupId: tab.groupId,
-          registeredTabs: [tab],
-          tabs: [tab],
-          activeTabId: null,
-          zone: DockZone.PrimaryWorkspace,
-        },
-      ],
+      tabs: [...state.tabs, tab],
+      activeTabId: tab.id,
     };
   }),
 
-  // ── openTab ──────────────────────────────────────────────────────────────
-  on(WorkspaceActions.openTab, (state, { tab }) => {
-    if (!tab || !tab.groupId) return state; // groupId is required for this action.
-    const idx = groupIndex(state, tab.groupId);
-
-    if (idx >= 0) {
-      const group = state.tabGroups[idx];
-      // Tab already present — just activate it.
-      if (group.tabs.some((t) => t.id === tab.id)) {
-        return updateGroup(state, tab.groupId, (g) => ({ ...g, activeTabId: tab.id }));
-      }
-      // Tab registered but not currently open — add to tabs and activate.
-      const groups = [...state.tabGroups] as TabGroupState[];
-      groups[idx] = { ...group, tabs: [...group.tabs, tab], activeTabId: tab.id };
-      return { ...state, tabGroups: groups };
-    }
-
-    // Tab not registered in any group — no-op with warning.
-    console.warn(
-      `[Workspace] openTab: tab '${tab.id}' not registered. Call registerTab first.`
-    );
-    return state;
+  on(WorkspaceActions.registerAndOpenTab, (state, { tab }) => {
+    const registered = registerCentralTab(state, tab);
+    return tab ? { ...registered, activeTabId: tab.id } : registered;
   }),
 
-  // ── registerAndOpenTab ───────────────────────────────────────────────────
-  on(WorkspaceActions.registerAndOpenTab, (state, { tab }) => {
+  on(WorkspaceActions.closeTab, (state, { tabId }) => {
+    const tabIdx = state.tabs.findIndex((tab) => tab.id === tabId);
+    if (tabIdx < 0) {
+      return state;
+    }
 
-    if (!tab || !tab.groupId) return state; // groupId is required for this action.
-    // Step 1: Apply registerTab logic.
-    let intermediate = state;
-    const groupIdx = groupIndex(intermediate, tab.groupId);
+    const tab = state.tabs[tabIdx];
+    if (!isTabCloseable(tab)) {
+      return state;
+    }
 
-    if (groupIdx >= 0) {
-      const group = intermediate.tabGroups[groupIdx];
-      if (!group.tabs.some((t) => t.id === tab.id)) {
-        const groups = [...intermediate.tabGroups] as TabGroupState[];
-        groups[groupIdx] = {
-          ...group,
-          registeredTabs: group.registeredTabs.some((t) => t.id === tab.id)
-            ? group.registeredTabs
-            : [...group.registeredTabs, tab],
-          tabs: [...group.tabs, tab],
-        };
-        intermediate = { ...intermediate, tabGroups: groups };
+    if (isTabPinnable(tab) && tab.pinnable?.pinned) {
+      return state;
+    }
+
+    const tabs = state.tabs.filter((candidate) => candidate.id !== tabId);
+
+    return {
+      ...state,
+      tabs,
+      activeTabId: resolveActiveAfterRemoval(state.activeTabId, tabId, tabIdx, tabs),
+    };
+  }),
+
+  on(WorkspaceActions.selectTab, (state, { tabId }) => {
+    if (!state.tabs.some((tab) => tab.id === tabId)) {
+      return state;
+    }
+
+    return { ...state, activeTabId: tabId };
+  }),
+
+  on(WorkspaceActions.reorderTab, (state, { workspaceId, fromIndex, toIndex }) => {
+    void workspaceId;
+
+    if (
+      fromIndex < 0 ||
+      fromIndex >= state.tabs.length ||
+      toIndex < 0 ||
+      toIndex > state.tabs.length ||
+      fromIndex === toIndex
+    ) {
+      return state;
+    }
+
+    const tabs = [...state.tabs];
+    const [moved] = tabs.splice(fromIndex, 1);
+    tabs.splice(toIndex, 0, moved);
+
+    return { ...state, tabs };
+  }),
+
+  on(WorkspaceActions.setTabDirty, (state, { tabId, dirty }) => ({
+    ...state,
+    tabs: state.tabs.map((tab) =>
+      tab.id === tabId && isTabCloseable(tab)
+        ? { ...tab, closeable: { ...tab.closeable, dirty } }
+        : tab
+    ),
+    registeredTabs: state.registeredTabs.map((tab) =>
+      tab.id === tabId && isTabCloseable(tab)
+        ? { ...tab, closeable: { ...tab.closeable, dirty } }
+        : tab
+    ),
+  })),
+
+  on(WorkspaceActions.setTabPinned, (state, { tabId, pinned }) => ({
+    ...state,
+    tabs: state.tabs.map((tab) =>
+      tab.id === tabId && isTabPinnable(tab)
+        ? { ...tab, pinnable: { ...tab.pinnable, pinned } }
+        : tab
+    ),
+    registeredTabs: state.registeredTabs.map((tab) =>
+      tab.id === tabId && isTabPinnable(tab)
+        ? { ...tab, pinnable: { ...tab.pinnable, pinned } }
+        : tab
+    ),
+  })),
+
+  on(WorkspaceActions.removeTab, (state, { tabId }) => {
+    const tabIdx = state.tabs.findIndex((tab) => tab.id === tabId);
+    if (tabIdx < 0 && !state.registeredTabs.some((tab) => tab.id === tabId)) {
+      return state;
+    }
+
+    const tabs = state.tabs.filter((tab) => tab.id !== tabId);
+    const registeredTabs = state.registeredTabs.filter((tab) => tab.id !== tabId);
+
+    return {
+      ...state,
+      tabs,
+      registeredTabs,
+      activeTabId: resolveActiveAfterRemoval(state.activeTabId, tabId, tabIdx, tabs),
+    };
+  }),
+
+  on(WorkspaceActions.moveTabToZone, (state, { tabId, sourceZone, targetZone, tabMetadata }) => {
+    let nextState = state;
+
+    if (sourceZone === DockZone.PrimaryWorkspace) {
+      const tabIdx = state.tabs.findIndex((tab) => tab.id === tabId);
+      if (tabIdx < 0) {
+        return state;
       }
-    } else {
-      intermediate = {
-        ...intermediate,
-        tabGroups: [
-          ...intermediate.tabGroups,
-          {
-            groupId: tab.groupId,
-            registeredTabs: [tab],
-            tabs: [tab],
-            activeTabId: null,
-            zone: DockZone.PrimaryWorkspace,
-          },
-        ],
+
+      const tabs = state.tabs.filter((tab) => tab.id !== tabId);
+      const registeredTabs = state.registeredTabs.filter((tab) => tab.id !== tabId);
+      nextState = {
+        ...state,
+        tabs,
+        registeredTabs,
+        activeTabId: resolveActiveAfterRemoval(state.activeTabId, tabId, tabIdx, tabs),
+      };
+    } else if (sourceZone === DockZone.BottomPanel) {
+      nextState = {
+        ...state,
+        bottomPanelTabs: state.bottomPanelTabs.filter((tab) => tab.id !== tabId),
+      };
+    } else if (sourceZone === DockZone.SecondaryPanel) {
+      const secondaryPanelEntries = state.secondaryPanelEntries.filter((tab) => tab.id !== tabId);
+      nextState = {
+        ...state,
+        secondaryPanelEntries,
+        activeSecondaryPanelEntryId:
+          state.activeSecondaryPanelEntryId === tabId
+            ? pickSecondaryDefault(secondaryPanelEntries)
+            : state.activeSecondaryPanelEntryId,
       };
     }
 
-    // Step 2: Apply openTab logic (activate the tab).
-    const finalIdx = groupIndex(intermediate, tab.groupId);
-    if (finalIdx >= 0) {
-      const groups = [...intermediate.tabGroups] as TabGroupState[];
-      groups[finalIdx] = { ...groups[finalIdx], activeTabId: tab.id };
-      return { ...intermediate, tabGroups: groups };
+    if (targetZone !== DockZone.PrimaryWorkspace) {
+      return nextState;
     }
 
-    return intermediate;
+    const registered = registerCentralTab(nextState, tabMetadata);
+    return { ...registered, activeTabId: tabMetadata.id };
   }),
 
-  // ── closeTab ─────────────────────────────────────────────────────────────
-  on(WorkspaceActions.closeTab, (state, { tabId, groupId }) => {
-    const idx = groupIndex(state, groupId);
-    if (idx < 0) return state;
-
-    const group = state.tabGroups[idx];
-    const tabIdx = group.tabs.findIndex((t) => t.id === tabId);
-    if (tabIdx < 0) return state;
-
-    const tab = group.tabs[tabIdx];
-
-    // Only closeable tabs can be closed.
-    if (!isTabCloseable(tab)) return state;
-
-    // Pinned tabs are protected from accidental close.
-    if (isTabPinnable(tab) && tab.pinnable?.pinned) return state;
-
-    const newTabs = group.tabs.filter((t) => t.id !== tabId);
-
-    // Resolve the next active tab.
-    let newActiveTabId = group.activeTabId;
-    if (group.activeTabId === tabId) {
-      if (newTabs.length === 0) {
-        newActiveTabId = null;
-      } else if (tabIdx > 0) {
-        newActiveTabId = newTabs[tabIdx - 1].id;
-      } else {
-        newActiveTabId = newTabs[0].id;
-      }
-    }
-
-    const groups = [...state.tabGroups] as TabGroupState[];
-    groups[idx] = { ...group, tabs: newTabs, activeTabId: newActiveTabId };
-    return { ...state, tabGroups: groups };
-  }),
-
-  // ── selectTab ────────────────────────────────────────────────────────────
-  on(WorkspaceActions.selectTab, (state, { tabId, groupId }) =>
-    updateGroup(state, groupId, (g) => ({ ...g, activeTabId: tabId }))
-  ),
-
-  // ── reorderTab ───────────────────────────────────────────────────────────
-  on(WorkspaceActions.reorderTab, (state, { workspaceId, groupId, fromIndex, toIndex }) => {
-    // workspaceId is received for future multi-workspace support;
-    // currently a single workspace is used so it does not affect logic.
-    void workspaceId;
-
-    return updateGroup(state, groupId, (group) => {
-      const tabs = [...group.tabs] as ShellTab[];
-      if (fromIndex < 0 || fromIndex >= tabs.length) return group;
-      if (toIndex < 0 || toIndex > tabs.length) return group;
-      const [moved] = tabs.splice(fromIndex, 1);
-      tabs.splice(toIndex, 0, moved);
-      return { ...group, tabs };
-    })
-  }),
-
-  // ── setTabDirty ──────────────────────────────────────────────────────────
-  on(WorkspaceActions.setTabDirty, (state, { tabId, dirty }) => {
-    const idx = state.tabGroups.findIndex((g) => g.tabs.some((t) => t.id === tabId));
-    if (idx < 0) return state;
-    return updateGroup(state, state.tabGroups[idx].groupId, (g) => ({
-      ...g,
-      tabs: g.tabs.map((t) => (t.id === tabId ? { ...t, dirty } : t)),
-    }));
-  }),
-
-  // ── setTabPinned ─────────────────────────────────────────────────────────
-  on(WorkspaceActions.setTabPinned, (state, { tabId, pinned }) => {
-    const idx = state.tabGroups.findIndex((g) => g.tabs.some((t) => t.id === tabId));
-    if (idx < 0) return state;
-    return updateGroup(state, state.tabGroups[idx].groupId, (g) => ({
-      ...g,
-      tabs: g.tabs.map((t) => (t.id === tabId ? { ...t, pinned } : t)),
-    }));
-  }),
-
-  // ── assignGroupToZone ────────────────────────────────────────────────────
-  on(WorkspaceActions.assignGroupToZone, (state, { groupId, zone }) =>
-    updateGroup(state, groupId, (g) => ({ ...g, zone }))
-  ),
-
-  // ── removeTab ────────────────────────────────────────────────────────────
-  on(WorkspaceActions.removeTab, (state, { tabId, groupId }) => {
-    const idx = groupIndex(state, groupId);
-    if (idx < 0) return state;
-
-    const group = state.tabGroups[idx];
-    const tabIdx = group.tabs.findIndex((t) => t.id === tabId);
-    if (tabIdx < 0) return state;
-
-    const newTabs = group.tabs.filter((t) => t.id !== tabId);
-    const newRegisteredTabs = group.registeredTabs.filter((t) => t.id !== tabId);
-
-    // Resolve the next active tab.
-    let newActiveTabId = group.activeTabId;
-    if (group.activeTabId === tabId) {
-      if (newTabs.length === 0) {
-        newActiveTabId = null;
-      } else if (tabIdx > 0) {
-        newActiveTabId = newTabs[tabIdx - 1].id;
-      } else {
-        newActiveTabId = newTabs[0].id;
-      }
-    }
-
-    const groups = [...state.tabGroups] as TabGroupState[];
-    groups[idx] = { ...group, tabs: newTabs, registeredTabs: newRegisteredTabs, activeTabId: newActiveTabId };
-    return { ...state, tabGroups: groups };
-  }),
-
-  // ── moveTabToZone ────────────────────────────────────────────────────────
-  on(WorkspaceActions.moveTabToZone, (state, { tabId, sourceGroupId, sourceZone, targetZone, tabMetadata }) => {
-    // Step 1: Remove the tab from the source group (inline removeTab logic).
-    const srcIdx = groupIndex(state, sourceGroupId);
-    if (srcIdx < 0) return state;
-
-    const srcGroup = state.tabGroups[srcIdx];
-    const tabIdx = srcGroup.tabs.findIndex((t) => t.id === tabId);
-    if (tabIdx < 0) return state;
-
-    const newTabs = srcGroup.tabs.filter((t) => t.id !== tabId);
-    const newRegisteredTabs = srcGroup.registeredTabs.filter((t) => t.id !== tabId);
-
-    let newActiveTabId = srcGroup.activeTabId;
-    if (srcGroup.activeTabId === tabId) {
-      if (newTabs.length === 0) {
-        newActiveTabId = null;
-      } else if (tabIdx > 0) {
-        newActiveTabId = newTabs[tabIdx - 1].id;
-      } else {
-        newActiveTabId = newTabs[0].id;
-      }
-    }
-
-    const groupsAfterRemove = [...state.tabGroups] as TabGroupState[];
-    groupsAfterRemove[srcIdx] = { ...srcGroup, tabs: newTabs, registeredTabs: newRegisteredTabs, activeTabId: newActiveTabId };
-    let intermediate: WorkspaceState = { ...state, tabGroups: groupsAfterRemove };
-
-    // Step 2: If target is PrimaryWorkspace, add the tab to the target group.
-    if (targetZone === DockZone.PrimaryWorkspace) {
-      if (!tabMetadata || !tabMetadata.groupId) return state; // Metadata with groupId is required to move to PrimaryWorkspace.{
-      const targetIdx = groupIndex(intermediate, tabMetadata.groupId);
-      if (targetIdx >= 0) {
-        const targetGroup = intermediate.tabGroups[targetIdx];
-        if (!targetGroup.tabs.some((t) => t.id === tabMetadata.id)) {
-          const groups = [...intermediate.tabGroups] as TabGroupState[];
-          groups[targetIdx] = {
-            ...targetGroup,
-            registeredTabs: targetGroup.registeredTabs.some((t) => t.id === tabMetadata.id)
-              ? targetGroup.registeredTabs
-              : [...targetGroup.registeredTabs, tabMetadata],
-            tabs: [...targetGroup.tabs, tabMetadata],
-            activeTabId: tabMetadata.id,
-          };
-          intermediate = { ...intermediate, tabGroups: groups };
-        } else {
-          const groups = [...intermediate.tabGroups] as TabGroupState[];
-          groups[targetIdx] = { ...targetGroup, activeTabId: tabMetadata.id };
-          intermediate = { ...intermediate, tabGroups: groups };
-        }
-      } else {
-        intermediate = {
-          ...intermediate,
-          tabGroups: [
-            ...intermediate.tabGroups,
-            {
-              groupId: tabMetadata.groupId ,
-              registeredTabs: [tabMetadata],
-              tabs: [tabMetadata],
-              activeTabId: tabMetadata.id,
-              zone: DockZone.PrimaryWorkspace,
-            },
-          ],
-        };
-      }
-    }
-    // For BottomPanel/SecondaryPanel targets, the caller (DragDropService)
-    // must register the tab in the target region via ShellManager.
-
-    return intermediate;
-  }),
-
-  // ── addBottomPanelEntry ───────────────────────────────────────────────────
   on(WorkspaceActions.addBottomPanelEntry, (state, panelTab) => {
     const idExists = state.bottomPanelTabs.some((tab) => tab.id === panelTab.id);
     if (idExists) {
@@ -395,7 +258,6 @@ export const workspaceReducer = createReducer(
     };
   }),
 
-  // ── removeBottomPanelEntry ────────────────────────────────────────────────
   on(WorkspaceActions.removeBottomPanelEntry, (state, { entryId }) => {
     const exists = state.bottomPanelTabs.some((tab) => tab.id === entryId);
     if (!exists) return state;
@@ -404,10 +266,7 @@ export const workspaceReducer = createReducer(
     return { ...state, bottomPanelTabs };
   }),
 
-  // ── reorderBottomPanelTabs ────────────────────────────────────────────────
   on(WorkspaceActions.reorderBottomPanelTabs, (state, { workspaceId, fromIndex, toIndex }) => {
-    // workspaceId is received for future multi-workspace support;
-    // currently a single workspace is used so it does not affect logic.
     void workspaceId;
 
     if (
@@ -427,7 +286,6 @@ export const workspaceReducer = createReducer(
     return { ...state, bottomPanelTabs };
   }),
 
-  // ── addSecondaryPanelEntry ────────────────────────────────────────────────
   on(WorkspaceActions.addSecondaryPanelEntry, (state, { entry }) => {
     const idExists = state.secondaryPanelEntries.some((existing) => existing.id === entry.id);
     if (idExists) {
@@ -454,7 +312,6 @@ export const workspaceReducer = createReducer(
     };
   }),
 
-  // ── removeSecondaryPanelEntry ─────────────────────────────────────────────
   on(WorkspaceActions.removeSecondaryPanelEntry, (state, { entryId }) => {
     const exists = state.secondaryPanelEntries.some((entry) => entry.id === entryId);
     if (!exists) return state;
@@ -468,7 +325,6 @@ export const workspaceReducer = createReducer(
     return { ...state, secondaryPanelEntries, activeSecondaryPanelEntryId };
   }),
 
-  // ── setActiveSecondaryPanelEntry ──────────────────────────────────────────
   on(WorkspaceActions.setActiveSecondaryPanelEntry, (state, { id }) => {
     const exists = state.secondaryPanelEntries.some((entry) => entry.id === id);
     if (exists) {
@@ -482,10 +338,7 @@ export const workspaceReducer = createReducer(
     };
   }),
 
-  // ── reorderSecondaryPanelEntries ──────────────────────────────────────────
   on(WorkspaceActions.reorderSecondaryPanelEntries, (state, { workspaceId, fromIndex, toIndex }) => {
-    // workspaceId is received for future multi-workspace support;
-    // currently a single workspace is used so it does not affect logic.
     void workspaceId;
 
     if (
@@ -510,5 +363,3 @@ export const workspaceReducer = createReducer(
     return { ...state, secondaryPanelEntries, activeSecondaryPanelEntryId };
   })
 );
-
-

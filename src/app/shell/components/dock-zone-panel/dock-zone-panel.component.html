@@ -1,0 +1,94 @@
+@if (rendered) {
+  <section
+    [ngClass]="panelClasses"
+    [attr.data-testid]="zone"
+    [attr.role]="isPrimaryWorkspace ? 'main' : 'complementary'"
+    [attr.aria-label]="ariaLabel"
+    [style.height.px]="heightPx"
+    [style.width.px]="widthPx"
+  >
+    <header class="dock-zone-panel__header" [attr.data-testid]="isPrimaryWorkspace ? 'tab-bar' : zone + '-header'">
+      <div
+        class="dock-zone-panel__tabs"
+        role="tablist"
+        [attr.aria-label]="ariaLabel + ' tabs'"
+        #tabList
+      >
+        @for (tab of tabs; track tab.id) {
+          <button
+            class="dock-zone-panel__tab"
+            [class.dock-zone-panel__tab--active]="tab.id === activeTab?.id"
+            [class.dock-zone-panel__tab--dirty]="isDirty(tab)"
+            [class.dock-zone-panel__tab--pinned]="isPinned(tab)"
+            [class.dragging]="dragDropService.isDragging()"
+            role="tab"
+            [attr.id]="getTabId(tab)"
+            [attr.aria-selected]="tab.id === activeTab?.id"
+            [attr.tabindex]="tab.id === activeTab?.id ? 0 : -1"
+            [attr.aria-controls]="contentId"
+            [attr.data-testid]="getTabTestId(tab)"
+            (click)="onTabSelect(tab.id)"
+            (pointerdown)="onTabPointerDown($event, tab)"
+          >
+            @if (tab.icon) {
+              <span class="dock-zone-panel__tab-icon" aria-hidden="true">{{ tab.icon }}</span>
+            }
+            <span class="dock-zone-panel__tab-label">{{ tab.label }}</span>
+            @if (isDirty(tab)) {
+              <span class="dock-zone-panel__dirty-indicator" aria-label="Unsaved changes" data-testid="tab-dirty-indicator">.</span>
+            }
+            @if (canClose(tab)) {
+              <button
+                class="dock-zone-panel__close-btn"
+                [class.dock-zone-panel__close-btn--pending]="isClosingGuardPending(tab.id)"
+                [attr.aria-label]="'Close ' + tab.label"
+                [attr.data-testid]="'tab-close-' + tab.id"
+                [disabled]="isClosingGuardPending(tab.id)"
+                (click)="onTabClose($event, tab.id)"
+              >x</button>
+            }
+          </button>
+        }
+      </div>
+
+      @if (isPrimaryWorkspace) {
+        <button
+          class="dock-zone-panel__new-tab-btn"
+          aria-label="Open new tab"
+          data-testid="tab-bar-new-tab"
+          (click)="onNewTab()"
+        >+</button>
+      } @else {
+        <div class="dock-zone-panel__actions" [attr.data-testid]="zone + '-actions'">
+          <button
+            class="dock-zone-panel__action-btn"
+            [attr.aria-label]="'Close ' + ariaLabel"
+            [attr.data-testid]="zone + '-close'"
+            (click)="onClosePanel()"
+          >x</button>
+        </div>
+      }
+    </header>
+
+    <div
+      class="dock-zone-panel__content"
+      [id]="contentId"
+      [attr.data-testid]="isPrimaryWorkspace ? 'content-area' : zone + '-content'"
+      role="tabpanel"
+      [attr.aria-labelledby]="activeTab ? getTabId(activeTab) : null"
+    >
+      @if (activeTab) {
+        <div class="dock-zone-panel__view" data-testid="content-area-view">
+          <ng-container *ngComponentOutlet="activeTab.component"></ng-container>
+        </div>
+      } @else {
+        <div class="dock-zone-panel__empty-state" data-testid="content-area-empty-state" aria-live="polite">
+          @if (isPrimaryWorkspace) {
+            <span class="dock-zone-panel__empty-icon" aria-hidden="true">[]</span>
+          }
+          <p class="dock-zone-panel__empty-text">{{ emptyMessage }}</p>
+        </div>
+      }
+    </div>
+  </section>
+}

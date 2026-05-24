@@ -16,8 +16,6 @@ export interface TabDescriptor {
   resourceKey?: string;
   /** The dock zone this tab belongs to. */
   zone: DockZone;
-  /** Identifier of the tab group this tab belongs to within its zone. */
-  groupId: string;
   /** Whether this tab is pinned and protected from accidental close. */
   pinned: boolean;
   /** Whether the user is allowed to close this tab. */

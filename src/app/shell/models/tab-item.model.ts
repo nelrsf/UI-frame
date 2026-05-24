@@ -33,8 +33,6 @@ export interface IDraggable {
   sourceZone: DockZone;
   /** The zone the tab is being dragged to (null if not currently over a valid drop target). */
   targetZone: DockZone;
-  /** The tab group ID in the source zone. */
-  sourceGroupId: string;
   /** The zones this tab can be dropped into. Used to validate drop targets during dragging. */
   allowableDropTargets: DockZone[];
 }

@@ -1,0 +1,173 @@
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.dock-zone-panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--color-panel-bg, #1e1e1e);
+  color: var(--color-panel-text, #d4d4d4);
+  font: var(--font-size-sm, 13px) var(--font-family-ui, "Segoe UI", system-ui, sans-serif);
+}
+
+.dock-zone-panel__header {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: var(--shell-tabbar-height, 35px);
+  overflow: hidden;
+  background: var(--color-panel-header-bg, #252526);
+  border-bottom: 1px solid var(--color-border-default, #3e3e3e);
+}
+
+.dock-zone-panel--primary .dock-zone-panel__header {
+  border-bottom: 0;
+}
+
+.dock-zone-panel__tabs {
+  display: flex;
+  align-items: stretch;
+  flex: 1;
+  height: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.dock-zone-panel__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1, 4px);
+  flex-shrink: 0;
+  height: 100%;
+  max-width: 220px;
+  padding: 0 var(--spacing-2, 8px);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--color-tab-inactive-text, #969696);
+  font: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  cursor: pointer;
+  user-select: none;
+}
+
+.dock-zone-panel--primary .dock-zone-panel__tab {
+  border-right: 1px solid var(--color-border-default, #3e3e3e);
+  border-bottom: 0;
+  background: var(--color-tab-inactive-bg, #2d2d2d);
+}
+
+.dock-zone-panel__tab:hover {
+  color: var(--color-tab-hover-text, #cccccc);
+  background: var(--color-panel-tab-hover-bg, transparent);
+}
+
+.dock-zone-panel__tab--active {
+  color: var(--color-tab-active-text, #ffffff);
+  border-bottom-color: var(--color-accent, #007acc);
+}
+
+.dock-zone-panel--primary .dock-zone-panel__tab--active {
+  background: var(--color-tab-active-bg, #1e1e1e);
+  border-top: 1px solid var(--color-border-focus, #007fd4);
+}
+
+.dock-zone-panel__tab--dirty .dock-zone-panel__tab-label {
+  font-style: italic;
+}
+
+.dock-zone-panel__tab-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dock-zone-panel__close-btn,
+.dock-zone-panel__action-btn,
+.dock-zone-panel__new-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.dock-zone-panel__close-btn {
+  width: 16px;
+  height: 16px;
+  margin-left: var(--spacing-1, 4px);
+  opacity: 0;
+}
+
+.dock-zone-panel__tab:hover .dock-zone-panel__close-btn,
+.dock-zone-panel__tab--active .dock-zone-panel__close-btn {
+  opacity: 0.7;
+}
+
+.dock-zone-panel__close-btn:hover,
+.dock-zone-panel__action-btn:hover,
+.dock-zone-panel__new-tab-btn:hover {
+  background: var(--color-toolbar-action-hover, rgba(255, 255, 255, 0.1));
+}
+
+.dock-zone-panel__new-tab-btn {
+  width: 28px;
+  height: 100%;
+  color: var(--color-tab-inactive-text, #969696);
+  font-size: 18px;
+}
+
+.dock-zone-panel__actions {
+  display: flex;
+  flex-shrink: 0;
+  padding: 0 var(--spacing-1, 4px);
+}
+
+.dock-zone-panel__action-btn {
+  width: 24px;
+  height: 24px;
+}
+
+.dock-zone-panel__content,
+.dock-zone-panel__view {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: auto;
+}
+
+.dock-zone-panel--bottom .dock-zone-panel__content,
+.dock-zone-panel--secondary .dock-zone-panel__content {
+  padding: var(--spacing-2, 8px);
+}
+
+.dock-zone-panel__empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--spacing-3, 12px);
+  color: var(--color-content-empty-text, #858585);
+  user-select: none;
+}
+
+.dock-zone-panel__empty-text {
+  margin: 0;
+  font-size: var(--font-size-base, 14px);
+  text-align: center;
+}

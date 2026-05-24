@@ -21,18 +21,19 @@
 
   <div class="shell-workspace" role="region" aria-label="Workspace">
     <app-toolbar class="shell-toolbar" [actions]="(toolbarActions$ | async) ?? []"></app-toolbar>
-    <app-tab-bar
-      class="shell-tabbar"
-      [groupId]="'main'"
+    <app-dock-zone-panel
+      class="shell-primary-workspace"
+      [zone]="DockZone.PrimaryWorkspace"
       [tabs]="(shellTabs$ | async) ?? []"
       [activeTabId]="(activeShellTabId$ | async) ?? ''"
+      [visible]="true"
       [closeGuards]="(closeGuards$ | async) ?? {}"
-      (tabSelected)="onShellTabSelected($event)"
+      (activeTabChange)="onShellTabSelected($event)"
       (tabClosed)="onShellTabClosed($event)"
       (closeGuardTimeout)="onCloseGuardTimeout($event)"
       (newTabRequested)="onNewTabRequested()"
-      (tabReordered)="onShellTabReordered($event)"
-    ></app-tab-bar>
+      (tabReordered)="onDockZoneTabReordered(DockZone.PrimaryWorkspace, $event)"
+    ></app-dock-zone-panel>
     @if (showTabAddModal) {
       <app-tab-add-modal
         [availableTabs]="(availableTabsForModal$ | async) ?? []"
@@ -40,11 +41,6 @@
         (dismissed)="onTabAddModalDismissed()"
       ></app-tab-add-modal>
     }
-    <app-content-area
-      class="shell-content-area"
-      [activeTab]="activeShellTab$ | async"
-      [componentType]="activeShellComponentType$ | async"
-    ></app-content-area>
     <div
       class="secondary-splitter-handle"
       data-testid="secondary-splitter"
@@ -56,18 +52,18 @@
       (pointerup)="onSecondarySplitterPointerUp($event)"
       (pointercancel)="onSecondarySplitterPointerCancel($event)"
     ></div>
-    <app-secondary-panel
+    <app-dock-zone-panel
       class="shell-secondary-panel"
-      [workspaceId]="workspaceId"
+      [zone]="DockZone.SecondaryPanel"
       [visible]="(secondaryPanelVisible$ | async) ?? false"
-      [width]="(secondaryPanelWidth$ | async) ?? 300"
-      [entries]="(secondaryPanelEntries$ | async) ?? []"
-      [activeEntryId]="(activeSecondaryPanelEntryId$ | async) ?? ''"
-      [activeComponentType]="activeSecondaryPanelComponentType$ | async"
+      [size]="(secondaryPanelWidth$ | async) ?? 300"
+      [tabs]="(secondaryPanelEntries$ | async) ?? []"
+      [activeTabId]="(activeSecondaryPanelEntryId$ | async) ?? ''"
       (visibilityChange)="onSecondaryPanelVisibilityChange($event)"
-      (activeEntryChange)="onSecondaryPanelActiveEntryChange($event)"
-      (widthChange)="onSecondaryPanelWidthChange($event)"
-    ></app-secondary-panel>
+      (activeTabChange)="onSecondaryPanelActiveEntryChange($event)"
+      (sizeChange)="onSecondaryPanelWidthChange($event)"
+      (tabReordered)="onDockZoneTabReordered(DockZone.SecondaryPanel, $event)"
+    ></app-dock-zone-panel>
     <div
       class="bottom-splitter-handle"
       data-testid="bottom-splitter"
@@ -79,17 +75,18 @@
       (pointerup)="onBottomSplitterPointerUp($event)"
       (pointercancel)="onBottomSplitterPointerCancel($event)"
     ></div>
-    <app-bottom-panel
+    <app-dock-zone-panel
       class="shell-bottom-panel"
-      [workspaceId]="workspaceId"
+      [zone]="DockZone.BottomPanel"
       [visible]="(bottomPanelVisible$ | async) ?? false"
-      [height]="(bottomPanelHeight$ | async) ?? 220"
-      [panels]="(bottomPanelTabs$ | async) ?? []"
-      [activePanelId]="activeBottomPanelId"
+      [size]="(bottomPanelHeight$ | async) ?? 220"
+      [tabs]="(bottomPanelTabs$ | async) ?? []"
+      [activeTabId]="activeBottomPanelId"
       (visibilityChange)="onBottomPanelVisibilityChange($event)"
-      (heightChange)="onBottomPanelHeightChange($event)"
-      (activePanelChange)="onBottomPanelActivePanelChange($event)"
-    ></app-bottom-panel>
+      (sizeChange)="onBottomPanelHeightChange($event)"
+      (activeTabChange)="onBottomPanelActivePanelChange($event)"
+      (tabReordered)="onDockZoneTabReordered(DockZone.BottomPanel, $event)"
+    ></app-dock-zone-panel>
   </div>
 
   <footer class="shell-statusbar" role="contentinfo" aria-label="Status bar">

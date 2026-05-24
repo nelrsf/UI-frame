@@ -1,7 +1,4 @@
 import {
-  BottomPanelEntry,
-  CentralRegionTab,
-  SecondaryPanelEntry,
   ISidebarEntry,
   IToolbarAction,
 } from '../contracts';
@@ -19,21 +16,30 @@ import { MockBottomResultsComponent } from './components/mock-bottom-panel/mock-
 import { MockBottomWarningsComponent } from './components/mock-bottom-panel/mock-bottom-warnings.component';
 import { MockSecondaryWeatherComponent } from './components/mock-secondary-panel/mock-secondary-weather.component';
 import { MockSecondaryMarketComponent } from './components/mock-secondary-panel/mock-secondary-market.component';
+import { ShellTab } from '../contracts/ShellTab';
+import { WithDraggable } from '../models/tab-item.model';
+import { DockZone } from '../../core/models/dock-zone-assignment.model';
 
-export const MOCK_DASHBOARD_TAB: CentralRegionTab = {
+export const MOCK_DASHBOARD_TAB: ShellTab & WithDraggable = {
   id: 'mock-dashboard',
   label: 'Dashboard',
   component: MockDashboardComponent,
   icon: '📄',
-  groupId: 'main'
+  draggable: {
+    allowableDropTargets: [
+      DockZone.BottomPanel,
+      DockZone.SecondaryPanel,
+    ],
+    sourceZone: DockZone.PrimaryWorkspace,
+    targetZone: DockZone.PrimaryWorkspace
+  }
 };
 
-export const MOCK_REPORTS_TAB: CentralRegionTab = {
+export const MOCK_REPORTS_TAB: ShellTab = {
   id: 'mock-reports',
   label: 'Reports',
   component: MockReportsComponent,
-  icon: '📊',
-  groupId: 'utilities'
+  icon: '📊'
 };
 
 export const MOCK_ALERT_INFO: IToolbarAction = {
@@ -84,42 +90,37 @@ export const MOCK_TOOLS_SIDEBAR_ENTRY: ISidebarEntry = {
   tooltip: 'Tools section',
 };
 
-export const MOCK_RESULTS_PANEL: BottomPanelEntry = {
+export const MOCK_RESULTS_PANEL: ShellTab = {
   id: 'mock-results',
   label: `Results (${MOCK_REPORT_ROWS.length + MOCK_DASHBOARD_CARDS.length})`,
   icon: '✓',
-  component: MockBottomResultsComponent,
-  groupId: 'utilities',
+  component: MockBottomResultsComponent
 };
 
-export const MOCK_LOGS_PANEL: BottomPanelEntry = {
+export const MOCK_LOGS_PANEL: ShellTab = {
   id: 'mock-logs',
   label: 'Logs',
   icon: '📄',
-  component: MockBottomLogsComponent,
-  groupId: 'utilities',
+  component: MockBottomLogsComponent
 };
 
-export const MOCK_WARNINGS_PANEL: BottomPanelEntry = {
+export const MOCK_WARNINGS_PANEL: ShellTab = {
   id: 'mock-warnings',
   label: 'Warnings',
   icon: '⚠️',
-  component: MockBottomWarningsComponent,
-  groupId: 'utilities',
+  component: MockBottomWarningsComponent
 };
 
-export const MOCK_SECONDARY_WEATHER_ENTRY: SecondaryPanelEntry = {
+export const MOCK_SECONDARY_WEATHER_ENTRY: ShellTab = {
   id: 'secondary-weather',
   label: 'Weather',
   icon: '☀️',
-  component: MockSecondaryWeatherComponent,
-  groupId: 'utilities',
+  component: MockSecondaryWeatherComponent
 };
 
-export const MOCK_SECONDARY_MARKET_ENTRY: SecondaryPanelEntry = {
+export const MOCK_SECONDARY_MARKET_ENTRY: ShellTab = {
   id: 'secondary-market',
   label: 'Market',
   icon: '📈',
-  component: MockSecondaryMarketComponent,
-  groupId: 'finance',
+  component: MockSecondaryMarketComponent
 };

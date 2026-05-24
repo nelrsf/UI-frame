@@ -1,19 +1,16 @@
 import { createAction, props } from '@ngrx/store';
-import { DockZone } from '../../models/dock-zone-assignment.model';
 import { ShellTab } from '../../../shell/contracts/ShellTab';
-import { SecondaryPanelEntry } from '../../../shell/contracts';
+import { DockZone } from '../../models/dock-zone-assignment.model';
 
 /**
  * Registers a tab in the workspace state without making it active or visible.
- * If the group does not yet exist it is created and assigned to the
- * `PrimaryWorkspace` zone by default.
- * If the tab is already present in the group the action is a no-op.
+ * If the tab is already present in the central region the action is a no-op.
  */
 export const registerTab = createAction('[Workspace] Register Tab', props<{ tab: ShellTab }>());
 
 /**
  * Opens (activates and displays) a tab that is already registered in the workspace.
- * If the tab is already present in its group, only activates it.
+ * If the tab is already present in the central region, only activates it.
  * If the tab is not registered, the action is a no-op.
  */
 export const openTab = createAction('[Workspace] Open Tab', props<{ tab: ShellTab }>());
@@ -28,32 +25,32 @@ export const registerAndOpenTab = createAction(
 );
 
 /**
- * Closes the tab identified by `tabId` inside `groupId`.
+ * Closes the central region tab identified by `tabId`.
  * Pinned tabs are ignored — they cannot be closed through this action.
  * If the closed tab was active, the adjacent tab (preferring the one to the
  * left) becomes active.
  */
 export const closeTab = createAction(
   '[Workspace] Close Tab',
-  props<{ tabId: string; groupId: string }>()
+  props<{ tabId: string }>()
 );
 
 /**
- * Activates the tab identified by `tabId` inside `groupId`.
+ * Activates the central region tab identified by `tabId`.
  */
 export const selectTab = createAction(
   '[Workspace] Select Tab',
-  props<{ tabId: string; groupId: string }>()
+  props<{ tabId: string }>()
 );
 
 /**
- * Reorders a tab within a group by moving it from `fromIndex` to `toIndex`.
+ * Reorders a central region tab by moving it from `fromIndex` to `toIndex`.
  * The workspaceId is included for future multi-workspace support.
  * No-ops when either index is out of range.
  */
 export const reorderTab = createAction(
   '[Workspace] Reorder Tab',
-  props<{ workspaceId: string; groupId: string; fromIndex: number; toIndex: number }>()
+  props<{ workspaceId: string; fromIndex: number; toIndex: number }>()
 );
 
 /**
@@ -73,34 +70,24 @@ export const setTabPinned = createAction(
 );
 
 /**
- * Reassigns a tab group to one of the three supported MVP dock zones.
- * Docking v1 allows only `PrimaryWorkspace`, `BottomPanel`, and `SecondaryPanel`.
- */
-export const assignGroupToZone = createAction(
-  '[Workspace] Assign Group To Zone',
-  props<{ groupId: string; zone: DockZone }>()
-);
-
-/**
- * Removes a tab from both the `tabs` and `registeredTabs` arrays of its group.
+ * Removes a central region tab from both `tabs` and `registeredTabs`.
  * If the removed tab was active, the adjacent tab (preferring left) becomes active.
  */
 export const removeTab = createAction(
   '[Workspace] Remove Tab',
-  props<{ tabId: string; groupId: string }>()
+  props<{ tabId: string }>()
 );
 
 /**
  * Moves a tab from its source zone to a target zone.
- * The tab is removed from the source group and, if the target is PrimaryWorkspace,
- * added to the target group. For BottomPanel/SecondaryPanel targets, the caller
+ * The tab is removed from the source zone and, if the target is PrimaryWorkspace,
+ * added to the central region. For BottomPanel/SecondaryPanel targets, the caller
  * must register the tab in the target region via ShellManager.
  */
 export const moveTabToZone = createAction(
   '[Workspace] Move Tab To Zone',
   props<{
     tabId: string;
-    sourceGroupId: string;
     sourceZone: DockZone;
     targetZone: DockZone;
     tabMetadata: ShellTab;
@@ -137,7 +124,7 @@ export const reorderBottomPanelTabs = createAction(
  */
 export const addSecondaryPanelEntry = createAction(
   '[Workspace] Add Secondary Panel Entry',
-  props<{ entry: SecondaryPanelEntry }>()
+  props<{ entry: ShellTab }>()
 );
 
 /**

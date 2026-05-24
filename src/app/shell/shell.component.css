@@ -89,13 +89,11 @@
   display: grid;
   grid-template-areas:
     "toolbar             toolbar              toolbar"
-    "tabbar              tabbar               tabbar"
-    "content             secondary-splitter   secondary-panel"
+    "primary-workspace   secondary-splitter   secondary-panel"
     "bottom-splitter     bottom-splitter      bottom-splitter"
     "bottom-panel        bottom-panel         bottom-panel";
   grid-template-rows:
     var(--shell-toolbar-height)
-    var(--shell-tabbar-height)
     1fr
     var(--shell-bottom-splitter-height, 0px)
     var(--shell-bottom-panel-height, 0px);
@@ -115,17 +113,9 @@
   overflow: hidden;
 }
 
-/* Sub-región: TabBar — scroll horizontal para muchas pestañas; sin scroll vertical */
-.shell-tabbar {
-  grid-area: tabbar;
-  height: var(--shell-tabbar-height);
-  overflow-x: auto;
-  overflow-y: hidden;
-}
-
-/* Sub-región: Content Area — scroll completo (área principal de trabajo) */
-.shell-content-area {
-  grid-area: content;
+/* Sub-región: Primary Workspace — tabs + content for DockZone.PrimaryWorkspace */
+.shell-primary-workspace {
+  grid-area: primary-workspace;
   overflow: auto;
   min-width: 0;
   min-height: 0;
@@ -173,7 +163,7 @@
 
 /* Ensure non-resizable regions retain the default cursor (T025) */
 .shell-toolbar,
-.shell-tabbar,
+.shell-primary-workspace,
 .shell-statusbar,
 .shell-sidebar {
   cursor: default;
@@ -198,12 +188,14 @@
 
 /* Drop zone visual feedback during drag-and-drop */
 .shell-bottom-panel.drop-zone-compatible,
-.shell-secondary-panel.drop-zone-compatible {
+.shell-secondary-panel.drop-zone-compatible,
+.shell-primary-workspace.drop-zone-compatible {
   box-shadow: inset 0 0 0 2px var(--color-success, #4caf50);
 }
 
 .shell-bottom-panel.drop-zone-incompatible,
-.shell-secondary-panel.drop-zone-incompatible {
+.shell-secondary-panel.drop-zone-incompatible,
+.shell-primary-workspace.drop-zone-incompatible {
   box-shadow: inset 0 0 0 2px var(--color-error, #f44336);
 }
 

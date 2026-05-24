@@ -26,6 +26,4 @@ export class ShellTab {
   readonly component!: Type<unknown>;
   /** Optional tooltip shown on hover or keyboard focus. */
   readonly tooltip?: string;
-  /** The group to which this tab belongs, appy only to tabs in Central Region Tabs */
-  readonly groupId!: string;
 }

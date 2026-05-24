@@ -25,7 +25,6 @@ export interface CrossRegionDropPayload {
   label: string;
   icon?: string;
   componentType: Type<unknown>;
-  sourceGroupId: string;
   sourceZone: DockZone;
   targetZone: DockZone;
   pinned: boolean;
@@ -356,7 +355,6 @@ export class DragDropService implements OnDestroy {
     this.store.dispatch(
       moveTabToZone({
         tabId: draggedTab.id,
-        sourceGroupId: draggedTab?.draggable?.sourceGroupId ?? '',
         sourceZone: draggedTab.draggable.sourceZone,
         targetZone,
         tabMetadata: draggedTab, // Pass full tab metadata for ShellComponent to register in target region
@@ -369,8 +367,7 @@ export class DragDropService implements OnDestroy {
       label: draggedTab.label,
       icon: draggedTab.icon,
       componentType: draggedTab.component,
-      sourceGroupId: draggedTab.draggable?.sourceGroupId ?? '',
-      sourceZone: draggedTab.draggable?.sourceZone ?? '',
+      sourceZone: draggedTab.draggable.sourceZone,
       targetZone,
       pinned: isTabPinnable(draggedTab) ? draggedTab.pinnable?.pinned ?? false : false,
       dirty: isTabCloseable(draggedTab) ? draggedTab.closeable?.dirty ?? false : false,
