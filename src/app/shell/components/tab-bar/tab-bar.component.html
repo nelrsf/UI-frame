@@ -3,8 +3,8 @@
     <div
       class="tab-bar__tab"
       [class.tab-bar__tab--active]="tab.id === activeTabId"
-      [class.tab-bar__tab--dirty]="tab.dirty"
-      [class.tab-bar__tab--pinned]="tab.pinned"
+      [class.tab-bar__tab--dirty]="tab.closeable?.dirty ?? false"
+      [class.tab-bar__tab--pinned]="tab.pinnable?.pinned ?? false"
       role="tab"
       [attr.aria-selected]="tab.id === activeTabId"
       [attr.tabindex]="tab.id === activeTabId ? 0 : -1"
@@ -16,10 +16,10 @@
         <span class="tab-bar__tab-icon" aria-hidden="true">{{ tab.icon }}</span>
       }
       <span class="tab-bar__tab-label">{{ tab.label }}</span>
-      @if (tab.dirty) {
+      @if (tab.closeable?.dirty) {
         <span class="tab-bar__dirty-indicator" aria-label="Unsaved changes" data-testid="tab-dirty-indicator">·</span>
       }
-      @if (tab.closable && !tab.pinned) {
+      @if (tab.closeable && !tab.pinnable?.pinned) {
         <button
           class="tab-bar__close-btn"
           [class.tab-bar__close-btn--pending]="isClosingGuardPending(tab.id)"

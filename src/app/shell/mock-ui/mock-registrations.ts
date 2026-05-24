@@ -1,7 +1,7 @@
 import {
-  IBottomPanelEntry,
-  ICentralRegionTab,
-  ISecondaryPanelEntry,
+  BottomPanelEntry,
+  CentralRegionTab,
+  SecondaryPanelEntry,
   ISidebarEntry,
   IToolbarAction,
 } from '../contracts';
@@ -20,20 +20,20 @@ import { MockBottomWarningsComponent } from './components/mock-bottom-panel/mock
 import { MockSecondaryWeatherComponent } from './components/mock-secondary-panel/mock-secondary-weather.component';
 import { MockSecondaryMarketComponent } from './components/mock-secondary-panel/mock-secondary-market.component';
 
-export const MOCK_DASHBOARD_TAB: ICentralRegionTab = {
+export const MOCK_DASHBOARD_TAB: CentralRegionTab = {
   id: 'mock-dashboard',
   label: 'Dashboard',
   component: MockDashboardComponent,
   icon: '📄',
-  closable: true,
+  groupId: 'main'
 };
 
-export const MOCK_REPORTS_TAB: ICentralRegionTab = {
+export const MOCK_REPORTS_TAB: CentralRegionTab = {
   id: 'mock-reports',
   label: 'Reports',
   component: MockReportsComponent,
   icon: '📊',
-  closable: true,
+  groupId: 'utilities'
 };
 
 export const MOCK_ALERT_INFO: IToolbarAction = {
@@ -84,37 +84,42 @@ export const MOCK_TOOLS_SIDEBAR_ENTRY: ISidebarEntry = {
   tooltip: 'Tools section',
 };
 
-export const MOCK_RESULTS_PANEL: IBottomPanelEntry = {
+export const MOCK_RESULTS_PANEL: BottomPanelEntry = {
   id: 'mock-results',
   label: `Results (${MOCK_REPORT_ROWS.length + MOCK_DASHBOARD_CARDS.length})`,
   icon: '✓',
   component: MockBottomResultsComponent,
+  groupId: 'utilities',
 };
 
-export const MOCK_LOGS_PANEL: IBottomPanelEntry = {
+export const MOCK_LOGS_PANEL: BottomPanelEntry = {
   id: 'mock-logs',
   label: 'Logs',
   icon: '📄',
   component: MockBottomLogsComponent,
+  groupId: 'utilities',
 };
 
-export const MOCK_WARNINGS_PANEL: IBottomPanelEntry = {
+export const MOCK_WARNINGS_PANEL: BottomPanelEntry = {
   id: 'mock-warnings',
   label: 'Warnings',
   icon: '⚠️',
   component: MockBottomWarningsComponent,
+  groupId: 'utilities',
 };
 
-export const MOCK_SECONDARY_WEATHER_ENTRY: ISecondaryPanelEntry = {
+export const MOCK_SECONDARY_WEATHER_ENTRY: SecondaryPanelEntry = {
   id: 'secondary-weather',
   label: 'Weather',
   icon: '☀️',
   component: MockSecondaryWeatherComponent,
+  groupId: 'utilities',
 };
 
-export const MOCK_SECONDARY_MARKET_ENTRY: ISecondaryPanelEntry = {
+export const MOCK_SECONDARY_MARKET_ENTRY: SecondaryPanelEntry = {
   id: 'secondary-market',
   label: 'Market',
   icon: '📈',
   component: MockSecondaryMarketComponent,
+  groupId: 'finance',
 };

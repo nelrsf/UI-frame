@@ -1,8 +1,7 @@
 import { createAction, props } from '@ngrx/store';
-import { TabItem } from '../../../shell/models/tab-item.model';
-import { PanelTab } from '../../../shell/models/panel-tab.model';
-import { SecondaryPanelEntry } from '../../../shell/models/secondary-panel-entry.model';
 import { DockZone } from '../../models/dock-zone-assignment.model';
+import { ShellTab } from '../../../shell/contracts/ShellTab';
+import { SecondaryPanelEntry } from '../../../shell/contracts';
 
 /**
  * Registers a tab in the workspace state without making it active or visible.
@@ -10,14 +9,14 @@ import { DockZone } from '../../models/dock-zone-assignment.model';
  * `PrimaryWorkspace` zone by default.
  * If the tab is already present in the group the action is a no-op.
  */
-export const registerTab = createAction('[Workspace] Register Tab', props<{ tab: TabItem }>());
+export const registerTab = createAction('[Workspace] Register Tab', props<{ tab: ShellTab }>());
 
 /**
  * Opens (activates and displays) a tab that is already registered in the workspace.
  * If the tab is already present in its group, only activates it.
  * If the tab is not registered, the action is a no-op.
  */
-export const openTab = createAction('[Workspace] Open Tab', props<{ tab: TabItem }>());
+export const openTab = createAction('[Workspace] Open Tab', props<{ tab: ShellTab }>());
 
 /**
  * Convenience facade that registers and immediately opens a tab.
@@ -25,7 +24,7 @@ export const openTab = createAction('[Workspace] Open Tab', props<{ tab: TabItem
  */
 export const registerAndOpenTab = createAction(
   '[Workspace] Register And Open Tab',
-  props<{ tab: TabItem }>()
+  props<{ tab: ShellTab }>()
 );
 
 /**
@@ -104,7 +103,7 @@ export const moveTabToZone = createAction(
     sourceGroupId: string;
     sourceZone: DockZone;
     targetZone: DockZone;
-    tabMetadata: TabItem;
+    tabMetadata: ShellTab;
   }>()
 );
 
@@ -113,7 +112,7 @@ export const moveTabToZone = createAction(
  */
 export const addBottomPanelEntry = createAction(
   '[Workspace] Add Bottom Panel Entry',
-  props<PanelTab>()
+  props<ShellTab>()
 );
 
 /**

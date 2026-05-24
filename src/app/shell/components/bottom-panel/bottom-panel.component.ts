@@ -2,11 +2,9 @@ import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, AfterV
 import { CommonModule } from '@angular/common';
 import { Store } from '@ngrx/store';
 import { DragDropService } from '../../services/drag-drop.service';
-import { DraggableTab, RegionInterface } from '../../../core/models/drag-drop.model';
-import { DockZone } from '../../../core/models/dock-zone-assignment.model';
-import { PanelTab } from '../../models/panel-tab.model';
 import { AppState } from '../../../core/state/app.state';
 import * as WorkspaceActions from '../../../core/state/workspace';
+import { ShellTab } from '../../contracts/ShellTab';
 
 @Component({
   selector: 'app-bottom-panel',
@@ -21,7 +19,7 @@ export class BottomPanelComponent implements AfterViewInit {
   @Input() workspaceId: string = 'ws-default';
   @Input() visible: boolean = false;
   @Input() height: number = 220;
-  @Input() panels: readonly PanelTab[] = [];
+  @Input() panels: readonly ShellTab[] = [];
   @Input() activePanelId: string = '';
 
   @Output() visibilityChange = new EventEmitter<boolean>();
@@ -49,7 +47,7 @@ export class BottomPanelComponent implements AfterViewInit {
     );
   }
 
-  get activePanel(): PanelTab | null {
+  get activePanel(): ShellTab | null {
     if (this.panels.length === 0) {
       return null;
     }
@@ -76,24 +74,9 @@ export class BottomPanelComponent implements AfterViewInit {
     this.visibilityChange.emit(false);
   }
 
-  onTabPointerDown(event: PointerEvent, panel: PanelTab): void {
+  onTabPointerDown(event: PointerEvent, panel: ShellTab): void {
     if (event.button !== 0) return;
 
-    const componentInterfaces = this.dragDropService.getComponentInterfaces(panel.component);
-
-    const draggableTab: DraggableTab = {
-      id: panel.id,
-      label: panel.label,
-      icon: panel.icon,
-      componentType: panel.component,
-      implementedInterfaces: componentInterfaces,
-      sourceZone: DockZone.BottomPanel,
-      sourceGroupId: '',
-      pinned: false,
-      dirty: false,
-      closable: panel.closable,
-    };
-
-    this.dragDropService.startDrag(draggableTab, event);
+    this.dragDropService.startDrag(panel, event);
   }
 }

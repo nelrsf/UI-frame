@@ -1,4 +1,4 @@
-import { Type } from '@angular/core';
+import { ShellTab } from './ShellTab';
 
 /**
  * Public contract for registering a panel tab in the shell's bottom panel.
@@ -16,16 +16,5 @@ import { Type } from '@angular/core';
  * };
  * shellManager.addBottomPanelEntry(outputPanel);
  */
-export interface IBottomPanelEntry {
-  /** Stable unique identifier. Duplicate ids are silently ignored. */
-  readonly id: string;
-  /** Label shown on the panel tab. */
-  readonly label: string;
-  /** Optional icon shown alongside the label on the panel tab. */
-  readonly icon?: string;
-  /**
-   * Standalone Angular component rendered when this bottom panel tab is active.
-   * Must be a standalone component (no NgModule required).
-   */
-  readonly component: Type<unknown>;
-}
+export class BottomPanelEntry extends ShellTab {}
+

@@ -64,15 +64,14 @@ import {
 } from '../core/state/workspace';
 import { setPreference } from '../core/state/preferences/preferences.actions';
 import { AppTheme, THEME_PREFERENCE_KEY } from '../core/models/theme.model';
-import { TabCloseGuard, TabItem } from './models/tab-item.model';
 import {
   selectStatusBarLeftItems,
   selectStatusBarRightItems,
 } from '../core/state/status-bar';
 import { DragDropService } from './services/drag-drop.service';
 import { ShellManager } from './shell-manager.service';
-import { RegionInterface } from '../core/models/drag-drop.model';
 import { DockZone } from '../core/models/dock-zone-assignment.model';
+import { ShellTab } from './contracts/ShellTab';
 
 @Component({
   selector: 'app-shell',
@@ -190,7 +189,7 @@ export class ShellComponent implements OnInit, AfterViewInit {
     map(([registered, openIds]) => registered.filter((tab) => !openIds.has(tab.id)))
   );
   /** Derived observable for the active tab metadata consumed by ContentArea. */
-  readonly activeShellTab$: Observable<TabItem | null> = combineLatest([
+  readonly activeShellTab$: Observable<ShellTab | null> = combineLatest([
     this.shellTabs$,
     this.activeShellTabId$,
   ]).pipe(
@@ -359,16 +358,14 @@ export class ShellComponent implements OnInit, AfterViewInit {
       if (bottomPanelEl) {
         this.dragDropService.registerDropZone(
           DockZone.BottomPanel,
-          bottomPanelEl as HTMLElement,
-          RegionInterface.BottomPanelEntry
+          bottomPanelEl as HTMLElement
         );
       }
 
       if (secondaryPanelEl) {
         this.dragDropService.registerDropZone(
           DockZone.SecondaryPanel,
-          secondaryPanelEl as HTMLElement,
-          RegionInterface.SecondaryPanelEntry
+          secondaryPanelEl as HTMLElement
         );
       }
     }, 0);
@@ -399,6 +396,7 @@ export class ShellComponent implements OnInit, AfterViewInit {
           this.shellManager.addBottomPanelEntry({
             id: drop.tabId,
             label: drop.label,
+            groupId: 'main',
             icon: drop.icon,
             component: drop.componentType,
           });
@@ -406,6 +404,7 @@ export class ShellComponent implements OnInit, AfterViewInit {
           this.shellManager.addSecondaryPanelEntry({
             id: drop.tabId,
             label: drop.label,
+            groupId: 'main',
             icon: drop.icon,
             component: drop.componentType,
           });

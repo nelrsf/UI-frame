@@ -20,19 +20,17 @@ import {
   removeSecondaryPanelEntry,
 } from '../core/state/workspace';
 import {
-  IBottomPanelEntry,
-  ICentralRegionTab,
-  ISecondaryPanelEntry,
+  BottomPanelEntry,
+  CentralRegionTab,
+  SecondaryPanelEntry,
   ISidebarEntry,
   IToolbarAction,
 } from './contracts';
-import { PanelTab } from './models/panel-tab.model';
-import { SecondaryPanelEntry } from './models/secondary-panel-entry.model';
 import { SidebarItem } from './models/sidebar-item.model';
-import { TabCloseGuard, TabItem } from './models/tab-item.model';
+import { TabCloseGuard } from './models/tab-item.model';
 import { ToolbarAction } from './models/toolbar-action.model';
 import { DragDropService } from './services/drag-drop.service';
-import { RegionInterface } from '../core/models/drag-drop.model';
+import { ShellTab } from './contracts/ShellTab';
 
 /**
  * Composition root for shell content registration.
@@ -55,7 +53,7 @@ export class ShellManager {
     return this.injector.get(DragDropService);
   }
 
-  addTab(tab: ICentralRegionTab, guard?: TabCloseGuard): void {
+  addTab(tab: ShellTab, guard?: TabCloseGuard): void {
     if (this.tabIds.has(tab.id)) {
       console.warn(`[ShellManager] Duplicate tab id '${tab.id}' ignored.`);
       return;
@@ -63,19 +61,7 @@ export class ShellManager {
 
     this.tabIds.add(tab.id);
 
-    const tabItem: TabItem = {
-      id: tab.id,
-      label: tab.label,
-      icon: tab.icon,
-      closable: tab.closable ?? true,
-      dirty: false,
-      pinned: false,
-      groupId: 'main',
-      componentType: tab.component,
-    };
-
-    this.store.dispatch(registerAndOpenTab({ tab: tabItem }));
-    this.dragDropService.registerComponentInterface(tab.component, RegionInterface.CentralRegionTab);
+    this.store.dispatch(registerAndOpenTab({ tab: tab }));
   }
 
   addSidebarEntry(entry: ISidebarEntry): void {
@@ -125,7 +111,7 @@ export class ShellManager {
     this.store.dispatch(addToolbarAction(toolbarAction));
   }
 
-  addBottomPanelEntry(panel: IBottomPanelEntry): void {
+  addBottomPanelEntry(panel: BottomPanelEntry): void {
     if (this.bottomPanelIds.has(panel.id)) {
       console.warn(`[ShellManager] Duplicate bottom panel entry id '${panel.id}' ignored.`);
       return;
@@ -133,19 +119,10 @@ export class ShellManager {
 
     this.bottomPanelIds.add(panel.id);
 
-    const panelTab: PanelTab = {
-      id: panel.id,
-      label: panel.label,
-      icon: panel.icon,
-      closable: false,
-      component: panel.component,
-    };
-
-    this.store.dispatch(addBottomPanelEntry(panelTab));
-    this.dragDropService.registerComponentInterface(panel.component, RegionInterface.BottomPanelEntry);
+    this.store.dispatch(addBottomPanelEntry(panel));
   }
 
-  addSecondaryPanelEntry(entry: ISecondaryPanelEntry): void {
+  addSecondaryPanelEntry(entry: SecondaryPanelEntry): void {
     if (this.secondaryPanelIds.has(entry.id)) {
       console.warn(`[ShellManager] Duplicate secondary panel entry id '${entry.id}' ignored.`);
       return;
@@ -153,15 +130,8 @@ export class ShellManager {
 
     this.secondaryPanelIds.add(entry.id);
 
-    const secondaryEntry: SecondaryPanelEntry = {
-      id: entry.id,
-      label: entry.label,
-      icon: entry.icon,
-      component: entry.component,
-    };
 
-    this.store.dispatch(addSecondaryPanelEntry({ entry: secondaryEntry }));
-    this.dragDropService.registerComponentInterface(entry.component, RegionInterface.SecondaryPanelEntry);
+    this.store.dispatch(addSecondaryPanelEntry({ entry: entry }));
   }
 
   setSidebarVisible(visible: boolean): void {

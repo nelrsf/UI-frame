@@ -11,8 +11,8 @@
  * ```
  */
 
-export type { ICentralRegionTab } from './ICentralRegionTab';
+export type { CentralRegionTab } from './CentralRegionTab';
 export type { ISidebarEntry } from './ISidebarEntry';
 export type { IToolbarAction } from './IToolbarAction';
-export type { IBottomPanelEntry } from './IBottomPanelEntry';
-export type { ISecondaryPanelEntry } from './ISecondaryPanelEntry';
+export type { BottomPanelEntry } from './BottomPanelEntry';
+export type { SecondaryPanelEntry } from './SecondaryPanelEntry';

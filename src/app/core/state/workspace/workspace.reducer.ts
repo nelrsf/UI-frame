@@ -1,9 +1,10 @@
 import { createReducer, on } from '@ngrx/store';
-import { TabItem } from '../../../shell/models/tab-item.model';
-import { PanelTab } from '../../../shell/models/panel-tab.model';
-import { SecondaryPanelEntry } from '../../../shell/models/secondary-panel-entry.model';
 import { DockZone } from '../../models/dock-zone-assignment.model';
 import * as WorkspaceActions from './workspace.actions';
+import { ShellTab } from '../../../shell/contracts/ShellTab';
+import { isTabCloseable, isTabPinnable } from '../../../shell/common/ShellTabGuardTypes';
+import { WithCloseable } from '../../../shell/models/tab-item.model';
+import { SecondaryPanelEntry } from '../../../shell/contracts';
 
 // ---------------------------------------------------------------------------
 // State shape
@@ -19,9 +20,9 @@ export interface TabGroupState {
   /** Stable identifier for this group (matches `TabItem.groupId`). */
   readonly groupId: string;
   /** All tabs ever registered in this group (never removed by closeTab). */
-  readonly registeredTabs: readonly TabItem[];
+  readonly registeredTabs: readonly ShellTab[];
   /** Ordered list of currently open tabs. Order matches the visual display order. */
-  readonly tabs: readonly TabItem[];
+  readonly tabs: readonly ShellTab[];
   /** Id of the currently active tab, or `null` when the group is empty. */
   readonly activeTabId: string | null;
   /** The dock zone this group is assigned to. */
@@ -33,7 +34,7 @@ export interface WorkspaceState {
   /** All known tab groups, in the order they were first created. */
   readonly tabGroups: readonly TabGroupState[];
   /** Bottom panel tabs registered in this workspace. */
-  readonly bottomPanelTabs: readonly PanelTab[];
+  readonly bottomPanelTabs: readonly ShellTab[];
   /** Secondary panel entries registered in this workspace. */
   readonly secondaryPanelEntries: readonly SecondaryPanelEntry[];
   /** ID of the currently active secondary panel entry. */
@@ -89,6 +90,7 @@ export const workspaceReducer = createReducer(
 
   // ── registerTab ───────────────────────────────────────────────────────────
   on(WorkspaceActions.registerTab, (state, { tab }) => {
+    if (!tab || !tab.groupId) return state; // groupId is required for this action.
     const idx = groupIndex(state, tab.groupId);
 
     if (idx >= 0) {
@@ -127,6 +129,7 @@ export const workspaceReducer = createReducer(
 
   // ── openTab ──────────────────────────────────────────────────────────────
   on(WorkspaceActions.openTab, (state, { tab }) => {
+    if (!tab || !tab.groupId) return state; // groupId is required for this action.
     const idx = groupIndex(state, tab.groupId);
 
     if (idx >= 0) {
@@ -150,6 +153,8 @@ export const workspaceReducer = createReducer(
 
   // ── registerAndOpenTab ───────────────────────────────────────────────────
   on(WorkspaceActions.registerAndOpenTab, (state, { tab }) => {
+
+    if (!tab || !tab.groupId) return state; // groupId is required for this action.
     // Step 1: Apply registerTab logic.
     let intermediate = state;
     const groupIdx = groupIndex(intermediate, tab.groupId);
@@ -203,8 +208,13 @@ export const workspaceReducer = createReducer(
     const tabIdx = group.tabs.findIndex((t) => t.id === tabId);
     if (tabIdx < 0) return state;
 
+    const tab = group.tabs[tabIdx];
+
+    // Only closeable tabs can be closed.
+    if (!isTabCloseable(tab)) return state;
+
     // Pinned tabs are protected from accidental close.
-    if (group.tabs[tabIdx].pinned) return state;
+    if (isTabPinnable(tab) && tab.pinnable?.pinned) return state;
 
     const newTabs = group.tabs.filter((t) => t.id !== tabId);
 
@@ -237,7 +247,7 @@ export const workspaceReducer = createReducer(
     void workspaceId;
 
     return updateGroup(state, groupId, (group) => {
-      const tabs = [...group.tabs] as TabItem[];
+      const tabs = [...group.tabs] as ShellTab[];
       if (fromIndex < 0 || fromIndex >= tabs.length) return group;
       if (toIndex < 0 || toIndex > tabs.length) return group;
       const [moved] = tabs.splice(fromIndex, 1);
@@ -330,6 +340,7 @@ export const workspaceReducer = createReducer(
 
     // Step 2: If target is PrimaryWorkspace, add the tab to the target group.
     if (targetZone === DockZone.PrimaryWorkspace) {
+      if (!tabMetadata || !tabMetadata.groupId) return state; // Metadata with groupId is required to move to PrimaryWorkspace.{
       const targetIdx = groupIndex(intermediate, tabMetadata.groupId);
       if (targetIdx >= 0) {
         const targetGroup = intermediate.tabGroups[targetIdx];
@@ -355,7 +366,7 @@ export const workspaceReducer = createReducer(
           tabGroups: [
             ...intermediate.tabGroups,
             {
-              groupId: tabMetadata.groupId,
+              groupId: tabMetadata.groupId ,
               registeredTabs: [tabMetadata],
               tabs: [tabMetadata],
               activeTabId: tabMetadata.id,
@@ -499,3 +510,5 @@ export const workspaceReducer = createReducer(
     return { ...state, secondaryPanelEntries, activeSecondaryPanelEntryId };
   })
 );
+
+

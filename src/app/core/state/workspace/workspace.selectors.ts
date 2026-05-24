@@ -1,9 +1,10 @@
 import { createSelector, createFeatureSelector } from '@ngrx/store';
-import { Type } from '@angular/core';
 import { WorkspaceState, TabGroupState } from './workspace.reducer';
-import { TabItem, TabCloseGuard } from '../../../shell/models/tab-item.model';
-import { SecondaryPanelEntry } from '../../../shell/models/secondary-panel-entry.model';
+import { TabCloseGuard } from '../../../shell/models/tab-item.model';
 import { DockZone } from '../../models/dock-zone-assignment.model';
+import { ShellTab } from '../../../shell/contracts/ShellTab';
+import { isTabCloseable } from '../../../shell/common/ShellTabGuardTypes';
+
 
 export const selectWorkspaceState = createFeatureSelector<WorkspaceState>('workspace');
 
@@ -28,11 +29,11 @@ export const selectGroupsByZone = (zone: DockZone) =>
 
 /** Flat list of TabItem[] for the primary tab group. */
 export const selectShellTabs = (groupId: string) =>
-  createSelector(selectTabGroupById(groupId), (group): TabItem[] => [...(group?.tabs ?? [])]);
+  createSelector(selectTabGroupById(groupId), (group): ShellTab[] => [...(group?.tabs ?? [])]);
 
 /** All registered tabs for a group (including closed ones, for the add-tab modal). */
 export const selectRegisteredTabsForGroup = (groupId: string) =>
-  createSelector(selectTabGroupById(groupId), (group): TabItem[] => [...(group?.registeredTabs ?? [])]);
+  createSelector(selectTabGroupById(groupId), (group): ShellTab[] => [...(group?.registeredTabs ?? [])]);
 
 /** Active tab ID for the primary tab group. */
 export const selectActiveShellTabId = (groupId: string) =>
@@ -43,7 +44,7 @@ export const selectActiveShellComponentType = (groupId: string) =>
   createSelector(selectTabGroupById(groupId), (group) => {
     if (!group?.activeTabId) return null;
     const activeTab = group.tabs.find((t) => t.id === group.activeTabId);
-    return activeTab?.componentType ?? null;
+    return activeTab?.component ?? null;
   });
 
 /** Full active tab metadata for ContentArea. */
@@ -59,8 +60,8 @@ export const selectCloseGuardsForGroup = (groupId: string) =>
     if (!group) return {};
     const guards: Record<string, TabCloseGuard> = {};
     for (const tab of group.tabs) {
-      if (tab.closeGuard) {
-        guards[tab.id] = tab.closeGuard;
+      if (isTabCloseable(tab) && tab.closeable?.closeGuard) {
+        guards[tab.id] = tab.closeable.closeGuard;
       }
     }
     return guards;

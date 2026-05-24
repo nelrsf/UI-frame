@@ -8,12 +8,12 @@ import { DockZone } from '../../core/models/dock-zone-assignment.model';
 import {
   DragPhase,
   DragState,
-  DraggableTab,
-  DropZoneRegistration,
-  RegionInterface,
+  DropZoneRegistration
 } from '../../core/models/drag-drop.model';
 import { moveTabToZone } from '../../core/state/workspace';
-import { TabItem } from '../models/tab-item.model';
+import { ShellTab } from '../contracts/ShellTab';
+import { WithCloseable, WithDraggable, WithPinnable } from '../models/tab-item.model';
+import { isTabCloseable, isTabPinnable } from '../common/ShellTabGuardTypes';
 
 /**
  * Payload emitted when a cross-region drop succeeds.
@@ -30,7 +30,6 @@ export interface CrossRegionDropPayload {
   targetZone: DockZone;
   pinned: boolean;
   dirty: boolean;
-  closable: boolean;
 }
 
 /**
@@ -56,7 +55,6 @@ export class DragDropService implements OnDestroy {
   });
 
   private readonly _dropZones = new Map<DockZone, DropZoneRegistration>();
-  private readonly _componentInterfaceMap = new Map<Type<unknown>, Set<RegionInterface>>();
   private _previousDropZone: DockZone | null = null;
 
   private _globalCleanup: (() => void) | null = null;
@@ -117,13 +115,11 @@ export class DragDropService implements OnDestroy {
    */
   registerDropZone(
     zone: DockZone,
-    element: HTMLElement,
-    requiredInterface: RegionInterface
+    element: HTMLElement
   ): void {
     this._dropZones.set(zone, {
       zone,
       element,
-      requiredInterface,
       boundingRect: null,
     });
   }
@@ -133,28 +129,6 @@ export class DragDropService implements OnDestroy {
    */
   unregisterDropZone(zone: DockZone): void {
     this._dropZones.delete(zone);
-  }
-
-  // ── Component Interface Registration ───────────────────────────────────────
-
-  /**
-   * Registers which region interface(s) a component type implements.
-   * Called by ShellManager when a tab/entry is added.
-   */
-  registerComponentInterface(
-    componentType: Type<unknown>,
-    interfaceType: RegionInterface
-  ): void {
-    const existing = this._componentInterfaceMap.get(componentType) ?? new Set<RegionInterface>();
-    existing.add(interfaceType);
-    this._componentInterfaceMap.set(componentType, existing);
-  }
-
-  /**
-   * Returns the set of region interfaces a component type implements.
-   */
-  getComponentInterfaces(componentType: Type<unknown>): Set<RegionInterface> {
-    return this._componentInterfaceMap.get(componentType) ?? new Set<RegionInterface>();
   }
 
   /**
@@ -177,7 +151,7 @@ export class DragDropService implements OnDestroy {
    * Must be called from a pointerdown event handler.
    * The drag only becomes active after the pointer moves DRAG_THRESHOLD pixels.
    */
-  startDrag(tab: DraggableTab, event: PointerEvent): void {
+  startDrag(tab: ShellTab & WithDraggable, event: PointerEvent): void {
     const target = event.target as HTMLElement;
     target.setPointerCapture?.(event.pointerId);
     event.preventDefault();
@@ -249,8 +223,8 @@ export class DragDropService implements OnDestroy {
       ...currentState,
       pointerX: x,
       pointerY: y,
-      activeDropZone: activeDropZone === currentState.draggedTab?.sourceZone ? null : activeDropZone,
-      dropCompatible: activeDropZone === currentState.draggedTab?.sourceZone ? false : dropCompatible,
+      activeDropZone: activeDropZone === currentState.draggedTab?.draggable?.sourceZone ? null : activeDropZone,
+      dropCompatible: activeDropZone === currentState.draggedTab?.draggable?.sourceZone ? false : dropCompatible,
     });
 
     // Store reorder target for use in endDrag.
@@ -296,7 +270,7 @@ export class DragDropService implements OnDestroy {
 
     if (activeDropZone && dropCompatible) {
       // Check if dropping back to the same zone (no-op = cancel).
-      if (activeDropZone === draggedTab.sourceZone) {
+      if (activeDropZone === draggedTab.draggable?.sourceZone) {
         this._resetState();
         return;
       }
@@ -355,7 +329,7 @@ export class DragDropService implements OnDestroy {
   private _detectDropZone(
     x: number,
     y: number,
-    draggedTab: DraggableTab | null
+    draggedTab: ShellTab & WithDraggable | null
   ): { activeDropZone: DockZone | null; dropCompatible: boolean } {
     if (!draggedTab) {
       return { activeDropZone: null, dropCompatible: false };
@@ -366,7 +340,7 @@ export class DragDropService implements OnDestroy {
       registration.boundingRect = rect;
 
       if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-        const compatible = draggedTab.implementedInterfaces.has(registration.requiredInterface);
+        const compatible = draggedTab.draggable?.allowableDropTargets.includes(registration.zone) ?? false;
         return { activeDropZone: registration.zone, dropCompatible: compatible };
       }
     }
@@ -374,26 +348,18 @@ export class DragDropService implements OnDestroy {
     return { activeDropZone: null, dropCompatible: false };
   }
 
-  private _emitCrossRegionDrop(draggedTab: DraggableTab, targetZone: DockZone): void {
-    const tabItem: TabItem = {
-      id: draggedTab.id,
-      label: draggedTab.label,
-      icon: draggedTab.icon,
-      dirty: draggedTab.dirty,
-      closable: draggedTab.closable,
-      pinned: draggedTab.pinned,
-      groupId: draggedTab.sourceGroupId,
-      componentType: draggedTab.componentType,
-    };
+  private _emitCrossRegionDrop(draggedTab: ShellTab & WithDraggable, targetZone: DockZone): void {
+
+    if (!draggedTab.draggable) return;
 
     // Dispatch the move action (handles source removal + target addition for PrimaryWorkspace).
     this.store.dispatch(
       moveTabToZone({
         tabId: draggedTab.id,
-        sourceGroupId: draggedTab.sourceGroupId,
-        sourceZone: draggedTab.sourceZone,
+        sourceGroupId: draggedTab?.draggable?.sourceGroupId ?? '',
+        sourceZone: draggedTab.draggable.sourceZone,
         targetZone,
-        tabMetadata: tabItem,
+        tabMetadata: draggedTab, // Pass full tab metadata for ShellComponent to register in target region
       })
     );
 
@@ -402,13 +368,12 @@ export class DragDropService implements OnDestroy {
       tabId: draggedTab.id,
       label: draggedTab.label,
       icon: draggedTab.icon,
-      componentType: draggedTab.componentType,
-      sourceGroupId: draggedTab.sourceGroupId,
-      sourceZone: draggedTab.sourceZone,
+      componentType: draggedTab.component,
+      sourceGroupId: draggedTab.draggable?.sourceGroupId ?? '',
+      sourceZone: draggedTab.draggable?.sourceZone ?? '',
       targetZone,
-      pinned: draggedTab.pinned,
-      dirty: draggedTab.dirty,
-      closable: draggedTab.closable,
+      pinned: isTabPinnable(draggedTab) ? draggedTab.pinnable?.pinned ?? false : false,
+      dirty: isTabCloseable(draggedTab) ? draggedTab.closeable?.dirty ?? false : false,
     });
   }
 
@@ -464,7 +429,7 @@ export class DragDropService implements OnDestroy {
   private _detectReorderTargetIndex(
     x: number,
     y: number,
-    draggedTab: DraggableTab | null
+    draggedTab: ShellTab | null
   ): number | null {
     if (!draggedTab) return null;
 

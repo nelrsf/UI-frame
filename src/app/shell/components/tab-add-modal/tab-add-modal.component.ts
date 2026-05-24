@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter, HostListener } from '@angular/core';
-import { TabItem } from '../../models/tab-item.model';
+import { ShellTab } from '../../contracts/ShellTab';
 
 @Component({
   selector: 'app-tab-add-modal',
@@ -9,7 +9,7 @@ import { TabItem } from '../../models/tab-item.model';
   styleUrl: './tab-add-modal.component.css',
 })
 export class TabAddModalComponent {
-  @Input() availableTabs: TabItem[] = [];
+  @Input() availableTabs: ShellTab[] = [];
 
   @Output() tabSelected = new EventEmitter<string>();
   @Output() dismissed = new EventEmitter<void>();

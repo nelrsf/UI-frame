@@ -2,11 +2,10 @@ import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, Type, 
 import { NgComponentOutlet } from '@angular/common';
 import { Store } from '@ngrx/store';
 import { DragDropService } from '../../services/drag-drop.service';
-import { DraggableTab, RegionInterface } from '../../../core/models/drag-drop.model';
-import { DockZone } from '../../../core/models/dock-zone-assignment.model';
-import { SecondaryPanelEntry } from '../../models/secondary-panel-entry.model';
 import { AppState } from '../../../core/state/app.state';
 import * as WorkspaceActions from '../../../core/state/workspace';
+import { isTabDraggable } from '../../common/ShellTabGuardTypes';
+import { SecondaryPanelEntry } from '../../contracts';
 
 /**
  * SecondaryPanelComponent — right-side collapsible dock zone (SecondaryPanel).
@@ -80,21 +79,8 @@ export class SecondaryPanelComponent implements AfterViewInit {
   onEntryPointerDown(event: PointerEvent, entry: SecondaryPanelEntry): void {
     if (event.button !== 0) return;
 
-    const componentInterfaces = this.dragDropService.getComponentInterfaces(entry.component);
+    if(!isTabDraggable(entry)) return; 
 
-    const draggableTab: DraggableTab = {
-      id: entry.id,
-      label: entry.label,
-      icon: entry.icon,
-      componentType: entry.component,
-      implementedInterfaces: componentInterfaces,
-      sourceZone: DockZone.SecondaryPanel,
-      sourceGroupId: '',
-      pinned: false,
-      dirty: false,
-      closable: true,
-    };
-
-    this.dragDropService.startDrag(draggableTab, event);
+    this.dragDropService.startDrag(entry, event);
   }
 }

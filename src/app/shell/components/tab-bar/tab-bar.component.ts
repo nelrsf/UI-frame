@@ -1,8 +1,7 @@
 import { Component, Input, Output, EventEmitter, inject, NgZone, ElementRef } from '@angular/core';
-import { TabItem, TabCloseGuard } from '../../models/tab-item.model';
+import { TabCloseGuard } from '../../models/tab-item.model';
 import { DragDropService } from '../../services/drag-drop.service';
-import { DraggableTab, RegionInterface } from '../../../core/models/drag-drop.model';
-import { DockZone } from '../../../core/models/dock-zone-assignment.model';
+import { CentralRegionTab } from '../../contracts';
 
 /** Duration (ms) after which an unresolved async `beforeClose()` guard times out. */
 const CLOSE_GUARD_TIMEOUT_MS = 10_000;
@@ -19,7 +18,7 @@ export class TabBarComponent {
   private readonly dragDropService = inject(DragDropService);
   private readonly elementRef = inject(ElementRef);
 
-  @Input() tabs: TabItem[] = [];
+  @Input() tabs: CentralRegionTab[] = [];
   @Input() activeTabId: string = '';
   @Input() groupId: string = '';
   /** Map of tabId → close guard. Provided by the parent host. */
@@ -65,7 +64,7 @@ export class TabBarComponent {
     if (!tab) return;
 
     // Non-dirty tabs close immediately without consulting a guard.
-    if (!tab.dirty) {
+    if (!tab.closeable?.dirty) {
       this.tabClosed.emit(tabId);
       return;
     }
@@ -107,24 +106,9 @@ export class TabBarComponent {
     this.newTabRequested.emit();
   }
 
-  onTabPointerDown(event: PointerEvent, tab: TabItem): void {
+  onTabPointerDown(event: PointerEvent, tab: CentralRegionTab): void {
     // Only left mouse button initiates drag.
     if (event.button !== 0) return;
-
-    const componentInterfaces = this.dragDropService.getComponentInterfaces(tab.componentType!);
-
-    const draggableTab: DraggableTab = {
-      id: tab.id,
-      label: tab.label,
-      icon: tab.icon,
-      componentType: tab.componentType!,
-      implementedInterfaces: componentInterfaces,
-      sourceZone: DockZone.PrimaryWorkspace,
-      sourceGroupId: tab.groupId,
-      pinned: tab.pinned,
-      dirty: tab.dirty,
-      closable: tab.closable,
-    };
 
     // Register this tab bar as a reorder source.
     const tabBarEl = this.elementRef?.nativeElement?.querySelector('.tab-bar') as HTMLElement | null;
@@ -134,7 +118,7 @@ export class TabBarComponent {
       });
     }
 
-    this.dragDropService.startDrag(draggableTab, event);
+    this.dragDropService.startDrag(tab, event);
   }
 
   private _timeoutGuard(tabId: string): { promise: Promise<false>; cancel: () => void } {
