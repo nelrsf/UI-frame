@@ -1,12 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 import { TabAddModalComponent } from './tab-add-modal.component';
-import { TabItem } from '../../models/tab-item.model';
+import { ShellTab } from '../../contracts/ShellTab';
 
-const makeTab = (partial: Partial<TabItem> & { id: string; label: string }): TabItem => ({
-  dirty: false,
-  closable: true,
-  pinned: false,
-  groupId: 'main',
+
+const makeTab = (partial: Partial<ShellTab>): ShellTab => ({
+  id: partial.id ?? 'tab-id',
+  label: partial.label ?? '',
+  component: partial.component ?? class {},
   ...partial,
 });
 

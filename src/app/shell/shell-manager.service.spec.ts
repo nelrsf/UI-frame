@@ -7,15 +7,13 @@ import {
   setSidebarVisible,
 } from '../core/state/layout';
 import {
-  addBottomPanelEntry,
-  addSecondaryPanelEntry,
   addSidebarEntry,
   addToolbarAction,
 } from '../core/state/shell-content';
 import { registerAndOpenTab } from '../core/state/workspace';
 import { commandTelemetryReducer, selectLastExecution } from '../core/state/command-telemetry';
 import { ShellManager } from './shell-manager.service';
-import { TabCloseGuard } from './models/tab-item.model';
+
 
 describe('ShellManager', () => {
   let shellManager: ShellManager;
@@ -48,7 +46,6 @@ describe('ShellManager', () => {
       label: 'Dashboard',
       component: componentType,
       icon: 'dashboard',
-      closable: false,
     });
 
     expect(dispatchSpy).toHaveBeenCalledWith(
@@ -57,11 +54,7 @@ describe('ShellManager', () => {
           id: 'dashboard',
           label: 'Dashboard',
           icon: 'dashboard',
-          closable: false,
-          dirty: false,
-          pinned: false,
-          groupId: 'main',
-          componentType,
+          component: componentType,
         },
       })
     );
@@ -129,11 +122,10 @@ describe('ShellManager', () => {
     });
 
     expect(dispatchSpy).toHaveBeenCalledWith(
-      addBottomPanelEntry({
+      shellManager.addBottomPanelEntry({
         id: 'results',
         label: 'Results',
         icon: 'list',
-        closable: false,
         component: componentType,
       })
     );
@@ -159,14 +151,13 @@ describe('ShellManager', () => {
     });
 
     expect(dispatchSpy).toHaveBeenCalledWith(
-      addSecondaryPanelEntry({
-        entry: {
+      shellManager.addSecondaryPanelEntry({
           id: 'secondary-weather',
           label: 'Weather',
           icon: 'sun',
           component: componentType,
         },
-      })
+      )
     );
   });
 

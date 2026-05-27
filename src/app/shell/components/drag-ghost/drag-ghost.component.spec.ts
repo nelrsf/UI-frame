@@ -1,10 +1,12 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { DragGhostComponent } from './drag-ghost.component';
 import { DragDropService } from '../../services/drag-drop.service';
-import { DragPhase, DraggableTab, RegionInterface, DragState } from '../../../core/models/drag-drop.model';
+import { DragPhase, DragState } from '../../../core/models/drag-drop.model';
 import { DockZone } from '../../../core/models/dock-zone-assignment.model';
 import { Type } from '@angular/core';
 import { Observable, of, BehaviorSubject } from 'rxjs';
+import { WithDraggable } from '../../models/tab-item.model';
+import { ShellTab } from '../../contracts/ShellTab';
 
 class MockComp {}
 
@@ -15,14 +17,7 @@ function makeDragState(overrides: Partial<DragState> = {}): DragState {
       id: 'tab-1',
       label: 'File.ts',
       icon: '📄',
-      componentType: MockComp as Type<unknown>,
-      implementedInterfaces: new Set<RegionInterface>(),
-      sourceZone: DockZone.PrimaryWorkspace,
-      sourceGroupId: 'main',
-      pinned: false,
-      dirty: false,
-      closable: true,
-    } as DraggableTab,
+    } as ShellTab & WithDraggable,
     pointerX: 100,
     pointerY: 200,
     activeDropZone: null,

@@ -14,7 +14,7 @@ Represents a tab that can be dragged across regions.
 | `id` | `string` | Unique identifier for the tab |
 | `label` | `string` | Display label for the tab |
 | `icon` | `string \| undefined` | Optional icon identifier |
-| `componentType` | `Type<unknown>` | Angular component type reference |
+| `component` | `Type<unknown>` | Angular component type reference (matches `ShellTab.component`) |
 | `implementedInterfaces` | `Set<RegionInterface>` | Set of region interfaces the component implements |
 | `sourceZone` | `DockZone` | Origin zone (PrimaryWorkspace, BottomPanel, SecondaryPanel) |
 | `sourceGroupId` | `string` | Workspace tab group ID (empty string for panel tabs) |

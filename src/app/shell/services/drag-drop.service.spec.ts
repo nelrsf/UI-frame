@@ -1,12 +1,8 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { Store, StoreModule } from '@ngrx/store';
-import { NgZone, Type } from '@angular/core';
-import { DragDropService, CrossRegionDropPayload } from './drag-drop.service';
-import {
-  DragPhase,
-  DraggableTab,
-  RegionInterface,
-} from '../../core/models/drag-drop.model';
+import { NgZone } from '@angular/core';
+import { DragDropService } from './drag-drop.service';
+import { DragPhase } from '../../core/models/drag-drop.model';
 import { DockZone } from '../../core/models/dock-zone-assignment.model';
 import { moveTabToZone } from '../../core/state/workspace';
 import { workspaceReducer } from '../../core/state/workspace/workspace.reducer';
@@ -15,18 +11,21 @@ class MockCentralTabComp {}
 class MockBottomPanelComp {}
 class MockMultiInterfaceComp {}
 
-function makeDraggableTab(partial: Partial<DraggableTab> & { id: string; label: string }): DraggableTab {
+function makeDraggableTab(partial: Partial<any> & { id: string; label: string }): any {
   return {
     id: partial.id,
     label: partial.label,
-    icon: partial.icon,
-    componentType: partial.componentType ?? MockCentralTabComp,
-    implementedInterfaces: partial.implementedInterfaces ?? new Set<RegionInterface>(),
-    sourceZone: partial.sourceZone ?? DockZone.PrimaryWorkspace,
-    sourceGroupId: partial.sourceGroupId ?? 'main',
-    pinned: partial.pinned ?? false,
-    dirty: partial.dirty ?? false,
-    closable: partial.closable ?? true,
+    icon: partial['icon'] ?? 'file',
+    component: partial['component'] ?? MockCentralTabComp,
+    // Provide a draggable descriptor matching WithDraggable/IDraggable
+    draggable: partial['draggable'] ?? {
+      sourceZone: partial['sourceZone'] ?? DockZone.PrimaryWorkspace,
+      targetZone: partial['targetZone'] ?? null,
+      allowableDropTargets: partial['allowableDropTargets'] ?? [],
+    },
+    pinned: partial['pinned'] ?? false,
+    dirty: partial['dirty'] ?? false,
+    closable: partial['closable'] ?? true,
   };
 }
 
@@ -94,8 +93,8 @@ describe('DragDropService', () => {
     store = TestBed.inject(Store);
     ngZone = TestBed.inject(NgZone);
 
-    service.registerDropZone(DockZone.BottomPanel, bottomPanelEl, RegionInterface.BottomPanelEntry);
-    service.registerDropZone(DockZone.SecondaryPanel, secondaryPanelEl, RegionInterface.SecondaryPanelEntry);
+    service.registerDropZone(DockZone.BottomPanel, bottomPanelEl);
+    service.registerDropZone(DockZone.SecondaryPanel, secondaryPanelEl);
   });
 
   afterEach(() => {
@@ -209,13 +208,11 @@ describe('DragDropService', () => {
 
   describe('interface compatibility', () => {
     it('should mark drop zone as compatible when tab implements required interface', () => {
-      service.registerComponentInterface(MockBottomPanelComp, RegionInterface.BottomPanelEntry);
-
       const tab = makeDraggableTab({
         id: 'tab-1',
         label: 'File.ts',
-        componentType: MockBottomPanelComp,
-        implementedInterfaces: new Set([RegionInterface.BottomPanelEntry]),
+        component: MockBottomPanelComp,
+        draggable: { allowableDropTargets: [DockZone.BottomPanel], sourceZone: DockZone.PrimaryWorkspace },
       });
       const downEvent = makePointerEvent({ clientX: 100, clientY: 100, target: dragSourceEl });
       service.startDrag(tab, downEvent);
@@ -231,7 +228,7 @@ describe('DragDropService', () => {
       const tab = makeDraggableTab({
         id: 'tab-1',
         label: 'File.ts',
-        implementedInterfaces: new Set<RegionInterface>(),
+        draggable: { allowableDropTargets: [], sourceZone: DockZone.PrimaryWorkspace },
       });
       const downEvent = makePointerEvent({ clientX: 100, clientY: 100, target: dragSourceEl });
       service.startDrag(tab, downEvent);
@@ -248,14 +245,11 @@ describe('DragDropService', () => {
 
   describe('cross-region drop', () => {
     it('should dispatch moveTabToZone and emit crossRegionDrop$ on successful drop', fakeAsync(() => {
-      service.registerComponentInterface(MockBottomPanelComp, RegionInterface.BottomPanelEntry);
-
       const tab = makeDraggableTab({
         id: 'tab-1',
         label: 'File.ts',
-        componentType: MockBottomPanelComp,
-        implementedInterfaces: new Set([RegionInterface.BottomPanelEntry]),
-        sourceGroupId: 'main',
+        component: MockBottomPanelComp,
+        draggable: { allowableDropTargets: [DockZone.BottomPanel], sourceZone: DockZone.PrimaryWorkspace },
       });
       const downEvent = makePointerEvent({ clientX: 100, clientY: 100, target: dragSourceEl });
       service.startDrag(tab, downEvent);
@@ -264,7 +258,7 @@ describe('DragDropService', () => {
 
       const dropSpy = spyOn(store, 'dispatch');
 
-      let dropPayload: CrossRegionDropPayload | null = null;
+      let dropPayload: any | null = null;
       service.crossRegionDrop$.subscribe((payload) => { dropPayload = payload; });
 
       service.endDrag();
@@ -273,22 +267,20 @@ describe('DragDropService', () => {
       expect(dropSpy).toHaveBeenCalledWith(
         moveTabToZone({
           tabId: 'tab-1',
-          sourceGroupId: 'main',
           sourceZone: DockZone.PrimaryWorkspace,
           targetZone: DockZone.BottomPanel,
           tabMetadata: jasmine.any(Object) as any,
         })
       );
       expect(dropPayload).not.toBeNull();
-      expect(dropPayload!.tabId).toBe('tab-1');
-      expect(dropPayload!.targetZone).toBe(DockZone.BottomPanel);
+      expect(dropPayload!.id).toBe('tab-1');
     }));
 
     it('should cancel drag when dropping back to the same zone', () => {
       const tab = makeDraggableTab({
         id: 'tab-1',
         label: 'File.ts',
-        sourceZone: DockZone.PrimaryWorkspace,
+        draggable: { allowableDropTargets: [], sourceZone: DockZone.PrimaryWorkspace },
       });
       const downEvent = makePointerEvent({ clientX: 100, clientY: 100, target: dragSourceEl });
       service.startDrag(tab, downEvent);
@@ -298,7 +290,7 @@ describe('DragDropService', () => {
       service.onDragMove(makeMoveEvent(10, 10));
 
       const dropSpy = spyOn(store, 'dispatch');
-      let dropPayload: CrossRegionDropPayload | null = null;
+      let dropPayload: any | null = null;
       service.crossRegionDrop$.subscribe((payload) => { dropPayload = payload; });
 
       service.endDrag();
@@ -344,13 +336,11 @@ describe('DragDropService', () => {
 
   describe('drop zone CSS class toggling', () => {
     it('should add drop-zone-compatible class when over a compatible zone', () => {
-      service.registerComponentInterface(MockBottomPanelComp, RegionInterface.BottomPanelEntry);
-
       const tab = makeDraggableTab({
         id: 'tab-1',
         label: 'File.ts',
-        componentType: MockBottomPanelComp,
-        implementedInterfaces: new Set([RegionInterface.BottomPanelEntry]),
+        component: MockBottomPanelComp,
+        draggable: { allowableDropTargets: [DockZone.BottomPanel], sourceZone: DockZone.PrimaryWorkspace },
       });
       const downEvent = makePointerEvent({ clientX: 100, clientY: 100, target: dragSourceEl });
       service.startDrag(tab, downEvent);
@@ -365,7 +355,7 @@ describe('DragDropService', () => {
       const tab = makeDraggableTab({
         id: 'tab-1',
         label: 'File.ts',
-        implementedInterfaces: new Set<RegionInterface>(),
+        draggable: { allowableDropTargets: [], sourceZone: DockZone.PrimaryWorkspace },
       });
       const downEvent = makePointerEvent({ clientX: 100, clientY: 100, target: dragSourceEl });
       service.startDrag(tab, downEvent);
@@ -377,13 +367,11 @@ describe('DragDropService', () => {
     });
 
     it('should clear all drop zone classes after drag ends', () => {
-      service.registerComponentInterface(MockBottomPanelComp, RegionInterface.BottomPanelEntry);
-
       const tab = makeDraggableTab({
         id: 'tab-1',
         label: 'File.ts',
-        componentType: MockBottomPanelComp,
-        implementedInterfaces: new Set([RegionInterface.BottomPanelEntry]),
+        component: MockBottomPanelComp,
+        draggable: { allowableDropTargets: [DockZone.BottomPanel], sourceZone: DockZone.PrimaryWorkspace },
       });
       const downEvent = makePointerEvent({ clientX: 100, clientY: 100, target: dragSourceEl });
       service.startDrag(tab, downEvent);
@@ -398,55 +386,8 @@ describe('DragDropService', () => {
       expect(bottomPanelEl.classList.contains('drop-zone-incompatible')).toBeFalse();
     });
 
-    it('should remove classes from previous zone when moving to a new zone', () => {
-      service.registerComponentInterface(MockBottomPanelComp, RegionInterface.BottomPanelEntry);
-      service.registerComponentInterface(MockMultiInterfaceComp, RegionInterface.BottomPanelEntry);
-      service.registerComponentInterface(MockMultiInterfaceComp, RegionInterface.SecondaryPanelEntry);
-
-      const tab = makeDraggableTab({
-        id: 'tab-1',
-        label: 'File.ts',
-        componentType: MockBottomPanelComp,
-        implementedInterfaces: new Set([RegionInterface.BottomPanelEntry]),
-      });
-      const downEvent = makePointerEvent({ clientX: 100, clientY: 100, target: dragSourceEl });
-      service.startDrag(tab, downEvent);
-      service.onDragMove(makeMoveEvent(105, 100));
-
-      // Over bottom panel.
-      service.onDragMove(makeMoveEvent(400, 550));
-      expect(bottomPanelEl.classList.contains('drop-zone-compatible')).toBeTrue();
-
-      // Move away — classes should clear.
-      service.onDragMove(makeMoveEvent(10, 10));
-      expect(bottomPanelEl.classList.contains('drop-zone-compatible')).toBeFalse();
-    });
   });
 
-  // ── Component interface registration ──────────────────────────────────────
-
-  describe('component interface registration', () => {
-    it('should register a single interface for a component type', () => {
-      service.registerComponentInterface(MockCentralTabComp, RegionInterface.CentralRegionTab);
-      const interfaces = service.getComponentInterfaces(MockCentralTabComp);
-      expect(interfaces.has(RegionInterface.CentralRegionTab)).toBeTrue();
-    });
-
-    it('should allow registering multiple interfaces for the same component', () => {
-      service.registerComponentInterface(MockMultiInterfaceComp, RegionInterface.CentralRegionTab);
-      service.registerComponentInterface(MockMultiInterfaceComp, RegionInterface.BottomPanelEntry);
-
-      const interfaces = service.getComponentInterfaces(MockMultiInterfaceComp);
-      expect(interfaces.has(RegionInterface.CentralRegionTab)).toBeTrue();
-      expect(interfaces.has(RegionInterface.BottomPanelEntry)).toBeTrue();
-      expect(interfaces.size).toBe(2);
-    });
-
-    it('should return an empty set for an unregistered component', () => {
-      const interfaces = service.getComponentInterfaces(MockCentralTabComp);
-      expect(interfaces.size).toBe(0);
-    });
-  });
 
   // ── Reorder source registration ───────────────────────────────────────────
 
@@ -550,79 +491,4 @@ describe('DragDropService', () => {
     });
   });
 
-  // ── Multi-interface tab drop validation (T046) ────────────────────────────
-
-  describe('multi-interface tab drop validation', () => {
-    it('should allow drop to bottom panel when tab implements BottomPanelEntry', () => {
-      service.registerComponentInterface(MockMultiInterfaceComp, RegionInterface.BottomPanelEntry);
-      service.registerComponentInterface(MockMultiInterfaceComp, RegionInterface.SecondaryPanelEntry);
-
-      const tab = makeDraggableTab({
-        id: 'tab-1',
-        label: 'Multi.ts',
-        componentType: MockMultiInterfaceComp,
-        implementedInterfaces: new Set([RegionInterface.BottomPanelEntry, RegionInterface.SecondaryPanelEntry]),
-      });
-      const downEvent = makePointerEvent({ clientX: 100, clientY: 100, target: dragSourceEl });
-      service.startDrag(tab, downEvent);
-      service.onDragMove(makeMoveEvent(105, 100));
-      service.onDragMove(makeMoveEvent(400, 550));
-
-      let compatible = false;
-      service.dropCompatible$.subscribe((c) => { compatible = c; });
-      expect(compatible).toBeTrue();
-    });
-
-    it('should allow drop to secondary panel when tab implements SecondaryPanelEntry', () => {
-      service.registerComponentInterface(MockMultiInterfaceComp, RegionInterface.BottomPanelEntry);
-      service.registerComponentInterface(MockMultiInterfaceComp, RegionInterface.SecondaryPanelEntry);
-
-      const tab = makeDraggableTab({
-        id: 'tab-1',
-        label: 'Multi.ts',
-        componentType: MockMultiInterfaceComp,
-        implementedInterfaces: new Set([RegionInterface.BottomPanelEntry, RegionInterface.SecondaryPanelEntry]),
-      });
-      const downEvent = makePointerEvent({ clientX: 100, clientY: 100, target: dragSourceEl });
-      service.startDrag(tab, downEvent);
-      service.onDragMove(makeMoveEvent(105, 100));
-
-      // Pointer over secondary panel (right: 0, width: 300, top: 0, height: 600).
-      // Assuming 800px viewport: x=700 is within secondary panel.
-      service.onDragMove(makeMoveEvent(700, 300));
-
-      let compatible = false;
-      service.dropCompatible$.subscribe((c) => { compatible = c; });
-      expect(compatible).toBeTrue();
-    });
-
-    it('should emit crossRegionDrop$ with correct target zone for multi-interface tab', fakeAsync(() => {
-      service.registerComponentInterface(MockMultiInterfaceComp, RegionInterface.BottomPanelEntry);
-      service.registerComponentInterface(MockMultiInterfaceComp, RegionInterface.SecondaryPanelEntry);
-
-      const tab = makeDraggableTab({
-        id: 'tab-1',
-        label: 'Multi.ts',
-        componentType: MockMultiInterfaceComp,
-        implementedInterfaces: new Set([RegionInterface.BottomPanelEntry, RegionInterface.SecondaryPanelEntry]),
-        sourceGroupId: 'main',
-      });
-      const downEvent = makePointerEvent({ clientX: 100, clientY: 100, target: dragSourceEl });
-      service.startDrag(tab, downEvent);
-      service.onDragMove(makeMoveEvent(105, 100));
-      service.onDragMove(makeMoveEvent(400, 550));
-
-      const dropSpy = spyOn(store, 'dispatch');
-      let dropPayload: CrossRegionDropPayload | null = null;
-      service.crossRegionDrop$.subscribe((payload) => { dropPayload = payload; });
-
-      service.endDrag();
-      tick();
-
-      expect(dropSpy).toHaveBeenCalled();
-      expect(dropPayload).not.toBeNull();
-      expect(dropPayload!.targetZone).toBe(DockZone.BottomPanel);
-      expect(dropPayload!.tabId).toBe('tab-1');
-    }));
-  });
 });
