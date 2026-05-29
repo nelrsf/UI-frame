@@ -52,16 +52,13 @@ function registerCentralTab(state: WorkspaceState, tab: ShellTab): WorkspaceStat
     return state;
   }
 
-  if (state.tabs.some((existing) => existing.id === tab.id)) {
+  if (state.registeredTabs.some((existing) => existing.id === tab.id)) {
     return state;
   }
 
   return {
     ...state,
-    registeredTabs: state.registeredTabs.some((existing) => existing.id === tab.id)
-      ? state.registeredTabs
-      : [...state.registeredTabs, tab],
-    tabs: [...state.tabs, tab],
+    registeredTabs: [...state.registeredTabs, tab],
   };
 }
 

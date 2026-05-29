@@ -10,7 +10,11 @@ import {
   addSidebarEntry,
   addToolbarAction,
 } from '../core/state/shell-content';
-import { registerAndOpenTab } from '../core/state/workspace';
+import {
+  registerAndOpenTab,
+  addBottomPanelEntry,
+  addSecondaryPanelEntry,
+} from '../core/state/workspace';
 import { commandTelemetryReducer, selectLastExecution } from '../core/state/command-telemetry';
 import { ShellManager } from './shell-manager.service';
 
@@ -122,7 +126,7 @@ describe('ShellManager', () => {
     });
 
     expect(dispatchSpy).toHaveBeenCalledWith(
-      shellManager.addBottomPanelEntry({
+      addBottomPanelEntry({
         id: 'results',
         label: 'Results',
         icon: 'list',
@@ -151,13 +155,14 @@ describe('ShellManager', () => {
     });
 
     expect(dispatchSpy).toHaveBeenCalledWith(
-      shellManager.addSecondaryPanelEntry({
-          id: 'secondary-weather',
-          label: 'Weather',
-          icon: 'sun',
-          component: componentType,
-        },
-      )
+      addSecondaryPanelEntry({
+          entry: {
+            id: 'secondary-weather',
+            label: 'Weather',
+            icon: 'sun',
+            component: componentType,
+          }
+        })
     );
   });
 

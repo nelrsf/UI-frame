@@ -17,17 +17,21 @@ import {
 } from './workspace.actions';
 import { ShellTab } from '../../../shell/contracts/ShellTab';
 import { DockZone } from '../../models/dock-zone-assignment.model';
+import { IDraggable } from '../../../shell/models/tab-item.model';
 
 // ---------------------------------------------------------------------------
 // Test helpers
 // ---------------------------------------------------------------------------
 
-function makeTab(partial: Partial<ShellTab>): ShellTab {
+function makeTab(partial: any): ShellTab {
   return {
     id: partial.id,
     label: partial.label,
     component: partial.component,
     icon: partial.icon,
+    draggable: partial.draggable,
+    closeable: partial.closeable,
+    pinnable: partial.pinnable,
   } as ShellTab;
 }
 
@@ -184,7 +188,7 @@ describe('workspace reducer', () => {
 
     it('should not close a non-closeable tab', () => {
       const tab = makeTab({ id: 'tab-1', label: 'File.ts'});
-      const nonCloseableTab = makeTab({ id: 'tab-2', label: 'ReadOnly.ts' });
+      const nonCloseableTab = makeTab({ id: 'tab-2', label: 'ReadOnly.ts', closeable: undefined });
       const s1 = workspaceReducer(initialWorkspaceState, registerTab({ tab }));
       const s2 = workspaceReducer(s1, registerTab({ tab: nonCloseableTab }));
       const s3 = workspaceReducer(s2, openTab({ tab }));
@@ -195,7 +199,7 @@ describe('workspace reducer', () => {
     });
 
     it('should not close a pinned tab', () => {
-      const tab = makeTab({ id: 'tab-1', label: 'File.ts' });
+      const tab = makeTab({ id: 'tab-1', label: 'File.ts', pinnable: { pinned: true } });
       const s1 = workspaceReducer(initialWorkspaceState, registerTab({ tab }));
       const s2 = workspaceReducer(s1, openTab({ tab }));
       const s3 = workspaceReducer(s2, closeTab({ tabId: 'tab-1' }));
@@ -371,7 +375,7 @@ describe('workspace reducer', () => {
 
   describe('moveTabToZone', () => {
     it('should move a tab from PrimaryWorkspace to BottomPanel', () => {
-      const tab = makeTab({ id: 'tab-1', label: 'File.ts' });
+      const tab = makeTab({ id: 'tab-1', label: 'File.ts', draggable: { sourceZone: DockZone.PrimaryWorkspace, targetZone: DockZone.BottomPanel, allowableDropTargets: [DockZone.BottomPanel] } });
       let state = initialWorkspaceState;
       state = workspaceReducer(state, registerTab({ tab }));
       state = workspaceReducer(state, openTab({ tab }));
@@ -391,7 +395,7 @@ describe('workspace reducer', () => {
     });
 
     it('should move a tab from BottomPanel to PrimaryWorkspace', () => {
-      const tab = makeTab({ id: 'tab-1', label: 'File.ts' });
+      const tab = makeTab({ id: 'tab-1', label: 'File.ts', draggable: { sourceZone: DockZone.BottomPanel, targetZone: DockZone.PrimaryWorkspace, allowableDropTargets: [DockZone.PrimaryWorkspace] } });
       let state = initialWorkspaceState;
       state = workspaceReducer(state, addBottomPanelEntry(tab));
 
@@ -411,7 +415,7 @@ describe('workspace reducer', () => {
     });
 
     it('should move a tab from PrimaryWorkspace to SecondaryPanel', () => {
-      const tab = makeTab({ id: 'tab-1', label: 'File.ts' });
+      const tab = makeTab({ id: 'tab-1', label: 'File.ts', draggable: { sourceZone: DockZone.PrimaryWorkspace, targetZone: DockZone.SecondaryPanel, allowableDropTargets: [DockZone.SecondaryPanel] } });
       let state = initialWorkspaceState;
       state = workspaceReducer(state, registerTab({ tab }));
       state = workspaceReducer(state, openTab({ tab }));
@@ -461,7 +465,7 @@ describe('workspace reducer', () => {
     });
 
     it('should handle moving tabs between zones', () => {
-      const centralTab = makeTab({ id: 'central', label: 'Main' });
+      const centralTab = makeTab({ id: 'central', label: 'Main', draggable: { sourceZone: DockZone.PrimaryWorkspace, targetZone: DockZone.BottomPanel, allowableDropTargets: [DockZone.BottomPanel, DockZone.PrimaryWorkspace] } });
       const bottomTab = makeTab({ id: 'bottom', label: 'Logs' });
 
       let state = initialWorkspaceState;
