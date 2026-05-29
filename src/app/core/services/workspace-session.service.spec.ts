@@ -114,7 +114,6 @@ describe('WorkspaceSessionService', () => {
             tabId: 'tab-1',
             viewId: 'editor',
             zone: DockZone.PrimaryWorkspace,
-            groupId: 'group-main',
             pinned: false,
             closable: true,
           },

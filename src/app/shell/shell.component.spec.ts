@@ -339,7 +339,7 @@ describe('ShellComponent', () => {
       expect(handle).not.toBeNull();
       const computedCursor = getComputedStyle(handle!).cursor;
       // In JSDOM getComputedStyle may not fully apply CSS; check the class/attribute instead.
-      expect(handle!.classList.contains('bottom-splitter-handle')).toBeTrue();
+      expect(handle!.classList.contains('bottom-splitter-handle')).toBeTruthy();
     });
   });
 
@@ -349,7 +349,7 @@ describe('ShellComponent', () => {
       fixture.detectChanges();
       const handle = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('[data-testid="secondary-splitter"]');
       expect(handle).not.toBeNull();
-      expect(handle!.classList.contains('secondary-splitter-handle')).toBeTrue();
+      expect(handle!.classList.contains('secondary-splitter-handle')).toBeTruthy();
     });
   });
 
@@ -452,7 +452,7 @@ describe('ShellComponent', () => {
 
       fixture.componentInstance.onShellTabClosed('tab-1');
 
-      expect(dispatchSpy).toHaveBeenCalledWith(closeTab({ tabId: 'tab-1', groupId: 'main' }));
+      expect(dispatchSpy).toHaveBeenCalledWith(closeTab({ tabId: 'tab-1'}));
     });
 
     it('onNewTabRequested should set showTabAddModal to true', () => {
@@ -461,7 +461,7 @@ describe('ShellComponent', () => {
 
       fixture.componentInstance.onNewTabRequested();
 
-      expect(fixture.componentInstance.showTabAddModal).toBeTrue();
+      expect(fixture.componentInstance.showTabAddModal).toBeTruthy();
     });
 
     it('onTabAddModalDismissed should set showTabAddModal to false', () => {
@@ -471,7 +471,7 @@ describe('ShellComponent', () => {
 
       fixture.componentInstance.onTabAddModalDismissed();
 
-      expect(fixture.componentInstance.showTabAddModal).toBeFalse();
+      expect(fixture.componentInstance.showTabAddModal).toBeFalsy();
     });
   });
 
