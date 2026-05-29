@@ -54,15 +54,12 @@ describe('CallbackRegistryService', () => {
 
 it('should dispatch error action when sync callback throws', () => {
   service.register('fail-cb', () => { throw new Error('Test error'); });
-
-  let leftItems: any[] = [];
-  store.select(selectStatusBarLeftItems).subscribe((items) => { leftItems = items; });
-
   expect(() => service.execute('fail-cb')).toThrow();
 });
+
   });
 
-  describe('has', () => {
+describe('has', () => {
     it('should return true for registered callback', () => {
       service.register('has-cb', () => {});
       expect(service.has('has-cb')).toBeTrue();

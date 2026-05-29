@@ -188,7 +188,8 @@ describe('workspace reducer', () => {
 
     it('should not close a non-closeable tab', () => {
       const tab = makeTab({ id: 'tab-1', label: 'File.ts'});
-      const nonCloseableTab = makeTab({ id: 'tab-2', label: 'ReadOnly.ts', closeable: undefined });
+      let nonCloseableTab = makeTab({ id: 'tab-2', label: 'ReadOnly.ts', closeable: undefined }) as any;
+      delete nonCloseableTab.closeable;
       const s1 = workspaceReducer(initialWorkspaceState, registerTab({ tab }));
       const s2 = workspaceReducer(s1, registerTab({ tab: nonCloseableTab }));
       const s3 = workspaceReducer(s2, openTab({ tab }));
