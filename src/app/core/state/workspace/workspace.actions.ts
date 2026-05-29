@@ -100,7 +100,7 @@ export const moveTabToZone = createAction(
  */
 export const addBottomPanelEntry = createAction(
   '[Workspace] Add Bottom Panel Entry',
-  props<ShellTab>()
+  props<{ tab: ShellTab }>()
 );
 
 /**

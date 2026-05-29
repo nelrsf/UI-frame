@@ -287,41 +287,41 @@ describe('workspace reducer', () => {
   // ── Bottom Panel Entries ─────────────────────────────────────────────────
 
   describe('Bottom Panel Entries', () => {
-    it('should add a bottom panel entry', () => {
-      const tab = makeTab({ id: 'logs-1', label: 'Logs' });
-      const state = workspaceReducer(initialWorkspaceState, addBottomPanelEntry(tab));
+it('should add a bottom panel entry', () => {
+  const tab = makeTab({ id: 'logs-1', label: 'Logs' });
+  const state = workspaceReducer(initialWorkspaceState, addBottomPanelEntry({ tab }));
 
-      expect(state.bottomPanelTabs).toContain(tab);
-    });
+  expect(state.bottomPanelTabs).toContain(tab);
+});
 
-    it('should not add duplicate bottom panel entries', () => {
-      const tab = makeTab({ id: 'logs-1', label: 'Logs' });
-      spyOn(console, 'warn');
-      let state = initialWorkspaceState;
-      state = workspaceReducer(state, addBottomPanelEntry(tab));
-      state = workspaceReducer(state, addBottomPanelEntry(tab));
+it('should not add duplicate bottom panel entries', () => {
+  const tab = makeTab({ id: 'logs-1', label: 'Logs' });
+  spyOn(console, 'warn');
+  let state = initialWorkspaceState;
+  state = workspaceReducer(state, addBottomPanelEntry({ tab }));
+  state = workspaceReducer(state, addBottomPanelEntry({ tab }));
 
-      expect(state.bottomPanelTabs.length).toBe(1);
-      expect(console.warn).toHaveBeenCalled();
-    });
+  expect(state.bottomPanelTabs.length).toBe(1);
+  expect(console.warn).toHaveBeenCalled();
+});
 
-    it('should remove a bottom panel entry', () => {
-      const tab = makeTab({ id: 'logs-1', label: 'Logs' });
-      let state = initialWorkspaceState;
-      state = workspaceReducer(state, addBottomPanelEntry(tab));
-      state = workspaceReducer(state, removeBottomPanelEntry({ entryId: 'logs-1' }));
+it('should remove a bottom panel entry', () => {
+  const tab = makeTab({ id: 'logs-1', label: 'Logs' });
+  let state = initialWorkspaceState;
+  state = workspaceReducer(state, addBottomPanelEntry({ tab }));
+  state = workspaceReducer(state, removeBottomPanelEntry({ entryId: 'logs-1' }));
 
-      expect(state.bottomPanelTabs.length).toBe(0);
-    });
+  expect(state.bottomPanelTabs.length).toBe(0);
+});
 
-    it('should not affect state when removing non-existent bottom panel entry', () => {
-      const tab = makeTab({ id: 'logs-1', label: 'Logs' });
-      let state = initialWorkspaceState;
-      state = workspaceReducer(state, addBottomPanelEntry(tab));
-      const s2 = workspaceReducer(state, removeBottomPanelEntry({ entryId: 'nonexistent' }));
+it('should not affect state when removing non-existent bottom panel entry', () => {
+  const tab = makeTab({ id: 'logs-1', label: 'Logs' });
+  let state = initialWorkspaceState;
+  state = workspaceReducer(state, addBottomPanelEntry({ tab }));
+  const s2 = workspaceReducer(state, removeBottomPanelEntry({ entryId: 'nonexistent' }));
 
-      expect(s2).toEqual(state);
-    });
+  expect(s2).toEqual(state);
+});
   });
 
   // ── Secondary Panel Entries ──────────────────────────────────────────────
@@ -394,10 +394,10 @@ describe('workspace reducer', () => {
       expect(state.bottomPanelTabs).toContain(tab);
     });
 
-    it('should move a tab from BottomPanel to PrimaryWorkspace', () => {
-      const tab = makeTab({ id: 'tab-1', label: 'File.ts', draggable: { sourceZone: DockZone.BottomPanel, targetZone: DockZone.PrimaryWorkspace, allowableDropTargets: [DockZone.PrimaryWorkspace] } });
-      let state = initialWorkspaceState;
-      state = workspaceReducer(state, addBottomPanelEntry(tab));
+it('should move a tab from BottomPanel to PrimaryWorkspace', () => {
+  const tab = makeTab({ id: 'tab-1', label: 'File.ts', draggable: { sourceZone: DockZone.BottomPanel, targetZone: DockZone.PrimaryWorkspace, allowableDropTargets: [DockZone.PrimaryWorkspace] } });
+  let state = initialWorkspaceState;
+  state = workspaceReducer(state, addBottomPanelEntry({ tab }));
 
       state = workspaceReducer(
         state,
@@ -464,13 +464,13 @@ describe('workspace reducer', () => {
       expect(state.registeredTabs.length).toBe(2);
     });
 
-    it('should handle moving tabs between zones', () => {
-      const centralTab = makeTab({ id: 'central', label: 'Main', draggable: { sourceZone: DockZone.PrimaryWorkspace, targetZone: DockZone.BottomPanel, allowableDropTargets: [DockZone.BottomPanel, DockZone.PrimaryWorkspace] } });
-      const bottomTab = makeTab({ id: 'bottom', label: 'Logs' });
+it('should handle moving tabs between zones', () => {
+  const centralTab = makeTab({ id: 'central', label: 'Main', draggable: { sourceZone: DockZone.PrimaryWorkspace, targetZone: DockZone.BottomPanel, allowableDropTargets: [DockZone.BottomPanel, DockZone.PrimaryWorkspace] } });
+  const bottomTab = makeTab({ id: 'bottom', label: 'Logs' });
 
-      let state = initialWorkspaceState;
-      state = workspaceReducer(state, registerAndOpenTab({ tab: centralTab }));
-      state = workspaceReducer(state, addBottomPanelEntry(bottomTab));
+  let state = initialWorkspaceState;
+  state = workspaceReducer(state, registerAndOpenTab({ tab: centralTab }));
+  state = workspaceReducer(state, addBottomPanelEntry({ tab: bottomTab }));
 
       // Move from central to bottom
       state = workspaceReducer(

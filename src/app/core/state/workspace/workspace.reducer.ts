@@ -90,10 +90,27 @@ export const workspaceReducer = createReducer(
     };
   }),
 
-  on(WorkspaceActions.registerAndOpenTab, (state, { tab }) => {
-    const registered = registerCentralTab(state, tab);
-    return tab ? { ...registered, activeTabId: tab.id } : registered;
-  }),
+on(WorkspaceActions.registerAndOpenTab, (state, { tab }) => {
+  if (!tab) {
+    return state;
+  }
+
+  // First register the tab (if not already registered)
+  const registered = registerCentralTab(state, tab);
+  
+  // Then open it if it's not already open
+  if (registered.tabs.some((existingTab) => existingTab.id === tab.id)) {
+    // Tab is already open, just make sure it's active
+    return { ...registered, activeTabId: tab.id };
+  }
+  
+  // Tab is registered but not open, so open it
+  return {
+    ...registered,
+    tabs: [...registered.tabs, tab],
+    activeTabId: tab.id,
+  };
+}),
 
   on(WorkspaceActions.closeTab, (state, { tabId }) => {
     const tabIdx = state.tabs.findIndex((tab) => tab.id === tabId);
@@ -250,17 +267,17 @@ export const workspaceReducer = createReducer(
 
   }),
 
-  on(WorkspaceActions.addBottomPanelEntry, (state, panelTab) => {
-    const idExists = state.bottomPanelTabs.some((tab) => tab.id === panelTab.id);
-    if (idExists) {
-      console.warn(`[Workspace] Bottom panel tab with id '${panelTab.id}' already exists. Ignoring.`);
-      return state;
-    }
-    return {
-      ...state,
-      bottomPanelTabs: [...state.bottomPanelTabs, panelTab],
-    };
-  }),
+on(WorkspaceActions.addBottomPanelEntry, (state, { tab }) => {
+  const idExists = state.bottomPanelTabs.some((existingTab) => existingTab.id === tab.id);
+  if (idExists) {
+    console.warn(`[Workspace] Bottom panel tab with id '${tab.id}' already exists. Ignoring.`);
+    return state;
+  }
+  return {
+    ...state,
+    bottomPanelTabs: [...state.bottomPanelTabs, tab],
+  };
+}),
 
   on(WorkspaceActions.removeBottomPanelEntry, (state, { entryId }) => {
     const exists = state.bottomPanelTabs.some((tab) => tab.id === entryId);

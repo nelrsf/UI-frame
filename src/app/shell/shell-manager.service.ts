@@ -116,7 +116,7 @@ export class ShellManager {
 
     this.bottomPanelIds.add(panel.id);
 
-    this.store.dispatch(addBottomPanelEntry(panel));
+    this.store.dispatch(addBottomPanelEntry({ tab: panel }));
   }
 
   addSecondaryPanelEntry(entry: ShellTab): void {

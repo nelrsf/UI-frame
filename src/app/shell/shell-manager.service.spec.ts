@@ -125,14 +125,16 @@ describe('ShellManager', () => {
       component: componentType,
     });
 
-    expect(dispatchSpy).toHaveBeenCalledWith(
-      addBottomPanelEntry({
-        id: 'results',
-        label: 'Results',
-        icon: 'list',
-        component: componentType,
-      })
-    );
+expect(dispatchSpy).toHaveBeenCalledWith(
+  addBottomPanelEntry({
+    tab: {
+      id: 'results',
+      label: 'Results',
+      icon: 'list',
+      component: componentType,
+    }
+  })
+);
   });
 
   it('duplicate ids are ignored', () => {
