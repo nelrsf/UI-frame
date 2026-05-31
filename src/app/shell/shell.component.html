@@ -42,6 +42,7 @@
       ></app-tab-add-modal>
     }
     <app-shell-splitter-handle
+      class="shell-secondary-splitter"
       variant="horizontal"
       testId="secondary-splitter"
       ariaLabel="Resize secondary panel"
@@ -64,6 +65,7 @@
       (tabReordered)="onDockZoneTabReordered(DockZone.SecondaryPanel, $event)"
     ></app-dock-zone-panel>
     <app-shell-splitter-handle
+      class="shell-bottom-splitter"
       variant="vertical"
       testId="bottom-splitter"
       ariaLabel="Resize bottom panel"

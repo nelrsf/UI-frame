@@ -154,6 +154,14 @@
   transition: box-shadow 80ms ease, outline-color 80ms ease;
 }
 
+.shell-secondary-splitter {
+  grid-area: secondary-splitter;
+}
+
+.shell-bottom-splitter {
+  grid-area: bottom-splitter;
+}
+
 /* Drop zone visual feedback during drag-and-drop */
 /* Handled within DockZonePanelComponent overlay */
 
