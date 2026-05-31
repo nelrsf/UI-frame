@@ -9,6 +9,7 @@ import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { DockZonePanelComponent } from './components/dock-zone-panel/dock-zone-panel.component';
 import { TabAddModalComponent } from './components/tab-add-modal/tab-add-modal.component';
 import { DragGhostComponent } from './components/drag-ghost/drag-ghost.component';
+import { ShellSplitterHandleComponent } from './components/shell-splitter-handle/shell-splitter-handle.component';
 import { PlatformService } from '../core/services/platform.service';
 import { CommandRegistryService } from '../core/services/command-registry.service';
 import { setPlatform, shellReady } from '../core/state/session';
@@ -67,6 +68,7 @@ import {
 import { DragDropService } from './services/drag-drop.service';
 import { ShellManager } from './shell-manager.service';
 import { DockZone } from '../core/models/dock-zone-assignment.model';
+import { LayoutSplittablePanelComponent } from './components/layout-splittable-panel/layout-splittable-panel.component';
 
 @Component({
   selector: 'app-shell',
@@ -79,6 +81,8 @@ import { DockZone } from '../core/models/dock-zone-assignment.model';
     DockZonePanelComponent,
     TabAddModalComponent,
     DragGhostComponent,
+    LayoutSplittablePanelComponent,
+    ShellSplitterHandleComponent,
   ],
   templateUrl: './shell.component.html',
   styleUrl: './shell.component.css',

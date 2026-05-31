@@ -41,17 +41,16 @@
         (dismissed)="onTabAddModalDismissed()"
       ></app-tab-add-modal>
     }
-    <div
-      class="secondary-splitter-handle"
-      data-testid="secondary-splitter"
-      role="separator"
-      aria-orientation="vertical"
-      aria-label="Resize secondary panel"
-      (pointerdown)="onSecondarySplitterPointerDown($event)"
-      (pointermove)="onSecondarySplitterPointerMove($event)"
-      (pointerup)="onSecondarySplitterPointerUp($event)"
-      (pointercancel)="onSecondarySplitterPointerCancel($event)"
-    ></div>
+    <app-shell-splitter-handle
+      variant="horizontal"
+      testId="secondary-splitter"
+      ariaLabel="Resize secondary panel"
+      ariaOrientation="vertical"
+      (pointerDown)="onSecondarySplitterPointerDown($event)"
+      (pointerMove)="onSecondarySplitterPointerMove($event)"
+      (pointerUp)="onSecondarySplitterPointerUp($event)"
+      (pointerCancel)="onSecondarySplitterPointerCancel($event)"
+    ></app-shell-splitter-handle>
     <app-dock-zone-panel
       class="shell-secondary-panel"
       [zone]="DockZone.SecondaryPanel"
@@ -64,17 +63,16 @@
       (sizeChange)="onSecondaryPanelWidthChange($event)"
       (tabReordered)="onDockZoneTabReordered(DockZone.SecondaryPanel, $event)"
     ></app-dock-zone-panel>
-    <div
-      class="bottom-splitter-handle"
-      data-testid="bottom-splitter"
-      role="separator"
-      aria-orientation="horizontal"
-      aria-label="Resize bottom panel"
-      (pointerdown)="onBottomSplitterPointerDown($event)"
-      (pointermove)="onBottomSplitterPointerMove($event)"
-      (pointerup)="onBottomSplitterPointerUp($event)"
-      (pointercancel)="onBottomSplitterPointerCancel($event)"
-    ></div>
+    <app-shell-splitter-handle
+      variant="vertical"
+      testId="bottom-splitter"
+      ariaLabel="Resize bottom panel"
+      ariaOrientation="horizontal"
+      (pointerDown)="onBottomSplitterPointerDown($event)"
+      (pointerMove)="onBottomSplitterPointerMove($event)"
+      (pointerUp)="onBottomSplitterPointerUp($event)"
+      (pointerCancel)="onBottomSplitterPointerCancel($event)"
+    ></app-shell-splitter-handle>
     <app-dock-zone-panel
       class="shell-bottom-panel"
       [zone]="DockZone.BottomPanel"

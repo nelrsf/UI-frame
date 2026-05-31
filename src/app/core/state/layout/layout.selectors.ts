@@ -52,3 +52,14 @@ export const selectLayoutSnapshot = createSelector(selectLayoutState, (state) =>
   secondaryPanelVisible: state.secondaryPanelVisible,
   secondaryPanelWidth: state.secondaryPanelWidth,
 }));
+
+/**
+ * Selects the current split layout state for the main content area, or null if not in a split layout. This is used to determine how many splits are currently open and their configuration, which can affect the visibility and behavior of other layout elements.
+ * The split layout state is represented as a `LayoutSplittableRegionModel`, which describes the hierarchy of split regions and their sizes.
+ */
+export const selectSplitLayout = createSelector(
+  selectLayoutState,
+  (state) => {
+    return state.splitPanelLayout;
+  }
+);

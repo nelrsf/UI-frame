@@ -7,12 +7,12 @@
 
 **Purpose**: Prepare component scaffolding and state foundations for split layout support.
 
-- [ ] T001 Create `src/app/shell/components/layout-splittable-panel/layout-splittable-panel.component.ts`, `layout-splittable-panel.component.html`, and `layout-splittable-panel.component.css`
-- [ ] T002 [P] Create `src/app/core/models/layout-splittable-region.model.ts` with `LayoutSplittableRegionModel`, `LayoutSplitSubRegion`, and `LayoutSplitDirection`
-- [ ] T003 [P] Add split layout actions to `src/app/core/state/layout/layout.actions.ts` for `setSplitLayout` and `setSplitPaneSize`
-- [ ] T004 [P] Extend `src/app/core/state/layout/layout.reducer.ts` to persist `splitPanelLayout` and handle split layout actions
-- [ ] T005 [P] Add split layout selectors to `src/app/core/state/layout/layout.selectors.ts`
-- [ ] T006 [P] Add `layout-splittable-panel` component imports/registration in `src/app/shell/shell.component.ts` or relevant shell module so it can be rendered by the shell
+- [x] T001 Create `src/app/shell/components/layout-splittable-panel/layout-splittable-panel.component.ts`, `layout-splittable-panel.component.html`, and `layout-splittable-panel.component.css`
+- [x] T002 [P] Create `src/app/core/models/layout-splittable-region.model.ts` with `LayoutSplittableRegionModel`, `LayoutSplitSubRegion`, and `LayoutSplitDirection`
+- [x] T003 [P] Add split layout actions to `src/app/core/state/layout/layout.actions.ts` for `setSplitLayout` and `setSplitPaneSize`
+- [x] T004 [P] Extend `src/app/core/state/layout/layout.reducer.ts` to persist `splitPanelLayout` and handle split layout actions
+- [x] T005 [P] Add split layout selectors to `src/app/core/state/layout/layout.selectors.ts`
+- [x] T006 [P] Add `layout-splittable-panel` component imports/registration in `src/app/shell/shell.component.ts` or relevant shell module so it can be rendered by the shell
 
 ---
 
@@ -20,7 +20,7 @@
 
 **Purpose**: Build the split wrapper logic and NgRx connection required for all user stories.
 
-- [ ] T007 Implement `src/app/shell/components/layout-splittable-panel/layout-splittable-panel.component.ts` to expose inputs: `direction`, `regions`, and `maxSubRegions`
+- [x] T007 Implement `src/app/shell/components/layout-splittable-panel/layout-splittable-panel.component.ts` to expose inputs: `direction`, `regions`, and `maxSubRegions`
 - [ ] T008 Implement `src/app/shell/components/layout-splittable-panel/layout-splittable-panel.component.html` to render a cyclic pattern of `app-dock-zone-panel` and separators
 - [ ] T009 Implement `src/app/shell/components/layout-splittable-panel/layout-splittable-panel.component.ts` split button logic and `splitRequested` output event
 - [ ] T010 Wire `layout-splittable-panel` event output to NgRx updates in `src/app/shell/shell.component.ts`

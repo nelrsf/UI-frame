@@ -1,4 +1,5 @@
 import { createAction, props } from '@ngrx/store';
+import { LayoutSplittableRegionModel } from '../../../shell/models/layout-splittable-region.model';
 
 /**
  * Toggles the sidebar content-panel visibility (show ↔ hide).
@@ -89,4 +90,25 @@ export const restoreLayout = createAction(
     secondaryPanelVisible: boolean;
     secondaryPanelWidth: number;
   }>()
+);
+
+/**
+ * Sets the split layout state for the main content area. This is used when the user opens a file in a new split, or when they close a split and we need to update the layout accordingly.
+ * Pass `null` to reset to a single non-split layout.
+ */
+export const setSplitLayout = createAction(
+  '[Layout] Set Split Layout',
+  props<{
+    splitLayout: LayoutSplittableRegionModel | null;
+  }>()
+);
+
+
+/**
+ * Sets the size of a specific split pane in the main content area. The `paneId` corresponds to the `id` property of a `LayoutSplitRegion` in the current split layout state. The `size` is a number between 0 and 1 representing the percentage of available space that the pane should take up.
+ * This action is typically dispatched when the user drags the divider between split panes to resize them.
+ */
+export const setSplitPaneSize = createAction(
+  '[Layout] Set Split Pane Size',
+  props<{ paneId: string; size: number }>()
 );

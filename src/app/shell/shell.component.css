@@ -129,38 +129,6 @@
   min-height: 0;
 }
 
-/* ── Resize splitter handles ──────────────────────────────────────────────── */
-
-/* Horizontal splitter between content area and bottom panel */
-.bottom-splitter-handle {
-  grid-area: bottom-splitter;
-  cursor: ns-resize;
-  background-color: var(--color-border-subtle, transparent);
-  transition: background-color 80ms ease;
-  z-index: 10;
-  touch-action: none;
-}
-
-.bottom-splitter-handle:hover,
-.bottom-splitter-handle:active {
-  background-color: var(--color-accent-primary, #0078d4);
-}
-
-/* Vertical splitter between content area and secondary panel */
-.secondary-splitter-handle {
-  grid-area: secondary-splitter;
-  cursor: ew-resize;
-  background-color: var(--color-border-subtle, transparent);
-  transition: background-color 80ms ease;
-  z-index: 10;
-  touch-action: none;
-}
-
-.secondary-splitter-handle:hover,
-.secondary-splitter-handle:active {
-  background-color: var(--color-accent-primary, #0078d4);
-}
-
 /* Ensure non-resizable regions retain the default cursor (T025) */
 .shell-toolbar,
 .shell-primary-workspace,
