@@ -6,9 +6,19 @@
  */
 export enum DockZone {
   /** The primary editor or content area occupying the central workspace. */
-  PrimaryWorkspace = 'primary-workspace',
+  PrimaryTopLeftWorkspace = 'primary-top-left-workspace',
+  /** The collapsible panel anchored to the left side of the shell. */
+  PrimaryTopRightWorkspace = 'primary-top-right-workspace',
+  /** The collapsible panel anchored to the right side of the shell. */
+  PrimaryBottomLeftWorkspace = 'primary-bottom-left-workspace',
+  /** The collapsible panel anchored to the right side of the shell. */
+  PrimaryBottomRightWorkspace = 'primary-bottom-right-workspace',
   /** The collapsible panel anchored to the bottom of the shell. */
-  BottomPanel = 'bottom-panel',
+  BottomLeftPanel = 'bottom-left-panel',
+  /** The collapsible panel anchored to the bottom of the shell. */
+  BottomRightPanel = 'bottom-right-panel',
+  /** The collapsible panel anchored to the bottom of the shell. */
+  BottomCenterPanel = 'bottom-center-panel',
   /** The collapsible panel anchored to the right side of the shell. */
   SecondaryPanel = 'secondary-panel',
 }

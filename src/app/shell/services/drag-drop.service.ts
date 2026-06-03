@@ -10,10 +10,18 @@ import {
   DragState,
   DropZoneRegistration
 } from '../../core/models/drag-drop.model';
-import { moveTabToZone } from '../../core/state/workspace';
+import { moveTabToZone, reorderTab } from '../../core/state/workspace';
 import { ShellTab } from '../contracts/ShellTab';
-import { WithCloseable, WithDraggable, WithPinnable } from '../models/tab-item.model';
-import { isTabCloseable, isTabPinnable } from '../common/ShellTabGuardTypes';
+import { WithDraggable } from '../models/tab-item.model';
+import { DOMHelpers } from '../common/DOMHelpers';
+import { isTabDraggable } from '../common/ShellTabGuardTypes';
+
+
+export interface ReorderTabsPayload {
+  toIndex: number,
+  fromIndex: number,
+  zone: DockZone
+}
 
 /**
  * Central service that manages the lifecycle of drag-and-drop operations
@@ -42,8 +50,6 @@ export class DragDropService implements OnDestroy {
 
   private _globalCleanup: (() => void) | null = null;
 
-  // Reorder source registration — supports multiple tab bars (central, bottom, secondary)
-  private _reorderSources = new Map<HTMLElement, (fromIndex: number, toIndex: number) => void>();
   private _reorderTargetIndex: number | null = null;
   private _reorderTargetElement: HTMLElement | null = null;
 
@@ -91,6 +97,8 @@ export class DragDropService implements OnDestroy {
    */
   readonly crossRegionDrop$: Observable<ShellTab & WithDraggable> = this._crossRegionDrop$.asObservable();
 
+  readonly reorderTabs$: BehaviorSubject<ReorderTabsPayload | null> = new BehaviorSubject<ReorderTabsPayload | null>(null);
+
   // ── Drop Zone Management ───────────────────────────────────────────────────
 
   /**
@@ -112,19 +120,6 @@ export class DragDropService implements OnDestroy {
    */
   unregisterDropZone(zone: DockZone): void {
     this._dropZones.delete(zone);
-  }
-
-  /**
-   * Registers a tab bar element as a reorder source.
-   * When a tab is dropped back onto its source tab bar at a different position,
-   * the callback is invoked with the from/to indices.
-   * Multiple tab bars can be registered (central, bottom, secondary).
-   */
-  registerReorderSource(
-    element: HTMLElement,
-    callback: (fromIndex: number, toIndex: number) => void
-  ): void {
-    this._reorderSources.set(element, callback);
   }
 
   // ── Drag Lifecycle ─────────────────────────────────────────────────────────
@@ -205,8 +200,8 @@ export class DragDropService implements OnDestroy {
       ...currentState,
       pointerX: x,
       pointerY: y,
-      activeDropZone: activeDropZone === currentState.draggedTab?.draggable?.sourceZone ? null : activeDropZone,
-      dropCompatible: activeDropZone === currentState.draggedTab?.draggable?.sourceZone ? false : dropCompatible,
+      activeDropZone: activeDropZone,
+      dropCompatible: dropCompatible,
     });
 
     // Store reorder target for use in endDrag.
@@ -236,27 +231,14 @@ export class DragDropService implements OnDestroy {
 
     const { draggedTab, activeDropZone, dropCompatible } = currentState;
 
-    // Check for same-region reorder first.
-    if (this._reorderTargetIndex !== null && this._reorderTargetElement) {
-      const callback = this._reorderSources.get(this._reorderTargetElement);
-      if (callback) {
-        // Find the source tab index in the tab bar.
-        const sourceIndex = this._findTabIndexInTabBar(draggedTab.id);
-        if (sourceIndex !== null && sourceIndex !== this._reorderTargetIndex) {
-          callback(sourceIndex, this._reorderTargetIndex);
-          this._resetState();
-          return;
-        }
-      }
+    if(!isTabDraggable(draggedTab) || !draggedTab.draggable){
+      this._resetState();
+      return;
     }
 
-    if (activeDropZone && dropCompatible) {
-      // Check if dropping back to the same zone (no-op = cancel).
-      if (activeDropZone === draggedTab.draggable?.sourceZone) {
-        this._resetState();
-        return;
-      }
+    draggedTab.draggable.reorderTargetIndex = this._reorderTargetIndex;
 
+    if (activeDropZone && dropCompatible) {
       // Cross-region drop: dispatch action + emit event for ShellComponent.
       this._emitCrossRegionDrop(draggedTab, activeDropZone);
     }
@@ -318,10 +300,7 @@ export class DragDropService implements OnDestroy {
     }
 
     for (const registration of this._dropZones.values()) {
-      const rect = registration.boundingRect ?? registration.element.getBoundingClientRect();
-      registration.boundingRect = rect;
-
-      if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+      if (DOMHelpers.isPointerOverElement(x, y, registration.element)) {
         const compatible = draggedTab.draggable?.allowableDropTargets.includes(registration.zone) ?? false;
         return { activeDropZone: registration.zone, dropCompatible: compatible };
       }
@@ -334,15 +313,27 @@ export class DragDropService implements OnDestroy {
 
     if (!draggedTab.draggable) return;
 
-    // Dispatch the move action (handles source removal + target addition for PrimaryWorkspace).
-    this.store.dispatch(
-      moveTabToZone({
-        tabId: draggedTab.id,
-        sourceZone: draggedTab.draggable.sourceZone,
-        targetZone,
-        tabMetadata: draggedTab, // Pass full tab metadata for ShellComponent to register in target region
-      })
-    );
+    if(targetZone===draggedTab.draggable.sourceZone){
+      this.store.dispatch(
+        reorderTab({
+          zone: targetZone,
+          toIndex: draggedTab.draggable.reorderTargetIndex,
+          reorderedTab: draggedTab
+        })
+      );
+    } else {
+      // Dispatch the move action (handles source removal + target addition for PrimaryWorkspace).
+      this.store.dispatch(
+        moveTabToZone({
+          tabId: draggedTab.id,
+          sourceZone: draggedTab.draggable.sourceZone,
+          targetZone,
+          tabMetadata: draggedTab, // Pass full tab metadata for ShellComponent to register in target region
+        })
+      );
+    }
+
+
 
     // Emit event for ShellComponent to register in target region.
     this._crossRegionDrop$.next(draggedTab);
@@ -404,7 +395,8 @@ export class DragDropService implements OnDestroy {
   ): number | null {
     if (!draggedTab) return null;
 
-    for (const [element] of this._reorderSources) {
+    for (const [dockZone, dockZoneReg] of this._dropZones) {
+      const element = dockZoneReg.element;
       const rect = element.getBoundingClientRect();
       if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
         continue;
@@ -432,7 +424,8 @@ export class DragDropService implements OnDestroy {
   }
 
   private _findTabIndexInTabBar(tabId: string): number | null {
-    for (const element of this._reorderSources.keys()) {
+    for (const [dropZone, dropZoneReg] of this._dropZones) {
+      const element = dropZoneReg.element;
       const tabElements = element.querySelectorAll('[role="tab"]');
       for (let i = 0; i < tabElements.length; i++) {
         const testId = tabElements[i].getAttribute('data-testid');

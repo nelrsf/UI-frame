@@ -23,16 +23,15 @@
     <app-toolbar class="shell-toolbar" [actions]="(toolbarActions$ | async) ?? []"></app-toolbar>
     <app-dock-zone-panel
       class="shell-primary-workspace"
-      [zone]="DockZone.PrimaryWorkspace"
-      [tabs]="(shellTabs$ | async) ?? []"
-      [activeTabId]="(activeShellTabId$ | async) ?? ''"
+      [zone]="DockZone.PrimaryTopLeftWorkspace"
+      [tabs]="(getTabsByZone(DockZone.PrimaryTopLeftWorkspace) | async) ?? []"
+      [activeTabId]="(getActiveTabIdByZone(DockZone.PrimaryTopLeftWorkspace) | async) ?? ''"
       [visible]="true"
       [closeGuards]="(closeGuards$ | async) ?? {}"
       (activeTabChange)="onShellTabSelected($event)"
       (tabClosed)="onShellTabClosed($event)"
       (closeGuardTimeout)="onCloseGuardTimeout($event)"
       (newTabRequested)="onNewTabRequested()"
-      (tabReordered)="onDockZoneTabReordered(DockZone.PrimaryWorkspace, $event)"
     ></app-dock-zone-panel>
     @if (showTabAddModal) {
       <app-tab-add-modal
@@ -57,12 +56,11 @@
       [zone]="DockZone.SecondaryPanel"
       [visible]="(secondaryPanelVisible$ | async) ?? false"
       [size]="(secondaryPanelWidth$ | async) ?? 300"
-      [tabs]="(secondaryPanelEntries$ | async) ?? []"
-      [activeTabId]="(activeSecondaryPanelEntryId$ | async) ?? ''"
+      [tabs]="(getTabsByZone(DockZone.SecondaryPanel) | async) ?? []"
+      [activeTabId]="(getActiveTabIdByZone(DockZone.SecondaryPanel) | async) ?? ''"
       (visibilityChange)="onSecondaryPanelVisibilityChange($event)"
       (activeTabChange)="onSecondaryPanelActiveEntryChange($event)"
       (sizeChange)="onSecondaryPanelWidthChange($event)"
-      (tabReordered)="onDockZoneTabReordered(DockZone.SecondaryPanel, $event)"
     ></app-dock-zone-panel>
     <app-shell-splitter-handle
       class="shell-bottom-splitter"
@@ -75,18 +73,14 @@
       (pointerUp)="onBottomSplitterPointerUp($event)"
       (pointerCancel)="onBottomSplitterPointerCancel($event)"
     ></app-shell-splitter-handle>
-    <app-dock-zone-panel
-      class="shell-bottom-panel"
-      [zone]="DockZone.BottomPanel"
+
+    <app-layout-splittable-panel
+      class="shell-bottom-panel shell-bottom-splittable-panel"
+      [direction]="'horizontal'"
       [visible]="(bottomPanelVisible$ | async) ?? false"
-      [size]="(bottomPanelHeight$ | async) ?? 220"
-      [tabs]="(bottomPanelTabs$ | async) ?? []"
-      [activeTabId]="activeBottomPanelId"
-      (visibilityChange)="onBottomPanelVisibilityChange($event)"
-      (sizeChange)="onBottomPanelHeightChange($event)"
-      (activeTabChange)="onBottomPanelActivePanelChange($event)"
-      (tabReordered)="onDockZoneTabReordered(DockZone.BottomPanel, $event)"
-    ></app-dock-zone-panel>
+      [zones]="[DockZone.BottomLeftPanel, DockZone.BottomCenterPanel, DockZone.BottomRightPanel]"
+    ></app-layout-splittable-panel>
+
   </div>
 
   <footer class="shell-statusbar" role="contentinfo" aria-label="Status bar">

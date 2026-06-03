@@ -1,0 +1,30 @@
+@if(visible)
+{
+    <div class="layout-splittable-panel" 
+     [ngClass]="{
+    'layout-splitter-horizontal': direction === 'horizontal',
+    'layout-splitter-vertical': direction === 'vertical'
+    }">
+    @for(zone of zones;track zone) {
+        <div class="splittable-panel-region">
+            @if($index > 0) {
+            <app-shell-splitter-handle
+                class="shell-splitter"
+                [variant]="direction"
+                testId="splitter-{{$index}}"
+                ariaLabel="Resize panel {{$index}}"
+                [ariaOrientation]="direction">
+            </app-shell-splitter-handle>
+        }
+        <app-dock-zone-panel
+            #dockPanel
+            class="splittable-panel-dock-zone"
+            [zone]="zone"
+            [tabs]="(getPanelTabs(zone) | async) ?? []"
+            [activeTabId]="(getActiveTabIdByZone(zone) | async) ?? ''"
+            (activeTabChange)="onActiveTabChanged($event)"
+        ></app-dock-zone-panel>
+    </div>
+    }
+</div>
+}

@@ -27,12 +27,15 @@ export const MOCK_DASHBOARD_TAB: ShellTab & WithDraggable = {
   icon: '📄',
   draggable: {
     allowableDropTargets: [
-      DockZone.BottomPanel,
+      DockZone.PrimaryTopLeftWorkspace,
       DockZone.SecondaryPanel,
-      DockZone.PrimaryWorkspace
+      DockZone.BottomCenterPanel,
+      DockZone.BottomLeftPanel,
+      DockZone.BottomRightPanel,
     ],
-    sourceZone: DockZone.PrimaryWorkspace,
-    targetZone: DockZone.PrimaryWorkspace
+    sourceZone: DockZone.PrimaryTopLeftWorkspace,
+    targetZone: DockZone.PrimaryTopLeftWorkspace,
+    reorderTargetIndex: null
   }
 };
 
@@ -112,11 +115,14 @@ export const MOCK_WARNINGS_PANEL: ShellTab & WithDraggable = {
   component: MockBottomWarningsComponent,
   draggable: {
     allowableDropTargets: [
-      DockZone.BottomPanel,
+      DockZone.BottomCenterPanel,
+      DockZone.BottomRightPanel,
+      DockZone.BottomLeftPanel,
       DockZone.SecondaryPanel,
     ],
-    sourceZone: DockZone.BottomPanel,
-    targetZone: DockZone.BottomPanel
+    sourceZone: DockZone.BottomCenterPanel,
+    targetZone: DockZone.BottomCenterPanel,
+    reorderTargetIndex: null
   }
 };
 

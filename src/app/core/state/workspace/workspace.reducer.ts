@@ -3,29 +3,22 @@ import { DockZone } from '../../models/dock-zone-assignment.model';
 import * as WorkspaceActions from './workspace.actions';
 import { ShellTab } from '../../../shell/contracts/ShellTab';
 import { isTabCloseable, isTabDraggable, isTabPinnable } from '../../../shell/common/ShellTabGuardTypes';
+import { WithDraggable } from '../../../shell/models/tab-item.model';
 
 export interface WorkspaceState {
   /** All central region tabs ever registered; closeTab leaves them here for reopening. */
   readonly registeredTabs: readonly ShellTab[];
-  /** Ordered list of currently open central region tabs. */
-  readonly tabs: readonly ShellTab[];
-  /** Active central region tab id, or null when no central tab is open. */
-  readonly activeTabId: string | null;
-  /** Bottom panel tabs registered in this workspace. */
-  readonly bottomPanelTabs: readonly ShellTab[];
-  /** Secondary panel entries registered in this workspace. */
-  readonly secondaryPanelEntries: readonly ShellTab[];
-  /** ID of the currently active secondary panel entry. */
-  readonly activeSecondaryPanelEntryId: string | null;
+  /** Currently open tabs in the central region; order reflects tab strip order. */
+  readonly tabsByZone: Map<DockZone, readonly ShellTab[]>;
+  /** Id of the active tab in each region, or null if no tabs are open. */
+  readonly activeTabIdsByZone: Map<DockZone, string | null>;
+
 }
 
 export const initialWorkspaceState: WorkspaceState = {
   registeredTabs: [],
-  tabs: [],
-  activeTabId: null,
-  bottomPanelTabs: [],
-  secondaryPanelEntries: [],
-  activeSecondaryPanelEntryId: null,
+  tabsByZone: new Map(),
+  activeTabIdsByZone: new Map(),
 };
 
 function resolveActiveAfterRemoval(
@@ -47,7 +40,7 @@ function resolveActiveAfterRemoval(
     : remainingTabs[0].id;
 }
 
-function registerCentralTab(state: WorkspaceState, tab: ShellTab): WorkspaceState {
+function registerTab(state: WorkspaceState, tab: ShellTab): WorkspaceState {
   if (!tab) {
     return state;
   }
@@ -62,18 +55,27 @@ function registerCentralTab(state: WorkspaceState, tab: ShellTab): WorkspaceStat
   };
 }
 
+function findTabsById(state: WorkspaceState, tabId: string): { zone: DockZone; tabs: readonly ShellTab[] } | null {
+  for (const [zone, tabs] of state.tabsByZone.entries()) {
+    if (tabs.some((tab) => tab.id === tabId)) {
+      return { zone, tabs };
+    }
+  }
+  return null;
+}
+
 export const workspaceReducer = createReducer(
   initialWorkspaceState,
 
-  on(WorkspaceActions.registerTab, (state, { tab }) => registerCentralTab(state, tab)),
+  on(WorkspaceActions.registerTab, (state, { tab }) => registerTab(state, tab)),
 
-  on(WorkspaceActions.openTab, (state, { tab }) => {
+  on(WorkspaceActions.openTab, (state, { tab, zone }) => {
     if (!tab) {
       return state;
     }
 
-    if (state.tabs.some((existing) => existing.id === tab.id)) {
-      return { ...state, activeTabId: tab.id };
+    if (state.tabsByZone.get(zone)?.some((existing) => existing.id === tab.id)) {
+      return { ...state, activeTabIdsByZone: new Map(state.activeTabIdsByZone).set(zone, tab.id) };
     }
 
     if (!state.registeredTabs.some((existing) => existing.id === tab.id)) {
@@ -83,42 +85,36 @@ export const workspaceReducer = createReducer(
       return state;
     }
 
+    if(isTabDraggable(tab) && tab.draggable){
+      // On draggable tabs ensure source DockZone
+      tab.draggable.sourceZone = zone;
+    }
+
     return {
       ...state,
-      tabs: [...state.tabs, tab],
-      activeTabId: tab.id,
+      tabsByZone: new Map(state.tabsByZone).set(zone, [...(state.tabsByZone.get(zone) || []), tab]),
+      activeTabIdsByZone: new Map(state.activeTabIdsByZone).set(zone, tab.id),
     };
   }),
 
-on(WorkspaceActions.registerAndOpenTab, (state, { tab }) => {
-  if (!tab) {
-    return state;
-  }
-
-  // First register the tab (if not already registered)
-  const registered = registerCentralTab(state, tab);
-  
-  // Then open it if it's not already open
-  if (registered.tabs.some((existingTab) => existingTab.id === tab.id)) {
-    // Tab is already open, just make sure it's active
-    return { ...registered, activeTabId: tab.id };
-  }
-  
-  // Tab is registered but not open, so open it
-  return {
-    ...registered,
-    tabs: [...registered.tabs, tab],
-    activeTabId: tab.id,
-  };
-}),
-
   on(WorkspaceActions.closeTab, (state, { tabId }) => {
-    const tabIdx = state.tabs.findIndex((tab) => tab.id === tabId);
-    if (tabIdx < 0) {
+
+    const found = findTabsById(state, tabId);
+    const zone = found?.zone;
+
+    if (!zone) {
       return state;
     }
 
-    const tab = state.tabs[tabIdx];
+    const tabIdx = state.tabsByZone.get(zone)?.findIndex((tab) => tab.id === tabId);
+    if (!tabIdx || tabIdx < 0) {
+      return state;
+    }
+
+    const tab = state.tabsByZone.get(zone)?.[tabIdx];
+
+    if (!tab) return state;
+
     if (!isTabCloseable(tab)) {
       return state;
     }
@@ -127,249 +123,145 @@ on(WorkspaceActions.registerAndOpenTab, (state, { tab }) => {
       return state;
     }
 
-    const tabs = state.tabs.filter((candidate) => candidate.id !== tabId);
+    const tabs = state.tabsByZone.get(zone)?.filter((candidate) => candidate.id !== tabId);
+
+    const activeTabId = resolveActiveAfterRemoval(state.activeTabIdsByZone.get(zone) ?? null, tabId, tabIdx, tabs ?? [])
 
     return {
       ...state,
       tabs,
-      activeTabId: resolveActiveAfterRemoval(state.activeTabId, tabId, tabIdx, tabs),
+      activeTabIdsByZone: new Map(state.activeTabIdsByZone).set(zone, activeTabId),
     };
   }),
 
   on(WorkspaceActions.selectTab, (state, { tabId }) => {
-    if (!state.tabs.some((tab) => tab.id === tabId)) {
+
+    const found = findTabsById(state, tabId);
+    const zoneId = found?.zone;
+    const tabsByZone = found?.tabs;
+
+    if (!tabsByZone || !zoneId) {
       return state;
     }
 
-    return { ...state, activeTabId: tabId };
+    return { ...state, activeTabIdsByZone: new Map(state.activeTabIdsByZone).set(zoneId, tabId) };
   }),
 
-  on(WorkspaceActions.reorderTab, (state, { workspaceId, fromIndex, toIndex }) => {
-    void workspaceId;
+  on(WorkspaceActions.reorderTab, (state, { zone, toIndex, reorderedTab }) => {
+
+    if(toIndex === null || toIndex === undefined){
+      return state;
+    }
+    const tabsByZone = state.tabsByZone.get(zone);
+
+    if (!tabsByZone) {
+      return state;
+    }
+
+    const fromIndex = tabsByZone.indexOf(reorderedTab);
 
     if (
       fromIndex < 0 ||
-      fromIndex >= state.tabs.length ||
+      fromIndex >= tabsByZone?.length ||
       toIndex < 0 ||
-      toIndex > state.tabs.length ||
+      toIndex > tabsByZone?.length ||
       fromIndex === toIndex
     ) {
       return state;
     }
 
-    const tabs = [...state.tabs];
+    const tabs = [...tabsByZone];
     const [moved] = tabs.splice(fromIndex, 1);
     tabs.splice(toIndex, 0, moved);
 
-    return { ...state, tabs };
+    return { ...state, tabsByZone: new Map(state.tabsByZone).set(zone, tabs) };
   }),
 
-  on(WorkspaceActions.setTabDirty, (state, { tabId, dirty }) => ({
-    ...state,
-    tabs: state.tabs.map((tab) =>
-      tab.id === tabId && isTabCloseable(tab)
-        ? { ...tab, closeable: { ...tab.closeable, dirty } }
-        : tab
-    ),
-    registeredTabs: state.registeredTabs.map((tab) =>
-      tab.id === tabId && isTabCloseable(tab)
-        ? { ...tab, closeable: { ...tab.closeable, dirty } }
-        : tab
-    ),
-  })),
+  on(WorkspaceActions.setTabDirty, (state, { tabId, dirty }) => {
+    const found = findTabsById(state, tabId);
+    const zoneId = found?.zone;
+    const tabsByZone = found?.tabs;
 
-  on(WorkspaceActions.setTabPinned, (state, { tabId, pinned }) => ({
-    ...state,
-    tabs: state.tabs.map((tab) =>
-      tab.id === tabId && isTabPinnable(tab)
-        ? { ...tab, pinnable: { ...tab.pinnable, pinned } }
-        : tab
-    ),
-    registeredTabs: state.registeredTabs.map((tab) =>
-      tab.id === tabId && isTabPinnable(tab)
-        ? { ...tab, pinnable: { ...tab.pinnable, pinned } }
-        : tab
-    ),
-  })),
 
-  on(WorkspaceActions.removeTab, (state, { tabId }) => {
-    const tabIdx = state.tabs.findIndex((tab) => tab.id === tabId);
-    if (tabIdx < 0 && !state.registeredTabs.some((tab) => tab.id === tabId)) {
+    if (!tabsByZone || !zoneId) {
       return state;
     }
 
-    const tabs = state.tabs.filter((tab) => tab.id !== tabId);
-    const registeredTabs = state.registeredTabs.filter((tab) => tab.id !== tabId);
+    const tab = tabsByZone?.find((t) => t.id === tabId);
+    if (!tab || !isTabCloseable(tab)) {
+      return state;
+    }
 
-    return {
-      ...state,
-      tabs,
-      registeredTabs,
-      activeTabId: resolveActiveAfterRemoval(state.activeTabId, tabId, tabIdx, tabs),
-    };
+    if(!tab.closeable){
+      return state;
+    }
+
+    tab.closeable.dirty = dirty;
+    return { ...state, tabsByZone: new Map(state.tabsByZone).set(zoneId, [...tabsByZone]) };
+
+  }),
+    
+  on(WorkspaceActions.setTabPinned, (state, { tabId, pinned }) => {
+    const found = findTabsById(state, tabId);
+    const zoneId = found?.zone;
+    const tabsByZone = found?.tabs;
+
+    if (!tabsByZone || !zoneId) {
+      return state;
+    }
+
+    const tab = tabsByZone?.find((t) => t.id === tabId);
+    if (!tab || !isTabPinnable(tab)) {
+      return state;
+    }
+
+    if(!tab.pinnable){
+      return state;
+    }
+
+    tab.pinnable.pinned = pinned;
+    return { ...state, tabsByZone: new Map(state.tabsByZone).set(zoneId, [...tabsByZone]) };
+
   }),
 
   on(WorkspaceActions.moveTabToZone, (state, { tabId, sourceZone, targetZone, tabMetadata }) => {
-    let nextState = state;
 
-    if (sourceZone === DockZone.PrimaryWorkspace) {
-      const tabIdx = state.tabs.findIndex((tab) => tab.id === tabId);
-      if (tabIdx < 0) {
-        return state;
-      }
+    const found = findTabsById(state, tabId);
+    const currentZone = found?.zone;
+    const tabsByZone = found?.tabs;
 
-      const tabs = state.tabs.filter((tab) => tab.id !== tabId);
-      nextState = {
-        ...state,
-        tabs,
-        activeTabId: resolveActiveAfterRemoval(state.activeTabId, tabId, tabIdx, tabs),
-      };
-    } else if (sourceZone === DockZone.BottomPanel) {
-      nextState = {
-        ...state,
-        bottomPanelTabs: state.bottomPanelTabs.filter((tab) => tab.id !== tabId),
-      };
-    } else if (sourceZone === DockZone.SecondaryPanel) {
-      const secondaryPanelEntries = state.secondaryPanelEntries.filter((tab) => tab.id !== tabId);
-      nextState = {
-        ...state,
-        secondaryPanelEntries,
-        activeSecondaryPanelEntryId: tabMetadata.id,
-      };
+    if (!tabsByZone || !currentZone) {
+      return state;
     }
 
-    if (isTabDraggable(tabMetadata) && tabMetadata.draggable) {
-      tabMetadata.draggable.sourceZone = targetZone;
+    const tabIdx = tabsByZone.findIndex((tab) => tab.id === tabId);
+    if (tabIdx < 0) {
+      return state;
+    }
+
+    const tab: ShellTab & WithDraggable = tabsByZone[tabIdx];
+
+    if (!isTabDraggable(tab) || !tab.draggable) {
+      return state;
+    }
+
+    tab.draggable.sourceZone = targetZone; // Update the sourceZone for the draggable metadata
+
+    const updatedSourceTabs = tabsByZone.filter((candidate) => candidate.id !== tabId);
+    const newTab = { ...tab, ...tabMetadata };
+    let updatedTargetTabs;
+    if(newTab.draggable?.reorderTargetIndex === null || newTab.draggable?.reorderTargetIndex == undefined){
+      updatedTargetTabs = [...(state.tabsByZone.get(targetZone) || []), newTab];
     } else {
-      throw new Error(`[Workspace] moveTabToZone: Tab '${tabId}' is not draggable but received in moveTabToZone action.`);
+      updatedTargetTabs = [...(state.tabsByZone.get(targetZone) || [])];
+      updatedTargetTabs.splice(newTab.draggable.reorderTargetIndex, 0, newTab)
     }
-
-    if (targetZone === DockZone.PrimaryWorkspace) {
-      nextState = {
-        ...nextState,
-        tabs: [...nextState.tabs, tabMetadata],
-        activeTabId: tabMetadata.id,
-      }
-    } else if (targetZone === DockZone.BottomPanel) {
-      nextState = {
-        ...nextState,
-        bottomPanelTabs: [...nextState.bottomPanelTabs, tabMetadata],
-      };
-    } else if (targetZone === DockZone.SecondaryPanel) {
-      nextState = {
-        ...nextState,
-        secondaryPanelEntries: [...nextState.secondaryPanelEntries, tabMetadata],
-        activeSecondaryPanelEntryId: tabMetadata.id,
-      };
-    }
-
-    return nextState;
-
-  }),
-
-on(WorkspaceActions.addBottomPanelEntry, (state, { tab }) => {
-  const idExists = state.bottomPanelTabs.some((existingTab) => existingTab.id === tab.id);
-  if (idExists) {
-    console.warn(`[Workspace] Bottom panel tab with id '${tab.id}' already exists. Ignoring.`);
-    return state;
-  }
-  return {
-    ...state,
-    bottomPanelTabs: [...state.bottomPanelTabs, tab],
-  };
-}),
-
-  on(WorkspaceActions.removeBottomPanelEntry, (state, { entryId }) => {
-    const exists = state.bottomPanelTabs.some((tab) => tab.id === entryId);
-    if (!exists) return state;
-
-    const bottomPanelTabs = state.bottomPanelTabs.filter((tab) => tab.id !== entryId);
-    return { ...state, bottomPanelTabs };
-  }),
-
-  on(WorkspaceActions.reorderBottomPanelTabs, (state, { workspaceId, fromIndex, toIndex }) => {
-    void workspaceId;
-
-    if (
-      fromIndex < 0 ||
-      fromIndex >= state.bottomPanelTabs.length ||
-      toIndex < 0 ||
-      toIndex >= state.bottomPanelTabs.length ||
-      fromIndex === toIndex
-    ) {
-      return state;
-    }
-
-    const bottomPanelTabs = [...state.bottomPanelTabs];
-    const [moved] = bottomPanelTabs.splice(fromIndex, 1);
-    bottomPanelTabs.splice(toIndex, 0, moved);
-
-    return { ...state, bottomPanelTabs };
-  }),
-
-  on(WorkspaceActions.addSecondaryPanelEntry, (state, { entry }) => {
-    const idExists = state.secondaryPanelEntries.some((existing) => existing.id === entry.id);
-    if (idExists) {
-      console.warn(`[Workspace] Secondary panel entry with id '${entry.id}' already exists. Ignoring.`);
-      return state;
-    }
-
-    const secondaryPanelEntries = [...state.secondaryPanelEntries, entry];
-
 
 
     return {
       ...state,
-      secondaryPanelEntries,
-      activeSecondaryPanelEntryId: entry.id,
+      tabsByZone: new Map(state.tabsByZone).set(currentZone, updatedSourceTabs).set(targetZone, updatedTargetTabs),
+      activeTabIdsByZone: new Map(state.activeTabIdsByZone).set(targetZone, tab.id)
     };
   }),
-
-  on(WorkspaceActions.removeSecondaryPanelEntry, (state, { entryId }) => {
-    const exists = state.secondaryPanelEntries.some((entry) => entry.id === entryId);
-    if (!exists) return state;
-
-    const secondaryPanelEntries = state.secondaryPanelEntries.filter((entry) => entry.id !== entryId);
-    const activeSecondaryPanelEntryId = secondaryPanelEntries[secondaryPanelEntries.length - 1]?.id ?? null;
-
-    return { ...state, secondaryPanelEntries, activeSecondaryPanelEntryId };
-  }),
-
-  on(WorkspaceActions.setActiveSecondaryPanelEntry, (state, { id }) => {
-    const exists = state.secondaryPanelEntries.some((entry) => entry.id === id);
-    if (exists) {
-      return { ...state, activeSecondaryPanelEntryId: id };
-    }
-
-    console.warn(`[Workspace] Secondary panel entry with id '${id}' not found. Applying fallback.`);
-    return {
-      ...state,
-      activeSecondaryPanelEntryId: id,
-    };
-  }),
-
-  on(WorkspaceActions.reorderSecondaryPanelEntries, (state, { workspaceId, fromIndex, toIndex }) => {
-    void workspaceId;
-
-    if (
-      fromIndex < 0 ||
-      fromIndex >= state.secondaryPanelEntries.length ||
-      toIndex < 0 ||
-      toIndex >= state.secondaryPanelEntries.length ||
-      fromIndex === toIndex
-    ) {
-      return state;
-    }
-
-    const secondaryPanelEntries = [...state.secondaryPanelEntries];
-    const [moved] = secondaryPanelEntries.splice(fromIndex, 1);
-    secondaryPanelEntries.splice(toIndex, 0, moved);
-
-    const activeSecondaryPanelEntryId =
-      state.activeSecondaryPanelEntryId === moved.id
-        ? secondaryPanelEntries[toIndex]?.id ?? null
-        : state.activeSecondaryPanelEntryId;
-
-    return { ...state, secondaryPanelEntries, activeSecondaryPanelEntryId };
-  })
 );

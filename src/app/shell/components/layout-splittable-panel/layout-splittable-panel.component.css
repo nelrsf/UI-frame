@@ -1,0 +1,22 @@
+.layout-splittable-panel {
+    width: 100%;
+    height: 100%;
+}
+
+.layout-splitter-horizontal {
+    display: inline-flex;
+    flex-direction: row;
+}
+.layout-splitter-vertical {
+    display: inline-flex;
+    flex-direction: column;
+}
+
+.splittable-panel-region {
+    display: inline-flex;
+    flex: 1;
+}
+
+.shell-splitter{
+    width: 5px;
+}

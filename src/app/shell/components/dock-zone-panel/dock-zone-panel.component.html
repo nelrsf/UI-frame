@@ -59,7 +59,7 @@
           data-testid="tab-bar-new-tab"
           (click)="onNewTab()"
         >+</button>
-      } @else {
+      } @else if (showActions) {
         <div class="dock-zone-panel__actions" [attr.data-testid]="zone + '-actions'">
           <button
             class="dock-zone-panel__action-btn"

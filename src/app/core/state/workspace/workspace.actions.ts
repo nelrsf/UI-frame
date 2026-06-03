@@ -14,7 +14,10 @@ export const registerTab = createAction('[Workspace] Register Tab', props<{ tab:
  * If the tab is already present in the central region, only activates it.
  * If the tab is not registered, the action is a no-op.
  */
-export const openTab = createAction('[Workspace] Open Tab', props<{ tab: ShellTab }>());
+export const openTab = createAction(
+  '[Workspace] Open Tab', 
+  props<{ tab: ShellTab; zone: DockZone }>()
+);
 
 /**
  * Convenience facade that registers and immediately opens a tab.
@@ -22,7 +25,7 @@ export const openTab = createAction('[Workspace] Open Tab', props<{ tab: ShellTa
  */
 export const registerAndOpenTab = createAction(
   '[Workspace] Register And Open Tab',
-  props<{ tab: ShellTab }>()
+  props<{ tab: ShellTab; zone: DockZone }>()
 );
 
 /**
@@ -51,7 +54,7 @@ export const selectTab = createAction(
  */
 export const reorderTab = createAction(
   '[Workspace] Reorder Tab',
-  props<{ workspaceId: string; fromIndex: number; toIndex: number }>()
+  props<{ zone: DockZone; toIndex: number | null; reorderedTab: ShellTab & WithDraggable }>()
 );
 
 /**
@@ -95,60 +98,3 @@ export const moveTabToZone = createAction(
   }>()
 );
 
-/**
- * Adds a bottom panel entry to the workspace state.
- */
-export const addBottomPanelEntry = createAction(
-  '[Workspace] Add Bottom Panel Entry',
-  props<{ tab: ShellTab }>()
-);
-
-/**
- * Removes a bottom panel entry by id.
- */
-export const removeBottomPanelEntry = createAction(
-  '[Workspace] Remove Bottom Panel Entry',
-  props<{ entryId: string }>()
-);
-
-/**
- * Reorders bottom panel tabs within the workspace.
- * The workspaceId is included for future multi-workspace support.
- */
-export const reorderBottomPanelTabs = createAction(
-  '[Workspace] Reorder Bottom Panel Tabs',
-  props<{ workspaceId: string; fromIndex: number; toIndex: number }>()
-);
-
-/**
- * Adds a secondary panel entry to the workspace state.
- */
-export const addSecondaryPanelEntry = createAction(
-  '[Workspace] Add Secondary Panel Entry',
-  props<{ entry: ShellTab }>()
-);
-
-/**
- * Removes a secondary panel entry by id.
- */
-export const removeSecondaryPanelEntry = createAction(
-  '[Workspace] Remove Secondary Panel Entry',
-  props<{ entryId: string }>()
-);
-
-/**
- * Sets the active secondary panel entry by id.
- */
-export const setActiveSecondaryPanelEntry = createAction(
-  '[Workspace] Set Active Secondary Panel Entry',
-  props<{ id: string }>()
-);
-
-/**
- * Reorders secondary panel entries within the workspace.
- * The workspaceId is included for future multi-workspace support.
- */
-export const reorderSecondaryPanelEntries = createAction(
-  '[Workspace] Reorder Secondary Panel Entries',
-  props<{ workspaceId: string; fromIndex: number; toIndex: number }>()
-);

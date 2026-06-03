@@ -154,12 +154,22 @@
   transition: box-shadow 80ms ease, outline-color 80ms ease;
 }
 
+/* Sub-región: Splitter handles — áreas de interacción para redimensionar
+   (sin contenido propio, solo manejan eventos pointer) */
 .shell-secondary-splitter {
   grid-area: secondary-splitter;
 }
 
 .shell-bottom-splitter {
   grid-area: bottom-splitter;
+}
+
+
+/* Sub-región: Bottom Panel — scroll completo (terminal, logs, output) */
+.shell-bottom-splittable-panel{
+  grid-area: bottom-panel;
+  overflow: hidden;
+  min-height: var(--shell-bottom-panel-min);
 }
 
 /* Drop zone visual feedback during drag-and-drop */
