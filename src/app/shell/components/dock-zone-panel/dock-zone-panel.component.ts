@@ -29,7 +29,7 @@ const CLOSE_GUARD_TIMEOUT_MS = 10_000;
   styleUrl: './dock-zone-panel.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DockZonePanelComponent implements AfterViewChecked {
+export class DockZonePanelComponent {
   private readonly zoneRef = inject(NgZone);
   readonly dragDropService = inject(DragDropService);
   readonly el = inject(ElementRef<HTMLElement>);
@@ -48,21 +48,11 @@ export class DockZonePanelComponent implements AfterViewChecked {
   @Output() visibilityChange = new EventEmitter<boolean>();
   @Output() sizeChange = new EventEmitter<number>();
   @Output() tabClosed = new EventEmitter<string>();
-  @Output() tabReordered = new EventEmitter<{ fromIndex: number; toIndex: number }>();
   @Output() newTabRequested = new EventEmitter<void>();
   @Output() closeGuardTimeout = new EventEmitter<string>();
 
-  @ViewChild('tabList') private tabListRef?: ElementRef<HTMLElement>;
-
   private readonly closingTabIds = new Set<string>();
 
-  ngAfterViewChecked(): void {
-    this.dragDropService.reorderTabs$.pipe(
-      filter((reorderTabsPayload: ReorderTabsPayload | null)=>{
-        return reorderTabsPayload !== null && reorderTabsPayload?.zone === this.zone
-      })
-    ).subscribe(rtPayload=>this.reorderTabs(rtPayload?.fromIndex, rtPayload?.toIndex));
-  }
 
   get isPrimaryWorkspace(): boolean {
     return this.zone === DockZone.PrimaryTopLeftWorkspace;
@@ -85,11 +75,6 @@ export class DockZonePanelComponent implements AfterViewChecked {
 
   get contentId(): string {
     return `${this.zone}-content`;
-  }
-
-  reorderTabs(fromIndex: number | undefined, toIndex: number | undefined)  {
-    if(!fromIndex || !toIndex) return;
-    this.tabReordered.emit({ fromIndex, toIndex });
   }
 
   get ariaLabel(): string | null {

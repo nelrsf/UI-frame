@@ -320,15 +320,7 @@ export class ShellComponent implements OnInit, AfterViewInit {
   private _registerDropZones(): void {
     // Use setTimeout to ensure the view is fully rendered.
     setTimeout(() => {
-      const primaryWorkspaceEl = this.elementRef.nativeElement.querySelector('.shell-primary-workspace');
       const secondaryPanelEl = this.elementRef.nativeElement.querySelector('.shell-secondary-panel');
-
-      if (primaryWorkspaceEl) {
-        this.dragDropService.registerDropZone(
-          DockZone.PrimaryTopLeftWorkspace,
-          primaryWorkspaceEl as HTMLElement
-        );
-      }
 
       if (secondaryPanelEl) {
         this.dragDropService.registerDropZone(

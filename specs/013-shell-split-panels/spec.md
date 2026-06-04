@@ -27,8 +27,8 @@ Cada dock zone de la region es un dock-zone-panel component, debe crearse un nue
 
 export class LayoutSplittablePanelComponent {
             @Input() direction: Horizontal | Vertical
-            @Input() subRegions: Array<DockZonePanelComponent>
-            @Input() maxSubRegions: number // Max length of subregions
+            @Input() zones: Array<DockZone>
+            @Input() visible: boolean
 }
 ```
 

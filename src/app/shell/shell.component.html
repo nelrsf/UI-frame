@@ -21,18 +21,14 @@
 
   <div class="shell-workspace" role="region" aria-label="Workspace">
     <app-toolbar class="shell-toolbar" [actions]="(toolbarActions$ | async) ?? []"></app-toolbar>
-    <app-dock-zone-panel
+    <app-layout-splittable-panel
       class="shell-primary-workspace"
-      [zone]="DockZone.PrimaryTopLeftWorkspace"
-      [tabs]="(getTabsByZone(DockZone.PrimaryTopLeftWorkspace) | async) ?? []"
-      [activeTabId]="(getActiveTabIdByZone(DockZone.PrimaryTopLeftWorkspace) | async) ?? ''"
+      [direction]="'vertical'"
       [visible]="true"
-      [closeGuards]="(closeGuards$ | async) ?? {}"
-      (activeTabChange)="onShellTabSelected($event)"
-      (tabClosed)="onShellTabClosed($event)"
-      (closeGuardTimeout)="onCloseGuardTimeout($event)"
-      (newTabRequested)="onNewTabRequested()"
-    ></app-dock-zone-panel>
+      [zones]="[
+        DockZone.PrimaryTopLeftWorkspace,
+        DockZone.PrimaryBottomLeftWorkspace]"
+    ></app-layout-splittable-panel>
     @if (showTabAddModal) {
       <app-tab-add-modal
         [availableTabs]="(availableTabsForModal$ | async) ?? []"
@@ -51,6 +47,7 @@
       (pointerUp)="onSecondarySplitterPointerUp($event)"
       (pointerCancel)="onSecondarySplitterPointerCancel($event)"
     ></app-shell-splitter-handle>
+
     <app-dock-zone-panel
       class="shell-secondary-panel"
       [zone]="DockZone.SecondaryPanel"

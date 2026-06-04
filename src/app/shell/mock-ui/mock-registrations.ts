@@ -39,11 +39,21 @@ export const MOCK_DASHBOARD_TAB: ShellTab & WithDraggable = {
   }
 };
 
-export const MOCK_REPORTS_TAB: ShellTab = {
+export const MOCK_REPORTS_TAB: ShellTab & WithDraggable = {
   id: 'mock-reports',
   label: 'Reports',
   component: MockReportsComponent,
-  icon: '📊'
+  icon: '📊',
+  draggable: {
+    reorderTargetIndex: null,
+    sourceZone: DockZone.PrimaryTopLeftWorkspace,
+    targetZone: DockZone.PrimaryBottomLeftWorkspace,
+    allowableDropTargets: [
+      DockZone.PrimaryTopLeftWorkspace,
+      DockZone.PrimaryBottomLeftWorkspace,
+      DockZone.BottomRightPanel
+    ]
+  }
 };
 
 export const MOCK_ALERT_INFO: IToolbarAction = {

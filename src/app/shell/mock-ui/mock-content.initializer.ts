@@ -19,7 +19,7 @@ import {
 export function registerMockContent(shell: ShellManager): void {
 
   shell.addTab(MOCK_DASHBOARD_TAB, DockZone.PrimaryTopLeftWorkspace);
-  shell.addTab(MOCK_REPORTS_TAB, DockZone.PrimaryTopRightWorkspace);
+  shell.addTab(MOCK_REPORTS_TAB, DockZone.PrimaryTopLeftWorkspace);
 
   shell.addSidebarEntry(MOCK_NAV_SIDEBAR_ENTRY);
   shell.addSidebarEntry(MOCK_TOOLS_SIDEBAR_ENTRY);

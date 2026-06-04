@@ -97,8 +97,6 @@ export class DragDropService implements OnDestroy {
    */
   readonly crossRegionDrop$: Observable<ShellTab & WithDraggable> = this._crossRegionDrop$.asObservable();
 
-  readonly reorderTabs$: BehaviorSubject<ReorderTabsPayload | null> = new BehaviorSubject<ReorderTabsPayload | null>(null);
-
   // ── Drop Zone Management ───────────────────────────────────────────────────
 
   /**
@@ -420,21 +418,6 @@ export class DragDropService implements OnDestroy {
 
     // Pointer is not over any registered tab bar.
     this._reorderTargetElement = null;
-    return null;
-  }
-
-  private _findTabIndexInTabBar(tabId: string): number | null {
-    for (const [dropZone, dropZoneReg] of this._dropZones) {
-      const element = dropZoneReg.element;
-      const tabElements = element.querySelectorAll('[role="tab"]');
-      for (let i = 0; i < tabElements.length; i++) {
-        const testId = tabElements[i].getAttribute('data-testid');
-        if (testId?.includes(tabId)) {
-          return i;
-        }
-      }
-    }
-
     return null;
   }
 }

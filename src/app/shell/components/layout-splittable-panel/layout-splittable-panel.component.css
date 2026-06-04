@@ -4,19 +4,37 @@
 }
 
 .layout-splitter-horizontal {
-    display: inline-flex;
+    display: flex;
     flex-direction: row;
+    width: 100%;
 }
 .layout-splitter-vertical {
-    display: inline-flex;
+    display: flex;
     flex-direction: column;
+    height: 100%;
 }
 
+.layout-splitter-horizontal
 .splittable-panel-region {
     display: inline-flex;
     flex: 1;
+    overflow: auto;
 }
 
+.layout-splitter-vertical
+.splittable-panel-region {
+    display: inline-flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: auto;
+}
+
+.layout-splitter-horizontal
 .shell-splitter{
     width: 5px;
+}
+
+.layout-splitter-vertical
+.shell-splitter{
+    height: 5px;
 }

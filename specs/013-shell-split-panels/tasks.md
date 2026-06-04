@@ -20,8 +20,8 @@
 
 **Purpose**: Build the split wrapper logic and NgRx connection required for all user stories.
 
-- [x] T007 Implement `src/app/shell/components/layout-splittable-panel/layout-splittable-panel.component.ts` to expose inputs: `direction`, `regions`, and `maxSubRegions`
-- [ ] T008 Implement `src/app/shell/components/layout-splittable-panel/layout-splittable-panel.component.html` to render a cyclic pattern of `app-dock-zone-panel` and separators
+- [x] T007 Implement `src/app/shell/components/layout-splittable-panel/layout-splittable-panel.component.ts` to expose inputs: `direction`, `zones`, and `visible`
+- [x] T008 Implement `src/app/shell/components/layout-splittable-panel/layout-splittable-panel.component.html` to render a cyclic pattern of `app-dock-zone-panel` and separators
 - [ ] T009 Implement `src/app/shell/components/layout-splittable-panel/layout-splittable-panel.component.ts` split button logic and `splitRequested` output event
 - [ ] T010 Wire `layout-splittable-panel` event output to NgRx updates in `src/app/shell/shell.component.ts`
 - [ ] T011 Update `src/app/shell/shell.component.html` to support rendering `layout-splittable-panel` for the central workspace and bottom panel regions
