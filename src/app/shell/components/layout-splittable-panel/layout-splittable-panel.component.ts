@@ -17,7 +17,8 @@ class DockPanelPayload {
 
     constructor(
         public panel: DockZonePanelComponent,
-        public tabs: ShellTab[]
+        public tabs: ShellTab[],
+        public visible: boolean
     ) {
         this.el = panel.el.nativeElement as HTMLElement;
     }
@@ -45,7 +46,7 @@ export class LayoutSplittablePanelComponent implements AfterViewInit {
 
     @ViewChildren(DockZonePanelComponent) dockZonePanels!: QueryList<DockZonePanelComponent>;
 
-    private panels: Map<DockZone, DockPanelPayload> = new Map();
+    panels: Map<DockZone, DockPanelPayload> = new Map();
     private dragDropService = inject(DragDropService);
 
 
@@ -55,13 +56,21 @@ export class LayoutSplittablePanelComponent implements AfterViewInit {
     }
 
     private initializeTabsGroups() {
+        let index = 0
+        let tempPanels: Map<DockZone, DockPanelPayload>= new Map();
         for (const zone of this.zones) {
             const panel = this.dockZonePanels.find(p => p.zone === zone);
             if (!panel) {
                 continue;
             }
-            this.panels.set(zone, new DockPanelPayload(panel, []));
+            tempPanels.set(zone, new DockPanelPayload(
+                panel,
+                [],
+                index === 0
+            ));
+            index++;
         }
+        this.panels = tempPanels;
     }
 
     private registerDropZones() {
@@ -86,6 +95,30 @@ export class LayoutSplittablePanelComponent implements AfterViewInit {
 
     onActiveTabChanged(tabId: string) {
         this.store.dispatch(selectTab({ tabId }));
+    }
+
+    onSplitPanels(event: MouseEvent, direction: LayoutSplitDirection) {
+        const arrayPanels = [...this.panels.values()];
+        for (let i=0; i < arrayPanels.length; i++) {
+            const panel = arrayPanels[i];
+            if (!panel.visible){
+                panel.visible = true;
+                break;
+            }
+        }
+    }
+
+    getVisibleZones():Array<DockZone>{
+        const arrayPanels = [...this.panels];
+        return arrayPanels.filter(dzp=>{
+            return dzp[1].visible;
+        }).map(z=>{
+            return z[0];
+        });
+    }
+
+    getPanel(zone: DockZone): DockPanelPayload | null {
+        return this.panels.get(zone) ?? null;
     }
 
 }

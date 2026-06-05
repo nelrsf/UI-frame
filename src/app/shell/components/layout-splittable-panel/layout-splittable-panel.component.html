@@ -1,30 +1,42 @@
-@if(visible)
-{
-    <div class="layout-splittable-panel" 
-     [ngClass]="{
-    'layout-splitter-horizontal': direction === 'horizontal',
-    'layout-splitter-vertical': direction === 'vertical'
-    }">
-    @for(zone of zones;track zone) {
-        <div class="splittable-panel-region">
-            @if($index > 0) {
-            <app-shell-splitter-handle
-                class="shell-splitter"
-                [variant]="direction"
-                testId="splitter-{{$index}}"
-                ariaLabel="Resize panel {{$index}}"
-                [ariaOrientation]="direction">
-            </app-shell-splitter-handle>
+<div class="splitter-container">
+    @if(visible)
+    {
+        <div class="splitter-toolbar">
+            <button class="splitter-toolbar-button splitter-toolbar-button__split-h"
+                (click)="onSplitPanels($event,'horizontal')"
+            >↔</button>
+            <button class="splitter-toolbar-button splitter-toolbar-button__split-v"
+                (click)="onSplitPanels($event,'vertical')"
+            >↕</button>
+            <button class="splitter-toolbar-button splitter-toolbar-button__close">x</button>
+        </div>
+        <div class="layout-splittable-panel" 
+            [ngClass]="{
+            'layout-splitter-horizontal': direction === 'horizontal',
+            'layout-splitter-vertical': direction === 'vertical'
+        }">
+        @for(zone of zones; track $index) {
+            <div class="splittable-panel-region"
+                [style.display]="getPanel(zone)?.visible ? 'inline-flex' : 'none'">
+                @if($index > 0) {
+                <app-shell-splitter-handle
+                    class="shell-splitter"
+                    [variant]="direction"
+                    testId="splitter-{{$index}}"
+                    ariaLabel="Resize panel {{$index}}"
+                    [ariaOrientation]="direction">
+                </app-shell-splitter-handle>
+            }
+            <app-dock-zone-panel
+                #dockPanel
+                class="splittable-panel-dock-zone"
+                [zone]="zone"
+                [tabs]="(getPanelTabs(zone) | async) ?? []"
+                [activeTabId]="(getActiveTabIdByZone(zone) | async) ?? ''"
+                (activeTabChange)="onActiveTabChanged($event)"
+            ></app-dock-zone-panel>
+        </div>
         }
-        <app-dock-zone-panel
-            #dockPanel
-            class="splittable-panel-dock-zone"
-            [zone]="zone"
-            [tabs]="(getPanelTabs(zone) | async) ?? []"
-            [activeTabId]="(getActiveTabIdByZone(zone) | async) ?? ''"
-            (activeTabChange)="onActiveTabChanged($event)"
-        ></app-dock-zone-panel>
     </div>
     }
 </div>
-}
