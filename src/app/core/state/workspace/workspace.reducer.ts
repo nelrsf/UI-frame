@@ -66,7 +66,6 @@ function findTabsById(state: WorkspaceState, tabId: string): { zone: DockZone; t
 
 export const workspaceReducer = createReducer(
   initialWorkspaceState,
-
   on(WorkspaceActions.registerTab, (state, { tab }) => registerTab(state, tab)),
 
   on(WorkspaceActions.openTab, (state, { tab, zone }) => {
@@ -85,7 +84,7 @@ export const workspaceReducer = createReducer(
       return state;
     }
 
-    if(isTabDraggable(tab) && tab.draggable){
+    if (isTabDraggable(tab) && tab.draggable) {
       // On draggable tabs ensure source DockZone
       tab.draggable.sourceZone = zone;
     }
@@ -149,7 +148,7 @@ export const workspaceReducer = createReducer(
 
   on(WorkspaceActions.reorderTab, (state, { zone, toIndex, reorderedTab }) => {
 
-    if(toIndex === null || toIndex === undefined){
+    if (toIndex === null || toIndex === undefined) {
       return state;
     }
     const tabsByZone = state.tabsByZone.get(zone);
@@ -192,7 +191,7 @@ export const workspaceReducer = createReducer(
       return state;
     }
 
-    if(!tab.closeable){
+    if (!tab.closeable) {
       return state;
     }
 
@@ -200,7 +199,7 @@ export const workspaceReducer = createReducer(
     return { ...state, tabsByZone: new Map(state.tabsByZone).set(zoneId, [...tabsByZone]) };
 
   }),
-    
+
   on(WorkspaceActions.setTabPinned, (state, { tabId, pinned }) => {
     const found = findTabsById(state, tabId);
     const zoneId = found?.zone;
@@ -215,7 +214,7 @@ export const workspaceReducer = createReducer(
       return state;
     }
 
-    if(!tab.pinnable){
+    if (!tab.pinnable) {
       return state;
     }
 
@@ -250,7 +249,7 @@ export const workspaceReducer = createReducer(
     const updatedSourceTabs = tabsByZone.filter((candidate) => candidate.id !== tabId);
     const newTab = { ...tab, ...tabMetadata };
     let updatedTargetTabs;
-    if(newTab.draggable?.reorderTargetIndex === null || newTab.draggable?.reorderTargetIndex == undefined){
+    if (newTab.draggable?.reorderTargetIndex === null || newTab.draggable?.reorderTargetIndex == undefined) {
       updatedTargetTabs = [...(state.tabsByZone.get(targetZone) || []), newTab];
     } else {
       updatedTargetTabs = [...(state.tabsByZone.get(targetZone) || [])];

@@ -3,48 +3,53 @@
 }
 
 .splitter-container {
-    height: calc(100% - 22px);
+    height: 100%;
+    width: 100%;
+    display: inline-flex;
+    flex-direction: column;
 }
 
 .layout-splittable-panel {
     width: 100%;
-    height: 100%;
+    flex: 1;
+    display: inline-flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
-.layout-splitter-horizontal {
-    display: flex;
+.layout-splittable-row {
+    display: inline-flex;
     flex-direction: row;
     width: 100%;
-}
-.layout-splitter-vertical {
-    display: flex;
-    flex-direction: column;
     height: 100%;
+    overflow: hidden;
 }
 
-.layout-splitter-horizontal
-.splittable-panel-region {
-    display: inline-flex;
-    flex: 1;
-    overflow: auto;
-}
-
-.layout-splitter-vertical
-.splittable-panel-region {
+.layout-splittable-row-wrapper {
     display: inline-flex;
     flex-direction: column;
     flex: 1;
+    overflow: hidden;
+}
+
+.splittable-panel-region {
+    display: inline-flex; 
+    flex: 1;  
     overflow: auto;
 }
 
-.layout-splitter-horizontal
-.shell-splitter{
+.hidden {
+    display: none!important;
+}
+
+.vertical-splitter {
+    height: 100%;
     width: 5px;
 }
 
-.layout-splitter-vertical
-.shell-splitter{
+.horizontal-splitter {
     height: 5px;
+    width: 100%;
 }
 
 /* Splitter toolbar selectors */
@@ -54,6 +59,10 @@
     height: 22px;
     display: inline-flex;
     justify-content: end;
+}
+
+.splitter-toolbar:empty {
+    height: 0;
 }
 
 .splitter-toolbar-button {

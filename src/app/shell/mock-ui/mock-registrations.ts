@@ -18,7 +18,7 @@ import { MockSecondaryWeatherComponent } from './components/mock-secondary-panel
 import { MockSecondaryMarketComponent } from './components/mock-secondary-panel/mock-secondary-market.component';
 import { ShellTab } from '../contracts/ShellTab';
 import { WithDraggable } from '../models/tab-item.model';
-import { DockZone } from '../../core/models/dock-zone-assignment.model';
+import { BOTTOM_DOCK_ZONES, DockZone, PRIMARY_DOCK_ZONES } from '../../core/models/dock-zone-assignment.model';
 
 export const MOCK_DASHBOARD_TAB: ShellTab & WithDraggable = {
   id: 'mock-dashboard',
@@ -27,11 +27,9 @@ export const MOCK_DASHBOARD_TAB: ShellTab & WithDraggable = {
   icon: '📄',
   draggable: {
     allowableDropTargets: [
-      DockZone.PrimaryTopLeftWorkspace,
+      ...PRIMARY_DOCK_ZONES,
       DockZone.SecondaryPanel,
-      DockZone.BottomCenterPanel,
-      DockZone.BottomLeftPanel,
-      DockZone.BottomRightPanel,
+      ...BOTTOM_DOCK_ZONES,
     ],
     sourceZone: DockZone.PrimaryTopLeftWorkspace,
     targetZone: DockZone.PrimaryTopLeftWorkspace,
@@ -49,9 +47,8 @@ export const MOCK_REPORTS_TAB: ShellTab & WithDraggable = {
     sourceZone: DockZone.PrimaryTopLeftWorkspace,
     targetZone: DockZone.PrimaryBottomLeftWorkspace,
     allowableDropTargets: [
-      DockZone.PrimaryTopLeftWorkspace,
-      DockZone.PrimaryBottomLeftWorkspace,
-      DockZone.BottomRightPanel
+      DockZone.BottomRightPanel,
+      ...PRIMARY_DOCK_ZONES
     ]
   }
 };

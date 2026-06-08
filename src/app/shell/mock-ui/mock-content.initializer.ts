@@ -30,8 +30,8 @@ export function registerMockContent(shell: ShellManager): void {
   shell.addToolbarAction(MOCK_ALERT_SUCCESS);
 
   shell.addTab(MOCK_RESULTS_PANEL, DockZone.BottomLeftPanel);
-  shell.addTab(MOCK_LOGS_PANEL, DockZone.BottomCenterPanel);
-  shell.addTab(MOCK_WARNINGS_PANEL, DockZone.BottomRightPanel);
+  shell.addTab(MOCK_LOGS_PANEL, DockZone.BottomLeftPanel);
+  shell.addTab(MOCK_WARNINGS_PANEL, DockZone.BottomLeftPanel);
 
   shell.addTab(MOCK_SECONDARY_WEATHER_ENTRY, DockZone.SecondaryPanel);
   shell.addTab(MOCK_SECONDARY_MARKET_ENTRY, DockZone.SecondaryPanel);

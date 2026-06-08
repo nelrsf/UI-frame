@@ -151,7 +151,6 @@
   overflow: auto;
 }
 
-.dock-zone-panel--bottom .dock-zone-panel__content,
 .dock-zone-panel--secondary .dock-zone-panel__content {
   padding: var(--spacing-2, 8px);
 }

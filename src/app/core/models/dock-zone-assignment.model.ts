@@ -23,6 +23,19 @@ export enum DockZone {
   SecondaryPanel = 'secondary-panel',
 }
 
+export const BOTTOM_DOCK_ZONES = [
+  DockZone.BottomCenterPanel,
+  DockZone.BottomLeftPanel,
+  DockZone.BottomRightPanel
+]
+
+export const PRIMARY_DOCK_ZONES = [
+  DockZone.PrimaryBottomLeftWorkspace,
+  DockZone.PrimaryBottomRightWorkspace,
+  DockZone.PrimaryTopLeftWorkspace,
+  DockZone.PrimaryTopRightWorkspace
+]
+
 /**
  * Associates a tab group with one of the supported dock zones and carries the
  * visibility state and size constraints for that zone.

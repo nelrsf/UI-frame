@@ -11,7 +11,7 @@ import {
   inject,
 } from '@angular/core';
 import { NgClass, NgComponentOutlet } from '@angular/common';
-import { DockZone } from '../../../core/models/dock-zone-assignment.model';
+import { BOTTOM_DOCK_ZONES, DockZone, PRIMARY_DOCK_ZONES } from '../../../core/models/dock-zone-assignment.model';
 import { ShellTab } from '../../contracts/ShellTab';
 import { isTabCloseable, isTabPinnable } from '../../common/ShellTabGuardTypes';
 import { TabCloseGuard } from '../../models/tab-item.model';
@@ -102,8 +102,8 @@ export class DockZonePanelComponent {
   get panelClasses(): Record<string, boolean> {
     return {
       'dock-zone-panel': true,
-      'dock-zone-panel--primary': this.zone === DockZone.PrimaryTopLeftWorkspace,
-      'dock-zone-panel--bottom': this.zone === DockZone.BottomCenterPanel,
+      'dock-zone-panel--primary': PRIMARY_DOCK_ZONES.includes(this.zone),
+      'dock-zone-panel--bottom': BOTTOM_DOCK_ZONES.includes(this.zone),
       'dock-zone-panel--secondary': this.zone === DockZone.SecondaryPanel,
     };
   }
@@ -222,7 +222,7 @@ export class DockZonePanelComponent {
   }
 
   onClosePanel(): void {
-    this.visibilityChange.emit(false);
+    this.visibilityChange.emit(true);
   }
 
   onTabPointerDown(event: PointerEvent, tab: ShellTab): void {

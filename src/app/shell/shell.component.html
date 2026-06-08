@@ -24,10 +24,13 @@
     <app-layout-splittable-panel
       class="shell-primary-workspace"
       [direction]="'vertical'"
+      [showHorizontalSplitButton]="true"
+      [showVerticalSplitButton]="true"
       [visible]="true"
+      [showClose]="false"
       [zones]="[
-        DockZone.PrimaryTopLeftWorkspace,
-        DockZone.PrimaryBottomLeftWorkspace]"
+        [DockZone.PrimaryTopLeftWorkspace, DockZone.PrimaryTopRightWorkspace],
+        [DockZone.PrimaryBottomLeftWorkspace, DockZone.PrimaryBottomRightWorkspace]]"
     ></app-layout-splittable-panel>
     @if (showTabAddModal) {
       <app-tab-add-modal
@@ -53,6 +56,7 @@
       [zone]="DockZone.SecondaryPanel"
       [visible]="(secondaryPanelVisible$ | async) ?? false"
       [size]="(secondaryPanelWidth$ | async) ?? 300"
+      [showActions]="true"
       [tabs]="(getTabsByZone(DockZone.SecondaryPanel) | async) ?? []"
       [activeTabId]="(getActiveTabIdByZone(DockZone.SecondaryPanel) | async) ?? ''"
       (visibilityChange)="onSecondaryPanelVisibilityChange($event)"
@@ -74,8 +78,10 @@
     <app-layout-splittable-panel
       class="shell-bottom-panel shell-bottom-splittable-panel"
       [direction]="'horizontal'"
+      [showHorizontalSplitButton]="true"
       [visible]="(bottomPanelVisible$ | async) ?? false"
-      [zones]="[DockZone.BottomLeftPanel, DockZone.BottomCenterPanel, DockZone.BottomRightPanel]"
+      [zones]="[[DockZone.BottomLeftPanel, DockZone.BottomCenterPanel, DockZone.BottomRightPanel]]"
+      (closePanel)="onBottomPanelVisibilityChange($event)"
     ></app-layout-splittable-panel>
 
   </div>

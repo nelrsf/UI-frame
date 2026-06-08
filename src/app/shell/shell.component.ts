@@ -49,10 +49,8 @@ import {
   closeTab,
   openTab,
   selectTab,
-  reorderTab,
   selectRegisteredTabs,
   selectCloseGuards,
-  moveTabToZone,
   selectActiveIds,
 } from '../core/state/workspace';
 import { setPreference } from '../core/state/preferences/preferences.actions';
@@ -65,7 +63,6 @@ import { DragDropService } from './services/drag-drop.service';
 import { ShellManager } from './shell-manager.service';
 import { DockZone } from '../core/models/dock-zone-assignment.model';
 import { LayoutSplittablePanelComponent } from './components/layout-splittable-panel/layout-splittable-panel.component';
-import { isTabDraggable } from './common/ShellTabGuardTypes';
 import { ShellTab } from './contracts/ShellTab';
 
 @Component({
