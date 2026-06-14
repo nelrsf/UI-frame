@@ -38,3 +38,29 @@ body {
   color: var(--color-text-primary);
   overflow: hidden;
 }
+
+
+/* Estilos por defecto barras de scroll Shell */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+  background-color: var(--color-bg-base);
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-default);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
