@@ -345,6 +345,7 @@ describe('layout selectors', () => {
       activeSidebarItem: 'explorer',
       secondaryPanelVisible: true,
       secondaryPanelWidth: 350,
+      splitPanelLayout: null,
     },
   };
 

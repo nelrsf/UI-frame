@@ -113,7 +113,7 @@ describe('WorkspaceSessionService', () => {
           {
             tabId: 'tab-1',
             viewId: 'editor',
-            zone: DockZone.PrimaryWorkspace,
+            zone: DockZone.PrimaryTopLeftWorkspace,
             pinned: false,
             closable: true,
           },
@@ -121,11 +121,11 @@ describe('WorkspaceSessionService', () => {
         zoneAssignments: [
           {
             tabGroupId: 'group-main',
-            zone: DockZone.PrimaryWorkspace,
+            zone: DockZone.PrimaryTopLeftWorkspace,
             visible: true,
           },
         ],
-        activeTabPerZone: { [DockZone.PrimaryWorkspace]: 'tab-1' },
+        activeTabPerZone: { [DockZone.PrimaryTopLeftWorkspace]: 'tab-1' },
       };
 
       service.save(sessionWithData);
@@ -134,8 +134,8 @@ describe('WorkspaceSessionService', () => {
       const stored: WorkspaceSession = JSON.parse(raw);
       expect(stored.tabs.length).toBe(1);
       expect(stored.tabs[0].tabId).toBe('tab-1');
-      expect(stored.zoneAssignments[0].zone).toBe(DockZone.PrimaryWorkspace);
-      expect(stored.activeTabPerZone[DockZone.PrimaryWorkspace]).toBe('tab-1');
+      expect(stored.zoneAssignments[0].zone).toBe(DockZone.PrimaryTopLeftWorkspace);
+      expect(stored.activeTabPerZone[DockZone.PrimaryTopLeftWorkspace]).toBe('tab-1');
     });
   });
 

@@ -22,7 +22,7 @@ function makeDraggableTab(partial: Partial<any> & { id: string; label: string })
     component: partial['component'] ?? MockCentralTabComp,
     // Provide a draggable descriptor matching WithDraggable/IDraggable
     draggable: partial['draggable'] ?? {
-      sourceZone: partial['sourceZone'] ?? DockZone.PrimaryWorkspace,
+      sourceZone: partial['sourceZone'] ?? DockZone.PrimaryTopLeftWorkspace,
       targetZone: partial['targetZone'] ?? null,
       allowableDropTargets: partial['allowableDropTargets'] ?? [],
     },
@@ -96,7 +96,7 @@ describe('DragDropService', () => {
     store = TestBed.inject(Store);
     ngZone = TestBed.inject(NgZone);
 
-    service.registerDropZone(DockZone.BottomPanel, bottomPanelEl);
+    service.registerDropZone(DockZone.BottomCenterPanel, bottomPanelEl);
     service.registerDropZone(DockZone.SecondaryPanel, secondaryPanelEl);
   });
 
@@ -189,7 +189,7 @@ describe('DragDropService', () => {
 
       let activeZone: DockZone | null = null as DockZone | null;
       service.activeDropZone$.subscribe((zone) => { activeZone = zone; });
-      expect(activeZone).toBe(DockZone.BottomPanel);
+      expect(activeZone).toBe(DockZone.BottomCenterPanel);
     }));
 
     it('should return null drop zone when pointer is outside all zones', () => {
@@ -215,7 +215,7 @@ describe('DragDropService', () => {
         id: 'tab-1',
         label: 'File.ts',
         component: MockBottomPanelComp,
-        draggable: { allowableDropTargets: [DockZone.BottomPanel], sourceZone: DockZone.PrimaryWorkspace },
+        draggable: { allowableDropTargets: [DockZone.BottomCenterPanel], sourceZone: DockZone.PrimaryTopLeftWorkspace },
       });
       const downEvent = makePointerEvent({ clientX: 100, clientY: 100, target: dragSourceEl });
       service.startDrag(tab, downEvent);
@@ -231,7 +231,7 @@ describe('DragDropService', () => {
       const tab = makeDraggableTab({
         id: 'tab-1',
         label: 'File.ts',
-        draggable: { allowableDropTargets: [], sourceZone: DockZone.PrimaryWorkspace },
+        draggable: { allowableDropTargets: [], sourceZone: DockZone.PrimaryTopLeftWorkspace },
       });
       const downEvent = makePointerEvent({ clientX: 100, clientY: 100, target: dragSourceEl });
       service.startDrag(tab, downEvent);
@@ -252,7 +252,7 @@ describe('DragDropService', () => {
         id: 'tab-1',
         label: 'File.ts',
         component: MockBottomPanelComp,
-        draggable: { allowableDropTargets: [DockZone.BottomPanel], sourceZone: DockZone.PrimaryWorkspace },
+        draggable: { allowableDropTargets: [DockZone.BottomCenterPanel], sourceZone: DockZone.PrimaryTopLeftWorkspace },
       });
       const downEvent = makePointerEvent({ clientX: 100, clientY: 100, target: dragSourceEl });
       service.startDrag(tab, downEvent);
@@ -270,8 +270,8 @@ describe('DragDropService', () => {
       expect(dropSpy).toHaveBeenCalledWith(
         moveTabToZone({
           tabId: 'tab-1',
-          sourceZone: DockZone.PrimaryWorkspace,
-          targetZone: DockZone.BottomPanel,
+          sourceZone: DockZone.PrimaryTopLeftWorkspace,
+          targetZone: DockZone.BottomCenterPanel,
           tabMetadata: jasmine.any(Object) as any,
         })
       );
@@ -283,7 +283,7 @@ describe('DragDropService', () => {
       const tab = makeDraggableTab({
         id: 'tab-1',
         label: 'File.ts',
-        draggable: { allowableDropTargets: [], sourceZone: DockZone.PrimaryWorkspace },
+        draggable: { allowableDropTargets: [], sourceZone: DockZone.PrimaryTopLeftWorkspace },
       });
       const downEvent = makePointerEvent({ clientX: 100, clientY: 100, target: dragSourceEl });
       service.startDrag(tab, downEvent);
@@ -343,7 +343,7 @@ describe('DragDropService', () => {
         id: 'tab-1',
         label: 'File.ts',
         component: MockBottomPanelComp,
-        draggable: { allowableDropTargets: [DockZone.BottomPanel], sourceZone: DockZone.PrimaryWorkspace },
+        draggable: { allowableDropTargets: [DockZone.BottomCenterPanel], sourceZone: DockZone.PrimaryTopLeftWorkspace },
       });
       const downEvent = makePointerEvent({ clientX: 100, clientY: 100, target: dragSourceEl });
       service.startDrag(tab, downEvent);
@@ -358,7 +358,7 @@ describe('DragDropService', () => {
       const tab = makeDraggableTab({
         id: 'tab-1',
         label: 'File.ts',
-        draggable: { allowableDropTargets: [], sourceZone: DockZone.PrimaryWorkspace },
+        draggable: { allowableDropTargets: [], sourceZone: DockZone.PrimaryTopLeftWorkspace },
       });
       const downEvent = makePointerEvent({ clientX: 100, clientY: 100, target: dragSourceEl });
       service.startDrag(tab, downEvent);
@@ -374,7 +374,7 @@ describe('DragDropService', () => {
         id: 'tab-1',
         label: 'File.ts',
         component: MockBottomPanelComp,
-        draggable: { allowableDropTargets: [DockZone.BottomPanel], sourceZone: DockZone.PrimaryWorkspace },
+        draggable: { allowableDropTargets: [DockZone.BottomCenterPanel], sourceZone: DockZone.PrimaryTopLeftWorkspace },
       });
       const downEvent = makePointerEvent({ clientX: 100, clientY: 100, target: dragSourceEl });
       service.startDrag(tab, downEvent);
@@ -394,22 +394,8 @@ describe('DragDropService', () => {
 
   // ── Reorder source registration ───────────────────────────────────────────
 
-  describe('reorder source registration', () => {
-    it('should store the reorder source element and callback', () => {
-      const tabBarEl = document.createElement('div');
-      const callback = jasmine.createSpy('reorderCallback');
-      service.registerReorderSource(tabBarEl, callback);
-
-      // Registration is internal — verified indirectly via endDrag behavior.
-      expect(callback).not.toHaveBeenCalled();
-    });
-  });
-
-  // ── Same-region reorder (T032) ────────────────────────────────────────────
-
   describe('same-region reorder', () => {
     let tabBarEl: HTMLElement;
-    let reorderCallback: jasmine.Spy;
 
     beforeEach(() => {
       tabBarEl = document.createElement('div');
@@ -443,16 +429,19 @@ describe('DragDropService', () => {
       spyOn(tabBarEl, 'getBoundingClientRect').and.returnValue({ left: 0, right: 300, top: 0, bottom: 30, width: 300, height: 30, x: 0, y: 0, toJSON: () => ({}) } as DOMRect);
       document.body.appendChild(tabBarEl);
 
-      reorderCallback = jasmine.createSpy('reorderCallback');
-      service.registerReorderSource(tabBarEl, reorderCallback);
+      service.registerDropZone(DockZone.PrimaryTopLeftWorkspace, tabBarEl);
     });
 
     afterEach(() => {
       document.body.removeChild(tabBarEl);
     });
 
-    it('should invoke reorder callback when dropping on source tab bar at different position', () => {
-      const tab = makeDraggableTab({ id: 'tab-1', label: 'File.ts' });
+    it('should dispatch reorderTab when dropping on the same source tab bar', () => {
+      const tab = makeDraggableTab({
+        id: 'tab-1',
+        label: 'File.ts',
+        draggable: { allowableDropTargets: [DockZone.PrimaryTopLeftWorkspace], sourceZone: DockZone.PrimaryTopLeftWorkspace },
+      });
       const downEvent = makePointerEvent({ clientX: 50, clientY: 15, target: tabBarEl.querySelector('[data-testid="tab-tab-1"]') as HTMLElement });
       service.startDrag(tab, downEvent);
       service.onDragMove(makeMoveEvent(55, 15));
@@ -460,27 +449,22 @@ describe('DragDropService', () => {
       // Move pointer to position over tab-3 (left: 200-300, midX=250). Use x=249 to target index 2.
       service.onDragMove(makeMoveEvent(249, 15));
 
+      const dispatchSpy = spyOn(store, 'dispatch');
       service.endDrag();
 
-      expect(reorderCallback).toHaveBeenCalledWith(0, 2);
+      const action: any = dispatchSpy.calls.mostRecent().args[0];
+      expect(action.type).toBe('[Workspace] Reorder Tab');
+      expect(action.zone).toBe(DockZone.PrimaryTopLeftWorkspace);
+      expect(action.toIndex).toBe(2);
+      expect(action.reorderedTab.id).toBe('tab-1');
     });
 
-    it('should not invoke reorder callback when dropping at the same position', () => {
-      const tab = makeDraggableTab({ id: 'tab-1', label: 'File.ts' });
-      const downEvent = makePointerEvent({ clientX: 25, clientY: 15, target: tabBarEl.querySelector('[data-testid="tab-tab-1"]') as HTMLElement });
-      service.startDrag(tab, downEvent);
-      service.onDragMove(makeMoveEvent(30, 15));
-
-      // Move pointer but stay over tab-1's left half (midX=50, so x=40 targets index 0).
-      service.onDragMove(makeMoveEvent(40, 15));
-
-      service.endDrag();
-
-      expect(reorderCallback).not.toHaveBeenCalled();
-    });
-
-    it('should not invoke reorder callback when pointer is outside the tab bar', () => {
-      const tab = makeDraggableTab({ id: 'tab-1', label: 'File.ts' });
+    it('should not dispatch any action when pointer is outside the tab bar', () => {
+      const tab = makeDraggableTab({
+        id: 'tab-1',
+        label: 'File.ts',
+        draggable: { allowableDropTargets: [DockZone.PrimaryTopLeftWorkspace], sourceZone: DockZone.PrimaryTopLeftWorkspace },
+      });
       const downEvent = makePointerEvent({ clientX: 50, clientY: 15, target: tabBarEl.querySelector('[data-testid="tab-tab-1"]') as HTMLElement });
       service.startDrag(tab, downEvent);
       service.onDragMove(makeMoveEvent(55, 15));
@@ -488,9 +472,10 @@ describe('DragDropService', () => {
       // Move pointer far away from the tab bar.
       service.onDragMove(makeMoveEvent(500, 500));
 
+      const dispatchSpy = spyOn(store, 'dispatch');
       service.endDrag();
 
-      expect(reorderCallback).not.toHaveBeenCalled();
+      expect(dispatchSpy).not.toHaveBeenCalled();
     });
   });
 
