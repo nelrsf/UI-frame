@@ -4,8 +4,11 @@ import { NgZone } from '@angular/core';
 import { DragDropService } from './drag-drop.service';
 import { DragPhase } from '../../core/models/drag-drop.model';
 import { DockZone } from '../../core/models/dock-zone-assignment.model';
-import { moveTabToZone } from '../../core/state/workspace';
+import { moveTabToZone, reorderTab } from '../../core/state/workspace';
 import { workspaceReducer } from '../../core/state/workspace/workspace.reducer';
+import { ShellTab } from '../contracts/ShellTab';
+import { WithDraggable } from '../models/tab-item.model';
+import { isTabDraggable } from '../common/ShellTabGuardTypes';
 
 class MockCentralTabComp {}
 class MockBottomPanelComp {}

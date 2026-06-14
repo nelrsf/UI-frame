@@ -105,12 +105,13 @@ export const workspaceReducer = createReducer(
       return state;
     }
 
-    const tabIdx = state.tabsByZone.get(zone)?.findIndex((tab) => tab.id === tabId);
-    if (!tabIdx || tabIdx < 0) {
+    const tabsByZone = state.tabsByZone.get(zone);
+    const tabIdx = tabsByZone?.findIndex((tab) => tab.id === tabId) ?? -1;
+    if (tabIdx < 0) {
       return state;
     }
 
-    const tab = state.tabsByZone.get(zone)?.[tabIdx];
+    const tab = tabsByZone?.[tabIdx];
 
     if (!tab) return state;
 
@@ -122,13 +123,13 @@ export const workspaceReducer = createReducer(
       return state;
     }
 
-    const tabs = state.tabsByZone.get(zone)?.filter((candidate) => candidate.id !== tabId);
+    const tabs = tabsByZone?.filter((candidate) => candidate.id !== tabId) ?? [];
 
     const activeTabId = resolveActiveAfterRemoval(state.activeTabIdsByZone.get(zone) ?? null, tabId, tabIdx, tabs ?? [])
 
     return {
       ...state,
-      tabs,
+      tabsByZone: new Map(state.tabsByZone).set(zone, tabs),
       activeTabIdsByZone: new Map(state.activeTabIdsByZone).set(zone, activeTabId),
     };
   }),
@@ -229,7 +230,7 @@ export const workspaceReducer = createReducer(
     const currentZone = found?.zone;
     const tabsByZone = found?.tabs;
 
-    if (!tabsByZone || !currentZone) {
+    if (!tabsByZone || !currentZone || currentZone !== sourceZone) {
       return state;
     }
 
@@ -244,10 +245,11 @@ export const workspaceReducer = createReducer(
       return state;
     }
 
-    tab.draggable.sourceZone = targetZone; // Update the sourceZone for the draggable metadata
-
     const updatedSourceTabs = tabsByZone.filter((candidate) => candidate.id !== tabId);
     const newTab = { ...tab, ...tabMetadata };
+    if (isTabDraggable(newTab) && newTab.draggable) {
+      newTab.draggable = { ...newTab.draggable, sourceZone: targetZone };
+    }
     let updatedTargetTabs;
     if (newTab.draggable?.reorderTargetIndex === null || newTab.draggable?.reorderTargetIndex == undefined) {
       updatedTargetTabs = [...(state.tabsByZone.get(targetZone) || []), newTab];
