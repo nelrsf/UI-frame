@@ -97,7 +97,7 @@ export const layoutReducer = createReducer(
   })),
   on(
     LayoutActions.restoreLayout,
-    (state, { sidebarVisible, sidebarWidth, bottomPanelVisible, bottomPanelHeight, secondaryPanelVisible, secondaryPanelWidth }) => ({
+    (state, { sidebarVisible, sidebarWidth, bottomPanelVisible, bottomPanelHeight, secondaryPanelVisible, secondaryPanelWidth, splitPanelLayout }) => ({
       ...state,
       sidebarVisible,
       sidebarWidth: Math.min(SIDEBAR_WIDTH_MAX, Math.max(SIDEBAR_WIDTH_MIN, sidebarWidth)),
@@ -105,6 +105,7 @@ export const layoutReducer = createReducer(
       bottomPanelHeight: Math.min(BOTTOM_PANEL_HEIGHT_MAX, Math.max(BOTTOM_PANEL_HEIGHT_MIN, bottomPanelHeight)),
       secondaryPanelVisible,
       secondaryPanelWidth: Math.min(SECONDARY_PANEL_WIDTH_MAX, Math.max(SECONDARY_PANEL_WIDTH_MIN, secondaryPanelWidth)),
+      splitPanelLayout,
     })
   ),
   on(LayoutActions.setSplitLayout, (state, { splitLayout }) => ({

@@ -295,19 +295,20 @@ export class ShellComponent implements OnInit, AfterViewInit {
         (z) => z.zone === DockZone.SecondaryPanel
       );
 
-      this.store.dispatch(
-        restoreLayout({
-          // The WorkspaceSession v1 model does not persist sidebar collapsed/expanded
-          // state — the sidebar is always shown on restore so the workspace is
-          // immediately usable. Future sessions may add a sidebarVisible field.
-          sidebarVisible: true,
-          sidebarWidth: session.dimensions.sidebarWidth,
-          bottomPanelVisible: bottomZone?.visible ?? false,
-          bottomPanelHeight: session.dimensions.bottomPanelHeight,
-          secondaryPanelVisible: secondaryZone?.visible ?? false,
-          secondaryPanelWidth: session.dimensions.secondaryPanelWidth,
-        })
-      );
+       this.store.dispatch(
+         restoreLayout({
+           // The WorkspaceSession v1 model does not persist sidebar collapsed/expanded
+           // state — the sidebar is always shown on restore so the workspace is
+           // immediately usable. Future sessions may add a sidebarVisible field.
+           sidebarVisible: true,
+           sidebarWidth: session.dimensions.sidebarWidth,
+           bottomPanelVisible: bottomZone?.visible ?? false,
+           bottomPanelHeight: session.dimensions.bottomPanelHeight,
+           secondaryPanelVisible: secondaryZone?.visible ?? false,
+           secondaryPanelWidth: session.dimensions.secondaryPanelWidth,
+           splitPanelLayout: session.splitPanelLayout ?? null,
+         })
+       );
     }
 
     // Register drop zones for drag-and-drop after view init.

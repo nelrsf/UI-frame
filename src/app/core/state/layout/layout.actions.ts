@@ -89,6 +89,7 @@ export const restoreLayout = createAction(
     bottomPanelHeight: number;
     secondaryPanelVisible: boolean;
     secondaryPanelWidth: number;
+    splitPanelLayout: LayoutSplittableRegionModel | null;
   }>()
 );
 

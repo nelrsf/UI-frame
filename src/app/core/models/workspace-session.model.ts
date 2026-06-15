@@ -1,5 +1,6 @@
 import { DockZone, DockZoneAssignment } from './dock-zone-assignment.model';
 import { TabDescriptor } from './tab-descriptor.model';
+import { LayoutSplittableRegionModel } from '../../shell/models/layout-splittable-region.model';
 
 export { TabDescriptor };
 
@@ -50,4 +51,6 @@ export interface WorkspaceSession {
   tabs: TabDescriptor[];
   /** Persisted pixel dimensions for resizable shell zones. */
   dimensions: WorkspaceSessionDimensions;
+  /** Current split layout state for the shell regions, or null if no split is active. */
+  splitPanelLayout?: LayoutSplittableRegionModel | null;
 }

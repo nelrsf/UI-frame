@@ -5,7 +5,7 @@
 
 ## Summary
 
-Implement a new shell wrapper component, `layout-splittable-panel`, that composes one or more existing `app-dock-zone-panel` instances into a split layout. This wrapper will support `direction` (horizontal/vertical), a configurable `maxSubRegions`, and a cyclic render pattern of dock zone + separator + dock zone. The feature applies to the central primary workspace tabs and the bottom panel, and it persists the split region model in NgRx state so split configuration restores after restart.
+Implement a new shell wrapper component, `layout-splittable-panel`, that composes multiple existing `app-dock-zone-panel` instances into a split-grid layout managed by a 2D state matrix of panel visibilities. This wrapper supports `direction` (horizontal/vertical) for split boundaries, `zones` input representing the 2D grid of active dock zones, and dynamically toggling the visibility of individual panes. Separation and resizing boundaries are handled by `app-shell-splitter-handle`.
 
 ## Technical Context
 
@@ -16,7 +16,7 @@ Implement a new shell wrapper component, `layout-splittable-panel`, that compose
 **Target Platform**: Electron desktop shell (Windows, macOS, Linux)  
 **Project Type**: Desktop application shell (Electron + Angular)  
 **Performance Goals**: Split and pane update actions should render responsively with sub-50ms UI updates; state persistence should not degrade shell start-up.  
-**Constraints**: Must reuse existing `DockZonePanelComponent` without modifying its core tab presentation behavior. Split state updates must flow through NgRx Actions/Reducers/Selectors only, per constitution principle III. No new cross-component event bus may be introduced.  
+**Constraints**: Must reuse existing `DockZonePanelComponent` without modifying its core tab presentation behavior. Split state updates flow through NgRx Actions/Reducers/Selectors only. No new cross-component event bus may be introduced.  
 **Scale/Scope**: Shell-level feature within the existing Electron/Angular MVP.
 
 ## Constitution Check
@@ -93,7 +93,7 @@ src/app/
 - `DockZonePanelComponent` is the passive pane renderer. The split behavior belongs to `layout-splittable-panel`.  
 - Existing `DragDropService.registerReorderSource()` can register each split pane independently.  
 - The existing layout state slice is the best persistence boundary for split models because shell layout restore already uses NgRx state.  
-- `layout-splittable-panel` should expose `direction`, `regions`, and `maxSubRegions`; `regions` carries per-pane tab routing data and active tab state.
+- `layout-splittable-panel` exposes `direction`, `zones` (as a 2D matrix), and split configuration properties, managing panel visibility internally through `panelStates`.
 
 ## Phase 1: Design & Contracts
 
@@ -103,50 +103,41 @@ src/app/
 
 | Value | Description |
 |-------|-------------|
-| `horizontal` | Bottom-panel split orientation (stacked top/bottom). |
-| `vertical` | Primary workspace split orientation (side-by-side). |
+| `horizontal` | Split direction for horizontal layout panels. |
+| `vertical` | Split direction for vertical layout panels. |
 
-**LayoutSplitSubRegion**
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | `string` | Stable pane identifier. |
-| `tabsIds` | `string[]` | Ordered tab IDs for the pane. |
-| `activeTabId` | `string | null` | Active tab within the pane. |
-| `visible` | `boolean` | Whether the pane is shown. Defaults to `true`. |
-| `size` | `number | undefined` | Optional committed pane size in the split axis. |
-
-**LayoutSplittableRegionModel**
+**PanelState (Local Component State)**
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `direction` | `LayoutSplitDirection` | Split orientation. |
-| `regions` | `LayoutSplitSubRegion[]` | Pane definitions in the split layout. |
-| `maxSubRegions` | `number` | Maximum allowed panes for this wrapper. |
-
-### NgRx Contract
-
-- Add `setSplitLayout` and `setSplitPaneSize` actions to `layout.actions.ts`.  
-- Extend `LayoutState` in `layout.reducer.ts` to include `splitPanelLayout: LayoutSplittableRegionModel | null`.  
-- Add selectors in `layout.selectors.ts` for split layout and pane sizes.
+| `visible` | `boolean` | Current visibility of this cell panel. |
+| `zone` | `DockZone` | Associated dock zone for the panel. |
+| `row` | `number` | Row index in the 2D layout grid. |
+| `column` | `number` | Column index in the 2D layout grid. |
 
 ### Component Contract
 
-`layout-splittable-panel` should expose:
-- Inputs: `direction`, `regions`, `maxSubRegions`  
-- Outputs: `regionsChange`, `splitRequested`, `paneSizeChange`
+`layout-splittable-panel` exposes:
+- **Inputs**:
+  - `direction: LayoutSplitDirection`
+  - `zones: Array<DockZone[]>` (Predefined 2D matrix layout of dock zones)
+  - `visible: boolean`
+  - `showVerticalSplitButton: boolean`
+  - `showHorizontalSplitButton: boolean`
+  - `showClose: boolean`
+- **Outputs**:
+  - `closePanel: EventEmitter<boolean>`
 
-This wrapper renders the cyclic pattern of `app-dock-zone-panel` and separators exactly as required by the spec.
+This wrapper renders the grid of `app-dock-zone-panel` instances, separated by resizable `app-shell-splitter-handle` instances.
 
 ## Quickstart
 
-1. Create `src/app/shell/components/layout-splittable-panel/layout-splittable-panel.component.ts`.  
-2. Add wrapper template and styling for cyclic pane + separator rendering.  
-3. Extend `src/app/core/state/layout/layout.actions.ts`, `layout.reducer.ts`, and `layout.selectors.ts` with split layout state.  
-4. Update `src/app/shell/shell.component.html` to render primary workspace and bottom panel through `app-layout-splittable-panel` when split mode is active.  
-5. Ensure each rendered `app-dock-zone-panel` continues to register with `DragDropService` for tab ordering.  
-6. Add unit tests for split button behavior, `maxSubRegions` disablement, and region model emission.  
-7. Add shell-level verification that split layout restores from NgRx on reload.
+1. Modify `src/app/shell/components/layout-splittable-panel/layout-splittable-panel.component.ts` to implement 2D `panelStates` grid visibility control and split actions.
+2. In `layout-splittable-panel.component.html`, loop over rows and columns of `panelStates` with conditional rendering of splitter handles.
+3. Update `src/app/shell/shell.component.html` to integrate `app-layout-splittable-panel` in both the primary workspace (using a 2x2 grid of workspace zones) and the bottom panel (using a 1x3 grid of bottom zones).
+4. Implement reactive integration with NgRx selectors (`selectShellTabs`, `selectActiveIds`) and actions (`moveTabToZone`, `selectTab`).
+5. Ensure each rendered `app-dock-zone-panel` correctly registers with `DragDropService` for dynamic drag-and-drop support.
+6. Add unit tests for `LayoutSplittablePanelComponent` verifying splitting, panel visibility, close events, and tab migration.
 
 ---
 

@@ -1,38 +1,42 @@
 # Quickstart: Shell Split Panels
 
-**Date**: 2026-05-30  
+**Date**: 2026-06-15  
 **Feature**: 013-shell-split-panels
 
 ## Goal
 
-Add split behavior for the primary workspace and bottom panel using a new `layout-splittable-panel` wrapper around existing `app-dock-zone-panel` instances.
+Add split behavior for the primary workspace and bottom panel using a `layout-splittable-panel` wrapper that manages a grid of `app-dock-zone-panel` instances via a 2D visibility matrix.
 
-## Implementation Steps
+## Implementation Architecture
 
-1. Create `src/app/shell/components/layout-splittable-panel/layout-splittable-panel.component.ts`.  
-2. Implement `layout-splittable-panel.component.html` with:
-   - A split button whose icon reflects `direction`.  
-   - A cyclic render sequence: `DockZonePanelComponent`, separator, `DockZonePanelComponent`, separator..., up to `maxSubRegions`.  
-   - Split disablement when `regions.length >= maxSubRegions`.  
-3. Add `layout-splittable-panel.component.css` for the wrapper layout and separators.  
-4. Extend `src/app/core/state/layout/layout.actions.ts` with split layout actions and pane size actions.  
-5. Extend `src/app/core/state/layout/layout.reducer.ts` and `layout.selectors.ts` to persist and restore split layout state.  
-6. Update `src/app/shell/shell.component.html` so the primary workspace and bottom panel render through `app-layout-splittable-panel` when split mode is active.  
-7. Confirm that each rendered `app-dock-zone-panel` still registers with `DragDropService` for tab reorder and drop behavior.  
-8. Add unit tests for `layout-splittable-panel` split button behavior, model emission, and disabled `maxSubRegions`.  
-9. Add shell-level verification that split layout state restores correctly from NgRx on startup.
+The feature uses a **static grid approach** rather than dynamic element creation:
+- **Grid Matrix**: The component accepts a 2D array of `DockZone` (`zones: Array<DockZone[]>`).
+- **State Management**: A local `panelStates: PanelState[][]` matrix tracks the `visible` property for each cell in the grid.
+- **Splitting**: Toggling "split" simply marks the next available row or column in the matrix as `visible`.
+- **Tab Migration**: When a pane is closed, its tabs are automatically migrated to the first active panel to prevent data loss.
+
+## Integration Steps
+
+1. **Component Setup**: Use `LayoutSplittablePanelComponent` with the following configuration in `shell.component.html`:
+   - **Primary Workspace**: `direction="vertical"`, 2x2 grid of `Primary...Workspace` zones.
+   - **Bottom Panel**: `direction="horizontal"`, 1x3 grid of `Bottom...Panel` zones.
+2. **Boundary Handling**: Resizing is handled by `app-shell-splitter-handle` components, which are conditionally rendered between visible panels.
+3. **State Flow**:
+   - **Input**: Tab and active ID data flow into the component via NgRx selectors (`selectShellTabs`, `selectActiveIds`).
+   - **Output**: Tab movements within the split grid are dispatched back to the store via `moveTabToZone` and `selectTab` actions.
+4. **Closing Panels**: Use the `closePanel` output to notify the shell of visibility changes.
 
 ## Acceptance Criteria
 
-- Clicking split on the primary workspace creates a new vertical pane side by side with the existing pane.  
-- Clicking split on the bottom panel creates a new horizontal pane stacked with the existing pane.  
-- The split button disables once `maxSubRegions` is reached.  
-- Pane layout renders cyclically: `DockZonePanelComponent`, separator, `DockZonePanelComponent`, separator....  
-- Split configuration is emitted to NgRx and restorable across application sessions.
+- **Grid-based Splitting**: Clicking the split button enables the next hidden panel in the predefined grid.
+- **Responsive Resizing**: `app-shell-splitter-handle` allows users to resize visible panes.
+- **Tab Continuity**: Closing a panel moves all its tabs to another visible panel.
+- **Capacity Limits**: Split buttons automatically hide when all panels in the grid matrix are already visible.
+- **Store Integration**: Tab selections and movements within the grid are reactively synced with the NgRx workspace state.
 
 ## Testing Guidance
 
-- Verify `layout-splittable-panel` disables the split button at `maxSubRegions`.  
-- Verify the split icon changes correctly for horizontal vs vertical split directions.  
-- Verify the `regionsChange` event payload contains the updated pane model.  
-- Verify split layout restores from the layout state after shell reload or workspace restore.
+- **Grid Verification**: Verify that splitting a 2x2 workspace correctly enables panels in the intended sequence.
+- **Tab Migration**: Close a pane containing multiple tabs and verify they all move to the first remaining active panel.
+- **Boundary Logic**: Ensure splitter handles only appear between two *visible* adjacent panels.
+- **UI/UX**: Confirm the split button hides exactly when `areAllPanelsVisible()` or `areAllRowsVisible()` returns true.

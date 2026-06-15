@@ -10,7 +10,7 @@ import {
     inject
 } from '@angular/core';
 
-import { AsyncPipe, NgClass, NgStyle } from '@angular/common';
+import { AsyncPipe, NgClass } from '@angular/common';
 import { forkJoin, map, Observable, take } from 'rxjs';
 
 import { Store } from '@ngrx/store';
@@ -53,7 +53,6 @@ class DockPanelPayload {
         ShellSplitterHandleComponent,
         DockZonePanelComponent,
         AsyncPipe,
-        NgStyle
     ],
     templateUrl: './layout-splittable-panel.component.html',
     styleUrls: ['./layout-splittable-panel.component.css']
