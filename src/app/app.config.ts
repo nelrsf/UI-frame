@@ -16,6 +16,7 @@ import { registerMockContent } from './shell/mock-ui/mock-content.initializer';
 import { FALLBACK_WORKSPACE_ID } from './core/utils/workspace-id.util';
 import { loadPreferences } from './core/state/preferences/preferences.actions';
 import { MockConfigLoader } from './core/infrastructure/mock-config/mock-config.loader';
+import { WorkspaceEffects } from './core/state/workspace/workspace.effects';
 
 function initializeShellContent(shell: ShellManager): () => void {
   return () => registerMockContent(shell);
@@ -84,7 +85,7 @@ export const appConfig: ApplicationConfig = {
       deps: [MockConfigLoader],
       multi: true,
     },
-    provideEffects([PreferencesEffects, StatusBarEffects]),
+    provideEffects([PreferencesEffects, StatusBarEffects, WorkspaceEffects]),
     provideStoreDevtools({
       maxAge: 50,
       logOnly: false,

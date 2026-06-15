@@ -21,19 +21,17 @@
 
   <div class="shell-workspace" role="region" aria-label="Workspace">
     <app-toolbar class="shell-toolbar" [actions]="(toolbarActions$ | async) ?? []"></app-toolbar>
-    <app-dock-zone-panel
+    <app-layout-splittable-panel
       class="shell-primary-workspace"
-      [zone]="DockZone.PrimaryWorkspace"
-      [tabs]="(shellTabs$ | async) ?? []"
-      [activeTabId]="(activeShellTabId$ | async) ?? ''"
+      [direction]="'vertical'"
+      [showHorizontalSplitButton]="true"
+      [showVerticalSplitButton]="true"
       [visible]="true"
-      [closeGuards]="(closeGuards$ | async) ?? {}"
-      (activeTabChange)="onShellTabSelected($event)"
-      (tabClosed)="onShellTabClosed($event)"
-      (closeGuardTimeout)="onCloseGuardTimeout($event)"
-      (newTabRequested)="onNewTabRequested()"
-      (tabReordered)="onDockZoneTabReordered(DockZone.PrimaryWorkspace, $event)"
-    ></app-dock-zone-panel>
+      [showClose]="false"
+      [zones]="[
+        [DockZone.PrimaryTopLeftWorkspace, DockZone.PrimaryTopRightWorkspace],
+        [DockZone.PrimaryBottomLeftWorkspace, DockZone.PrimaryBottomRightWorkspace]]"
+    ></app-layout-splittable-panel>
     @if (showTabAddModal) {
       <app-tab-add-modal
         [availableTabs]="(availableTabsForModal$ | async) ?? []"
@@ -41,52 +39,51 @@
         (dismissed)="onTabAddModalDismissed()"
       ></app-tab-add-modal>
     }
-    <div
-      class="secondary-splitter-handle"
-      data-testid="secondary-splitter"
-      role="separator"
-      aria-orientation="vertical"
-      aria-label="Resize secondary panel"
-      (pointerdown)="onSecondarySplitterPointerDown($event)"
-      (pointermove)="onSecondarySplitterPointerMove($event)"
-      (pointerup)="onSecondarySplitterPointerUp($event)"
-      (pointercancel)="onSecondarySplitterPointerCancel($event)"
-    ></div>
+    <app-shell-splitter-handle
+      class="shell-secondary-splitter"
+      variant="horizontal"
+      testId="secondary-splitter"
+      ariaLabel="Resize secondary panel"
+      ariaOrientation="vertical"
+      (pointerDown)="onSecondarySplitterPointerDown($event)"
+      (pointerMove)="onSecondarySplitterPointerMove($event)"
+      (pointerUp)="onSecondarySplitterPointerUp($event)"
+      (pointerCancel)="onSecondarySplitterPointerCancel($event)"
+    ></app-shell-splitter-handle>
+
     <app-dock-zone-panel
       class="shell-secondary-panel"
       [zone]="DockZone.SecondaryPanel"
       [visible]="(secondaryPanelVisible$ | async) ?? false"
       [size]="(secondaryPanelWidth$ | async) ?? 300"
-      [tabs]="(secondaryPanelEntries$ | async) ?? []"
-      [activeTabId]="(activeSecondaryPanelEntryId$ | async) ?? ''"
+      [showActions]="true"
+      [tabs]="(getTabsByZone(DockZone.SecondaryPanel) | async) ?? []"
+      [activeTabId]="(getActiveTabIdByZone(DockZone.SecondaryPanel) | async) ?? ''"
       (visibilityChange)="onSecondaryPanelVisibilityChange($event)"
       (activeTabChange)="onSecondaryPanelActiveEntryChange($event)"
       (sizeChange)="onSecondaryPanelWidthChange($event)"
-      (tabReordered)="onDockZoneTabReordered(DockZone.SecondaryPanel, $event)"
     ></app-dock-zone-panel>
-    <div
-      class="bottom-splitter-handle"
-      data-testid="bottom-splitter"
-      role="separator"
-      aria-orientation="horizontal"
-      aria-label="Resize bottom panel"
-      (pointerdown)="onBottomSplitterPointerDown($event)"
-      (pointermove)="onBottomSplitterPointerMove($event)"
-      (pointerup)="onBottomSplitterPointerUp($event)"
-      (pointercancel)="onBottomSplitterPointerCancel($event)"
-    ></div>
-    <app-dock-zone-panel
-      class="shell-bottom-panel"
-      [zone]="DockZone.BottomPanel"
+    <app-shell-splitter-handle
+      class="shell-bottom-splitter"
+      variant="vertical"
+      testId="bottom-splitter"
+      ariaLabel="Resize bottom panel"
+      ariaOrientation="horizontal"
+      (pointerDown)="onBottomSplitterPointerDown($event)"
+      (pointerMove)="onBottomSplitterPointerMove($event)"
+      (pointerUp)="onBottomSplitterPointerUp($event)"
+      (pointerCancel)="onBottomSplitterPointerCancel($event)"
+    ></app-shell-splitter-handle>
+
+    <app-layout-splittable-panel
+      class="shell-bottom-panel shell-bottom-splittable-panel"
+      [direction]="'horizontal'"
+      [showHorizontalSplitButton]="true"
       [visible]="(bottomPanelVisible$ | async) ?? false"
-      [size]="(bottomPanelHeight$ | async) ?? 220"
-      [tabs]="(bottomPanelTabs$ | async) ?? []"
-      [activeTabId]="activeBottomPanelId"
-      (visibilityChange)="onBottomPanelVisibilityChange($event)"
-      (sizeChange)="onBottomPanelHeightChange($event)"
-      (activeTabChange)="onBottomPanelActivePanelChange($event)"
-      (tabReordered)="onDockZoneTabReordered(DockZone.BottomPanel, $event)"
-    ></app-dock-zone-panel>
+      [zones]="[[DockZone.BottomLeftPanel, DockZone.BottomCenterPanel, DockZone.BottomRightPanel]]"
+      (closePanel)="onBottomPanelVisibilityChange($event)"
+    ></app-layout-splittable-panel>
+
   </div>
 
   <footer class="shell-statusbar" role="contentinfo" aria-label="Status bar">

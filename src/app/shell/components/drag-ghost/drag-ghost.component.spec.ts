@@ -108,7 +108,7 @@ describe('DragGhostComponent', () => {
 
   it('should show accept indicator when over a compatible drop zone', () => {
     configureWithDragState(makeDragState({
-      activeDropZone: DockZone.BottomPanel,
+      activeDropZone: DockZone.BottomCenterPanel,
       dropCompatible: true,
     }));
     const fixture = TestBed.createComponent(DragGhostComponent);
@@ -122,7 +122,7 @@ describe('DragGhostComponent', () => {
 
   it('should show reject indicator when over an incompatible drop zone', () => {
     configureWithDragState(makeDragState({
-      activeDropZone: DockZone.BottomPanel,
+      activeDropZone: DockZone.BottomCenterPanel,
       dropCompatible: false,
     }));
     const fixture = TestBed.createComponent(DragGhostComponent);
@@ -149,7 +149,7 @@ describe('DragGhostComponent', () => {
 
   it('should apply compatible CSS class when dropCompatible is true', () => {
     configureWithDragState(makeDragState({
-      activeDropZone: DockZone.BottomPanel,
+      activeDropZone: DockZone.BottomCenterPanel,
       dropCompatible: true,
     }));
     const fixture = TestBed.createComponent(DragGhostComponent);
@@ -163,7 +163,7 @@ describe('DragGhostComponent', () => {
 
   it('should apply incompatible CSS class when dropCompatible is false', () => {
     configureWithDragState(makeDragState({
-      activeDropZone: DockZone.BottomPanel,
+      activeDropZone: DockZone.BottomCenterPanel,
       dropCompatible: false,
     }));
     const fixture = TestBed.createComponent(DragGhostComponent);

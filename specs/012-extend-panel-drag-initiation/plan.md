@@ -1,35 +1,33 @@
 # Implementation Plan: Extend Panel Drag Initiation
 
-**Branch**: `012-extend-panel-drag-initiation` | **Date**: 2026-05-21 | **Spec**: [spec.md](./spec.md)
+**Branch**: `012-extend-panel-drag-initiation` | **Date**: 2026-05-21 | **Updated**: 2026-06-14 | **Spec**: [spec.md](./spec.md)
 **Input**: Feature specification from `/specs/012-extend-panel-drag-initiation/spec.md`
-
-**Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/plan-template.md` for the execution workflow.
 
 ## Summary
 
-Extend drag-and-drop initiation from the central region tab bar to include bottom panel and secondary panel tab bars. Users will be able to drag tabs from any panel to compatible drop zones with same-region reorder support. The implementation adds pointer event handlers to `BottomPanelComponent` and `SecondaryPanelComponent`, constructs `DraggableTab` objects with appropriate source zones, and registers reorder callbacks for same-region drag operations. Cross-region drop handling and interface validation are already implemented in the existing `DragDropService`.
+Extend drag-and-drop initiation from the original central tab bar model to every shell dock zone that renders tabs. The implementation uses the current generic `DockZonePanelComponent`, existing pointer-event drag lifecycle in `DragDropService`, and NgRx workspace state keyed by `DockZone`. Cross-zone moves dispatch `moveTabToZone`; same-zone reorders dispatch `reorderTab`. The remaining feature work is to connect those runtime NgRx updates to workspace-session persistence so moved and reordered restorable tabs survive shell reload.
 
 ## Technical Context
 
-**Language/Version**: TypeScript 5.x, Angular 18.x  
-**Primary Dependencies**: Angular CDK (pointer events), NgRx (state management), existing DragDropService  
-**Storage**: N/A (in-memory state, persisted via existing workspace state management)  
-**Testing**: Jasmine/Karma (unit), component tests with Angular TestBed  
+**Language/Version**: TypeScript 5.7.x, Angular 19.x
+**Primary Dependencies**: Angular pointer events, NgRx 19.x, RxJS, existing DragDropService, WorkspaceSessionService
+**Storage**: Existing workspace session persistence, versioned and scoped by workspace ID
+**Testing**: Jasmine/Karma unit and integration tests with Angular TestBed
 **Target Platform**: Windows/macOS/Linux desktop via Electron  
 **Project Type**: Desktop application (Electron + Angular shell)  
-**Performance Goals**: Drag feedback within 50ms, drop processing within 100ms  
-**Constraints**: Must not introduce circular DI; must use pointer events (not HTML5 Drag API); must preserve existing drag behavior for central region  
-**Scale/Scope**: 2 components modified (BottomPanelComponent, SecondaryPanelComponent), 2 new NgRx actions for reorder, 1 new spec feature
+**Performance Goals**: Drag feedback within 50ms, drop processing within 100ms, persistence restore without degrading shell startup
+**Constraints**: Must not introduce circular DI; must use pointer events rather than HTML5 Drag API; all persistent tab membership/order changes must flow through NgRx; must preserve existing central-region drag behavior
+**Scale/Scope**: Generic dock-zone tab component, drag-drop service, workspace NgRx state, workspace session persistence, tests and docs
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+*GATE: Must pass before implementation updates. Re-check after persistence tasks.*
 
-- **Principle I (Official Stack and Layer Boundaries)**: PASS — Changes are scoped to Angular presentation components (BottomPanelComponent, SecondaryPanelComponent). All state changes flow through NgRx Actions. No direct Electron/Node.js API calls introduced.
-- **Principle II (Shell-First UX Contract)**: PASS — Feature extends existing shell layout regions (bottom panel, secondary panel) with drag initiation. Maintains responsive, keyboard-reachable design.
-- **Principle III (Single Reactive Paradigm)**: PASS — State changes use NgRx Actions (new reorder actions). Component communication uses existing DragDropService (pointer events, not pub/sub). No new event bus introduced.
-- **Principle IV (Security and Least Privilege)**: PASS — No new IPC or Electron capabilities exposed. Drag-and-drop is purely within the Angular presentation layer.
-- **Principle V (Quality Gates and Traceability)**: PASS — Feature has clear acceptance criteria in spec, measurable success criteria, and will have unit/component tests.
+- **Principle I (Official Stack and Layer Boundaries)**: PASS - Changes remain in Angular presentation, NgRx state, and existing persistence service boundaries. No direct Electron/Node APIs are introduced by presentation components.
+- **Principle II (Shell-First UX Contract)**: PASS - Feature extends existing shell layout regions and keeps dock zones responsive and keyboard reachable.
+- **Principle III (Single Reactive Paradigm)**: PASS - Runtime state changes flow through NgRx Actions, Reducers, and Selectors. No new event bus is introduced.
+- **Principle IV (Security and Least Privilege)**: PASS - Drag-and-drop and persistence use existing local workspace-session mechanisms; no new IPC or privilege surface is added.
+- **Principle V (Quality Gates and Traceability)**: PASS WITH FOLLOW-UP - Requirements now trace to current implementation, but persistence tests must be added/updated before this feature is done.
 
 ## Project Structure
 
@@ -37,38 +35,43 @@ Extend drag-and-drop initiation from the central region tab bar to include botto
 
 ```text
 specs/012-extend-panel-drag-initiation/
-├── plan.md              # This file (/speckit.plan command output)
-├── research.md          # Phase 0 output (/speckit.plan command)
-├── data-model.md        # Phase 1 output (/speckit.plan command)
-├── quickstart.md        # Phase 1 output (/speckit.plan command)
-├── contracts/           # Phase 1 output (/speckit.plan command)
-└── tasks.md             # Phase 2 output (/speckit.tasks command - NOT created by /speckit.plan)
+├── plan.md
+├── research.md
+├── data-model.md
+├── quickstart.md
+├── contracts/
+└── tasks.md
 ```
 
 ### Source Code (repository root)
 
 ```text
-src/app/shell/
-├── components/
-│   ├── bottom-panel/
-│   │   ├── bottom-panel.component.ts      # Add drag initiation handler
-│   │   └── bottom-panel.component.html    # Add pointerdown binding
-│   └── secondary-panel/
-│       ├── secondary-panel.component.ts   # Add drag initiation handler
-│       └── secondary-panel.component.html # Add pointerdown binding
-├── services/
-│   └── drag-drop.service.ts               # Already exists, no changes needed
-├── state/
-│   ├── shell-content.actions.ts           # Add reorder actions for bottom/secondary panels
-│   └── shell-content.reducer.ts           # Add reorder handlers for bottom/secondary panels
-└── shell.component.ts                     # Already handles crossRegionDrop$, no changes needed
+src/app/
+├── core/
+│   ├── models/
+│   │   ├── dock-zone-assignment.model.ts     # Current DockZone enum and bottom/primary groupings
+│   │   ├── tab-descriptor.model.ts           # Serializable restorable tab metadata
+│   │   └── workspace-session.model.ts        # Persisted workspace session snapshot
+│   ├── services/
+│   │   └── workspace-session.service.ts      # Versioned save/restore boundary
+│   └── state/
+│       └── workspace/
+│           ├── workspace.actions.ts          # moveTabToZone, reorderTab, restore/open actions
+│           ├── workspace.reducer.ts          # tabsByZone and activeTabIdsByZone updates
+│           └── workspace.selectors.ts        # Runtime tab-state selectors
+└── shell/
+    ├── components/
+    │   └── dock-zone-panel/
+    │       ├── dock-zone-panel.component.ts  # Generic tab pointerdown initiation
+    │       └── dock-zone-panel.component.html
+    ├── services/
+    │   └── drag-drop.service.ts              # Drag lifecycle, compatibility, move/reorder dispatch
+    └── shell.component.ts                    # Drop-zone registration and session restore wiring
 ```
 
-**Structure Decision**: Single project structure. Changes are scoped to existing Angular components and NgRx state management files within the `src/app/shell/` directory. No new modules or services are created; the existing `DragDropService` is reused.
+**Structure Decision**: Use the current generic dock-zone architecture. Do not reintroduce separate bottom/secondary tab state or zone-specific reorder actions. Persist and restore the runtime NgRx workspace model through the existing workspace-session boundary.
 
 ## Complexity Tracking
-
-> **Fill ONLY if Constitution Check has violations that must be justified**
 
 | Violation | Why Needed | Simpler Alternative Rejected Because |
 |-----------|------------|-------------------------------------|

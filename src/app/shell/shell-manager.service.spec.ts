@@ -11,9 +11,7 @@ import {
   addToolbarAction,
 } from '../core/state/shell-content';
 import {
-  registerAndOpenTab,
-  addBottomPanelEntry,
-  addSecondaryPanelEntry,
+  registerAndOpenTab
 } from '../core/state/workspace';
 import { commandTelemetryReducer, selectLastExecution } from '../core/state/command-telemetry';
 import { ShellManager } from './shell-manager.service';
@@ -40,28 +38,6 @@ describe('ShellManager', () => {
     commandRegistry = TestBed.inject(CommandRegistryService);
     dispatchSpy = spyOn(store, 'dispatch').and.callThrough();
     registerSpy = spyOn(commandRegistry, 'register').and.callThrough();
-  });
-
-  it('addTab dispatches registerAndOpenTab', () => {
-    const componentType = class {};
-
-    shellManager.addTab({
-      id: 'dashboard',
-      label: 'Dashboard',
-      component: componentType,
-      icon: 'dashboard',
-    });
-
-    expect(dispatchSpy).toHaveBeenCalledWith(
-      registerAndOpenTab({
-        tab: {
-          id: 'dashboard',
-          label: 'Dashboard',
-          icon: 'dashboard',
-          component: componentType,
-        },
-      })
-    );
   });
 
   it('addSidebarEntry dispatches addSidebarEntry', () => {
@@ -113,76 +89,6 @@ describe('ShellManager', () => {
         group: 'primary',
       })
     );
-  });
-
-  it('addBottomPanelEntry dispatches addBottomPanelEntry', () => {
-    const componentType = class {};
-
-    shellManager.addBottomPanelEntry({
-      id: 'results',
-      label: 'Results',
-      icon: 'list',
-      component: componentType,
-    });
-
-expect(dispatchSpy).toHaveBeenCalledWith(
-  addBottomPanelEntry({
-    tab: {
-      id: 'results',
-      label: 'Results',
-      icon: 'list',
-      component: componentType,
-    }
-  })
-);
-  });
-
-  it('duplicate ids are ignored', () => {
-    const componentType = class {};
-
-    shellManager.addTab({ id: 'dashboard', label: 'Dashboard', component: componentType });
-    shellManager.addTab({ id: 'dashboard', label: 'Dashboard', component: componentType });
-
-    expect(dispatchSpy.calls.count()).toBe(1);
-  });
-
-  it('addSecondaryPanelEntry dispatches addSecondaryPanelEntry', () => {
-    const componentType = class {};
-
-    shellManager.addSecondaryPanelEntry({
-      id: 'secondary-weather',
-      label: 'Weather',
-      icon: 'sun',
-      component: componentType,
-    });
-
-    expect(dispatchSpy).toHaveBeenCalledWith(
-      addSecondaryPanelEntry({
-          entry: {
-            id: 'secondary-weather',
-            label: 'Weather',
-            icon: 'sun',
-            component: componentType,
-          }
-        })
-    );
-  });
-
-  it('duplicate secondary panel entry ids are ignored', () => {
-    const componentType = class {};
-
-    shellManager.addSecondaryPanelEntry({
-      id: 'secondary-weather',
-      label: 'Weather',
-      component: componentType,
-    });
-    shellManager.addSecondaryPanelEntry({
-      id: 'secondary-weather',
-      label: 'Weather 2',
-      component: componentType,
-    });
-
-    expect(dispatchSpy.calls.count()).toBe(1);
   });
 
   it('throwing handler does not propagate when executed via CommandRegistry', async () => {

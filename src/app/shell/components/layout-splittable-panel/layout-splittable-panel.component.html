@@ -1,0 +1,59 @@
+<div class="splitter-container" [ngClass]="[visible ? '':'hidden']">
+
+    <div class="splitter-toolbar">
+
+        @if(showHorizontalSplitButton){
+        <button class="splitter-toolbar-button splitter-toolbar-button__split-h"
+            (click)="onSplitPanels($event, 'horizontal')" [ngClass]="[areAllPanelsVisible() ? 'hidden' : '']">
+            ↔
+        </button>
+        }
+
+        @if(showVerticalSplitButton){
+        <button class="splitter-toolbar-button splitter-toolbar-button__split-v"
+            (click)="onSplitPanels($event, 'vertical')" [ngClass]="[areAllRowsVisible() ? 'hidden' : '']">
+            ↕
+        </button>
+        }
+
+        @if(showClose){
+        <button class="splitter-toolbar-button splitter-toolbar-button__close" (click)="handleClosePanel($event)">
+            x
+        </button>
+        }
+    </div>
+
+    <div class="layout-splittable-panel">
+        @for (row of rowsArray; track $index; let rowIndex = $index) {
+        <div class="layout-splittable-row-wrapper" [class.hidden]="!isRowVisible($index)">
+            @if($index > 0){
+            <app-shell-splitter-handle class="horizontal-splitter" [variant]="'vertical'" testId="splitter-{{$index}}"
+                ariaLabel="Resize panel {{$index}}" [ariaOrientation]="direction">
+            </app-shell-splitter-handle>
+            }
+            <div class="layout-splittable-row">
+                @for (panel of panelStates[rowIndex]; track panel) {
+
+                <div class="splittable-panel-region" [class.hidden]="!isPanelVisible(panel.zone)">
+
+                    @if (hasPreviousColumnEnabled(panel)) {
+                    <app-shell-splitter-handle class="vertical-splitter" [variant]="'horizontal'"
+                        testId="splitter-{{$index}}" ariaLabel="Resize panel {{$index}}" [ariaOrientation]="direction">
+                    </app-shell-splitter-handle>
+                    }
+
+                    <app-dock-zone-panel #dockPanel class="splittable-panel-dock-zone" [zone]="panel.zone"
+                        [tabs]="(getPanelTabs(panel.zone) | async) ?? []"
+                        [activeTabId]="(getActiveTabIdByZone(panel.zone) | async) ?? ''"
+                        (activeTabChange)="onActiveTabChanged($event)"
+                        [showActions]="!(panel.column==0 && panel.row==0)"
+                        (visibilityChange)="onVisivilityChange($event, panel.zone)">
+                    </app-dock-zone-panel>
+
+                </div>
+                }
+            </div>
+        </div>
+        }
+    </div>
+</div>

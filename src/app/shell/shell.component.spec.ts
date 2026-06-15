@@ -339,7 +339,7 @@ describe('ShellComponent', () => {
       expect(handle).not.toBeNull();
       const computedCursor = getComputedStyle(handle!).cursor;
       // In JSDOM getComputedStyle may not fully apply CSS; check the class/attribute instead.
-      expect(handle!.classList.contains('bottom-splitter-handle')).toBeTruthy();
+      expect(handle!.classList.contains('vertical-splitter-handle')).toBeTruthy();
     });
   });
 
@@ -349,7 +349,7 @@ describe('ShellComponent', () => {
       fixture.detectChanges();
       const handle = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('[data-testid="secondary-splitter"]');
       expect(handle).not.toBeNull();
-      expect(handle!.classList.contains('secondary-splitter-handle')).toBeTruthy();
+      expect(handle!.classList.contains('horizontal-splitter-handle')).toBeTruthy();
     });
   });
 

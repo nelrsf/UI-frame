@@ -144,6 +144,7 @@ body[data-theme="light"] {
   --shell-topbar-height:       32px;
   --shell-toolbar-height:      40px;
   --shell-tabbar-height:       36px;
+  --shell-actions-height:      24px;
   --shell-statusbar-height:    24px;
 
   --shell-activity-bar-width:  48px;

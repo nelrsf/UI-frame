@@ -1,0 +1,87 @@
+:host {
+    overflow: hidden!important;
+}
+
+.splitter-container {
+    height: 100%;
+    width: 100%;
+    display: inline-flex;
+    flex-direction: column;
+}
+
+.layout-splittable-panel {
+    width: 100%;
+    flex: 1;
+    display: inline-flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.layout-splittable-row {
+    display: inline-flex;
+    flex-direction: row;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.layout-splittable-row-wrapper {
+    display: inline-flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+}
+
+.splittable-panel-region {
+    display: inline-flex; 
+    flex: 1;  
+    overflow: auto;
+}
+
+.hidden {
+    display: none!important;
+}
+
+.vertical-splitter {
+    height: 100%;
+    width: 5px;
+}
+
+.horizontal-splitter {
+    height: 5px;
+    width: 100%;
+}
+
+/* Splitter toolbar selectors */
+
+.splitter-toolbar {
+    width: 100%;
+    height: 22px;
+    display: inline-flex;
+    justify-content: end;
+}
+
+.splitter-toolbar:empty {
+    height: 0;
+}
+
+.splitter-toolbar-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-secondary);
+    width: 18px;
+    height: 18px;
+    margin: 2px;
+    font-size: 10px;
+    padding: 1px;
+    border-width: thin;
+    border-radius: 5px;
+    border-color: var(--color-border-default);
+    background-color: var(--color-bg-base);
+}
+
+.splitter-toolbar-button:hover {
+   background-color: var(--color-tab-close-hover);
+   cursor: pointer;
+}

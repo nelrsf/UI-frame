@@ -35,6 +35,8 @@ export interface IDraggable {
   targetZone: DockZone;
   /** The zones this tab can be dropped into. Used to validate drop targets during dragging. */
   allowableDropTargets: DockZone[];
+  /** The index where tab can be dropped into. */
+  reorderTargetIndex: number | null;
 }
 
 /** A tab item that can be rendered in the shell's central workspace and optionally supports drag-and-drop. */

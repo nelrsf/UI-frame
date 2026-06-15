@@ -1,5 +1,5 @@
 import { Component, OnInit, AfterViewInit, HostBinding, inject, ChangeDetectionStrategy, NgZone, DestroyRef, ElementRef, ViewChild, Renderer2 } from '@angular/core';
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, NgClass } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Store } from '@ngrx/store';
 import { combineLatest, map, Observable, BehaviorSubject, first } from 'rxjs';
@@ -9,6 +9,7 @@ import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { DockZonePanelComponent } from './components/dock-zone-panel/dock-zone-panel.component';
 import { TabAddModalComponent } from './components/tab-add-modal/tab-add-modal.component';
 import { DragGhostComponent } from './components/drag-ghost/drag-ghost.component';
+import { ShellSplitterHandleComponent } from './components/shell-splitter-handle/shell-splitter-handle.component';
 import { PlatformService } from '../core/services/platform.service';
 import { CommandRegistryService } from '../core/services/command-registry.service';
 import { setPlatform, shellReady } from '../core/state/session';
@@ -48,15 +49,9 @@ import {
   closeTab,
   openTab,
   selectTab,
-  reorderTab,
-  selectBottomPanelTabs,
-  selectSecondaryPanelEntries,
-  selectActiveSecondaryPanelEntryId,
-  setActiveSecondaryPanelEntry,
-  reorderBottomPanelTabs,
-  reorderSecondaryPanelEntries,
   selectRegisteredTabs,
   selectCloseGuards,
+  selectActiveIds,
 } from '../core/state/workspace';
 import { setPreference } from '../core/state/preferences/preferences.actions';
 import { AppTheme, THEME_PREFERENCE_KEY } from '../core/models/theme.model';
@@ -67,6 +62,8 @@ import {
 import { DragDropService } from './services/drag-drop.service';
 import { ShellManager } from './shell-manager.service';
 import { DockZone } from '../core/models/dock-zone-assignment.model';
+import { LayoutSplittablePanelComponent } from './components/layout-splittable-panel/layout-splittable-panel.component';
+import { ShellTab } from './contracts/ShellTab';
 
 @Component({
   selector: 'app-shell',
@@ -79,7 +76,10 @@ import { DockZone } from '../core/models/dock-zone-assignment.model';
     DockZonePanelComponent,
     TabAddModalComponent,
     DragGhostComponent,
-  ],
+    LayoutSplittablePanelComponent,
+    ShellSplitterHandleComponent,
+    NgClass
+],
   templateUrl: './shell.component.html',
   styleUrl: './shell.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -150,33 +150,20 @@ export class ShellComponent implements OnInit, AfterViewInit {
   readonly toolbarActions$ = this.store.select(selectShellToolbarActions);
   /** Observable of registered shell tabs from workspace. */
   readonly shellTabs$ = this.store.select(selectShellTabs);
+  /** Observable of the active shell tab ID from workspace. */
+  readonly selectActiveIds$ = this.store.select(selectActiveIds);
   /** Observable of active shell tab id from workspace. */
   readonly activeShellTabId$ = this.store.select(selectActiveShellTabId);
   /** Observable of close guards map for TabBarComponent. */
   readonly closeGuards$ = this.store.select(selectCloseGuards);
   /** Workspace ID for panel reorder actions (uses fallback for single-workspace mode). */
   readonly workspaceId = FALLBACK_WORKSPACE_ID;
-  /** Observable of registered bottom panel tabs. */
-  readonly bottomPanelTabs$ = this.store.select(selectBottomPanelTabs);
-
-  readonly secondaryPanelEntries$ = this.store.select(selectSecondaryPanelEntries);
-  /** Observable of active secondary panel entry id. */
-  readonly activeSecondaryPanelEntryId$ = this.store.select(selectActiveSecondaryPanelEntryId);
-  /** Observable of open tab IDs in the main workspace group (for modal picker). */
-  readonly openTabIds$ = this.shellTabs$.pipe(
-    map((tabs) => new Set(tabs.map((t) => t.id)))
-  );
   /** Observable of status bar items for the left section. */
   readonly statusBarLeftItems$ = this.store.select(selectStatusBarLeftItems);
   /** Observable of status bar items for the right section. */
   readonly statusBarRightItems$ = this.store.select(selectStatusBarRightItems);
   /** Observable of registered tabs not currently open (for the tab-add modal). */
-  readonly availableTabsForModal$ = combineLatest([
-    this.store.select(selectRegisteredTabs),
-    this.openTabIds$,
-  ]).pipe(
-    map(([registered, openIds]) => registered.filter((tab) => !openIds.has(tab.id)))
-  );
+  readonly availableTabsForModal$ = this.store.select(selectRegisteredTabs);
   /**
    * Derives the CSS value for --shell-sidebar-width used by the grid column.
    * When the sidebar panel is collapsed the column shrinks to the activity-bar
@@ -233,9 +220,6 @@ export class ShellComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
-    this.bottomPanelTabs$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((panels) => this.syncActiveBottomPanel(panels));
 
     // Track committed dimension values so drag can start from the right baseline.
     this.bottomPanelHeight$
@@ -305,25 +289,26 @@ export class ShellComponent implements OnInit, AfterViewInit {
     const session = this.sessionService.restore(FALLBACK_WORKSPACE_ID);
     if (session) {
       const bottomZone = session.zoneAssignments.find(
-        (z) => z.zone === DockZone.BottomPanel
+        (z) => z.zone === DockZone.BottomCenterPanel
       );
       const secondaryZone = session.zoneAssignments.find(
         (z) => z.zone === DockZone.SecondaryPanel
       );
 
-      this.store.dispatch(
-        restoreLayout({
-          // The WorkspaceSession v1 model does not persist sidebar collapsed/expanded
-          // state — the sidebar is always shown on restore so the workspace is
-          // immediately usable. Future sessions may add a sidebarVisible field.
-          sidebarVisible: true,
-          sidebarWidth: session.dimensions.sidebarWidth,
-          bottomPanelVisible: bottomZone?.visible ?? false,
-          bottomPanelHeight: session.dimensions.bottomPanelHeight,
-          secondaryPanelVisible: secondaryZone?.visible ?? false,
-          secondaryPanelWidth: session.dimensions.secondaryPanelWidth,
-        })
-      );
+       this.store.dispatch(
+         restoreLayout({
+           // The WorkspaceSession v1 model does not persist sidebar collapsed/expanded
+           // state — the sidebar is always shown on restore so the workspace is
+           // immediately usable. Future sessions may add a sidebarVisible field.
+           sidebarVisible: true,
+           sidebarWidth: session.dimensions.sidebarWidth,
+           bottomPanelVisible: bottomZone?.visible ?? false,
+           bottomPanelHeight: session.dimensions.bottomPanelHeight,
+           secondaryPanelVisible: secondaryZone?.visible ?? false,
+           secondaryPanelWidth: session.dimensions.secondaryPanelWidth,
+           splitPanelLayout: session.splitPanelLayout ?? null,
+         })
+       );
     }
 
     // Register drop zones for drag-and-drop after view init.
@@ -333,23 +318,7 @@ export class ShellComponent implements OnInit, AfterViewInit {
   private _registerDropZones(): void {
     // Use setTimeout to ensure the view is fully rendered.
     setTimeout(() => {
-      const primaryWorkspaceEl = this.elementRef.nativeElement.querySelector('.shell-primary-workspace');
-      const bottomPanelEl = this.elementRef.nativeElement.querySelector('.shell-bottom-panel');
       const secondaryPanelEl = this.elementRef.nativeElement.querySelector('.shell-secondary-panel');
-
-      if (primaryWorkspaceEl) {
-        this.dragDropService.registerDropZone(
-          DockZone.PrimaryWorkspace,
-          primaryWorkspaceEl as HTMLElement
-        );
-      }
-
-      if (bottomPanelEl) {
-        this.dragDropService.registerDropZone(
-          DockZone.BottomPanel,
-          bottomPanelEl as HTMLElement
-        );
-      }
 
       if (secondaryPanelEl) {
         this.dragDropService.registerDropZone(
@@ -358,6 +327,18 @@ export class ShellComponent implements OnInit, AfterViewInit {
         );
       }
     }, 0);
+  }
+
+  /** Retrieves the tabs for a given dock zone as an observable. This allows the template to reactively update when tabs change.
+   * The method is used in the template with the async pipe to get the current tabs for each zone. */
+  getTabsByZone(zone: DockZone): Observable<readonly ShellTab[]> {
+    return this.shellTabs$.pipe(map((tabsByZone) => tabsByZone.get(zone) || []));
+  }
+
+  /** Retrieves the active tab ID for a given dock zone as an observable. This allows the template to reactively update when the active tab changes.
+   * The method is used in the template with the async pipe to get the current active tab ID for each zone. */
+  getActiveTabIdByZone(zone: DockZone): Observable<string> {
+    return this.selectActiveIds$.pipe(map((activeIdsByZone) => activeIdsByZone.get(zone) || ''));
   }
 
   private _setupEscapeKeyHandler(): void {
@@ -377,16 +358,6 @@ export class ShellComponent implements OnInit, AfterViewInit {
     this._registerDropZones();
     this._setupEscapeKeyHandler();
 
-    // Handle cross-region drop events — register tab in target region.
-    this.dragDropService.crossRegionDrop$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((tab) => {
-        if (tab.draggable?.targetZone === DockZone.BottomPanel) {
-          this.shellManager.addBottomPanelEntry(tab);
-        } else if (tab.draggable?.targetZone === DockZone.SecondaryPanel) {
-          this.shellManager.addSecondaryPanelEntry(tab);
-        }
-      });
   }
 
   // ---------------------------------------------------------------------------
@@ -407,38 +378,6 @@ export class ShellComponent implements OnInit, AfterViewInit {
     this.store.dispatch(selectTab({ tabId }));
   }
 
-  onShellTabReordered(event: { fromIndex: number; toIndex: number }): void {
-    this.store.dispatch(reorderTab({
-      workspaceId: this.workspaceId,
-      fromIndex: event.fromIndex,
-      toIndex: event.toIndex
-    }));
-  }
-
-  onDockZoneTabReordered(
-    zone: DockZone,
-    event: { fromIndex: number; toIndex: number }
-  ): void {
-    switch (zone) {
-      case DockZone.PrimaryWorkspace:
-        this.onShellTabReordered(event);
-        break;
-      case DockZone.BottomPanel:
-        this.store.dispatch(reorderBottomPanelTabs({
-          workspaceId: this.workspaceId,
-          fromIndex: event.fromIndex,
-          toIndex: event.toIndex,
-        }));
-        break;
-      case DockZone.SecondaryPanel:
-        this.store.dispatch(reorderSecondaryPanelEntries({
-          workspaceId: this.workspaceId,
-          fromIndex: event.fromIndex,
-          toIndex: event.toIndex,
-        }));
-        break;
-    }
-  }
 
   onShellTabClosed(tabId: string): void {
     this.store.dispatch(closeTab({ tabId }));
@@ -456,7 +395,7 @@ export class ShellComponent implements OnInit, AfterViewInit {
     this.store.select(selectRegisteredTabs).pipe(first()).subscribe((tabs) => {
       const found = tabs.find((t) => t.id === tabId);
       if (found) {
-        this.store.dispatch(openTab({ tab: found }));
+        this.store.dispatch(openTab({ tab: found, zone: DockZone.PrimaryTopLeftWorkspace }));
       }
     });
     this.showTabAddModal = false;
@@ -514,7 +453,7 @@ export class ShellComponent implements OnInit, AfterViewInit {
   }
 
   onSecondaryPanelActiveEntryChange(entryId: string): void {
-    this.store.dispatch(setActiveSecondaryPanelEntry({ id: entryId }));
+    this.store.dispatch(selectTab({ tabId: entryId }));
   }
 
   onSecondaryPanelWidthChange(width: number): void {

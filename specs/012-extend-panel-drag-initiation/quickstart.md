@@ -1,71 +1,77 @@
 # Quickstart: Extend Panel Drag Initiation
 
 **Date**: 2026-05-21  
+**Updated**: 2026-06-14
 **Feature**: 012-extend-panel-drag-initiation
 
 ## Prerequisites
 
-- Node.js 18+ and npm/pnpm installed
-- Angular CLI 18+ available
-- Existing UI Frame project with spec 011-tab-drag-drop implemented
+- Node.js and npm installed
+- Existing UI Frame project with the generic dock-zone shell implementation
+- Current working branch contains `DockZonePanelComponent`, `DragDropService`, and NgRx workspace state
 
-## Setup
+## Verify Current Runtime Drag Behavior
 
-1. **Ensure you're on the feature branch**:
+1. **Build the app**:
    ```bash
-   git checkout 012-extend-panel-drag-initiation
+   npm.cmd run build
    ```
 
-2. **Install dependencies** (if not already done):
+2. **Start the app for manual validation**:
    ```bash
-   npm install
+   npm.cmd start
    ```
 
-3. **Verify existing drag-and-drop works**:
-   ```bash
-   npm start
-   ```
-   - Drag a tab in the central region tab bar to verify existing functionality
+3. **Manual drag checks**:
+   - Drag a tab in a bottom dock zone to a compatible primary workspace zone.
+   - Drag a tab in the secondary panel to a compatible bottom or primary zone.
+   - Drag a tab within the same dock zone to reorder it.
+   - Drag to an incompatible zone and verify rejection feedback.
+   - Press Escape during an active drag and verify cancellation.
 
-## Implementation Steps
+## Implementation Focus Still Pending
 
-1. **Add drag initiation to BottomPanelComponent**:
-   - Inject `DragDropService` in constructor
-   - Add `onTabPointerDown(event: PointerEvent, panel: PanelTab)` handler
-   - Update template with `(pointerdown)` binding
+1. **Align legacy tests**:
+   - Replace obsolete `DockZone.PrimaryWorkspace` and `DockZone.BottomPanel` test references with current split dock-zone values.
+   - Update workspace reducer tests from legacy `tabs` / `bottomPanelTabs` shape to `tabsByZone`.
+   - Remove expectations for removed `addBottomPanelEntry`, `addSecondaryPanelEntry`, and `registerReorderSource` contracts.
 
-2. **Add drag initiation to SecondaryPanelComponent**:
-   - Same pattern as BottomPanelComponent
-   - Use `DockZone.SecondaryPanel` for `sourceZone`
+2. **Connect successful drag outcomes to persistence**:
+   - Convert `WorkspaceState.tabsByZone` and `activeTabIdsByZone` into serializable session data.
+   - Persist only restorable tabs through `WorkspaceSessionService`.
+   - Save after successful `moveTabToZone` and `reorderTab` outcomes, not during pointer movement.
 
-3. **Add NgRx reorder actions**:
-   - Create `reorderBottomPanelTabs` action in `shell-content.actions.ts`
-   - Create `reorderSecondaryPanelEntries` action in `shell-content.actions.ts`
-   - Add reducer handlers in `shell-content.reducer.ts`
-
-4. **Register reorder sources**:
-   - Call `dragDropService.registerReorderSource()` in `BottomPanelComponent.ngAfterViewInit()`
-   - Call `dragDropService.registerReorderSource()` in `SecondaryPanelComponent.ngAfterViewInit()`
+3. **Restore persisted tab organization**:
+   - Add/update NgRx workspace restore action(s).
+   - Rehydrate `tabsByZone` and `activeTabIdsByZone` from a valid `WorkspaceSession`.
+   - Ignore corrupt or non-restorable entries without blocking shell startup.
 
 ## Testing
 
-1. **Run unit tests**:
+1. **Application build**:
    ```bash
-   npm test
+   npm.cmd run build
    ```
 
-2. **Manual testing**:
-   - Start the app: `npm start`
-   - Add a bottom panel entry and a secondary panel entry
-   - Drag bottom panel tab to central region → should move
-   - Drag secondary panel tab to bottom panel → should move (if compatible)
-   - Drag within bottom panel → should reorder
-   - Press Escape during drag → should cancel
+2. **Full automated suite**:
+   ```bash
+   npm.cmd run test:coverage:ci
+   ```
+
+3. **Persistence validation scenario**:
+   - Open or register restorable tabs in at least two dock zones.
+   - Move one restorable tab to another compatible zone.
+   - Reorder tabs inside one zone.
+   - Save the workspace session.
+   - Restore the workspace session.
+   - Verify tab membership, order, and active tab per zone match the pre-save state.
 
 ## Verification
 
-- No circular DI errors in console
-- Drag threshold (4px) works correctly for all panels
-- Visual feedback (ghost, drop zone highlighting) appears during drag
-- Cross-region drops update state correctly via NgRx
-- Same-region reorders persist after drag completes
+- No circular DI errors in console.
+- Drag threshold works correctly for all dock-zone tab bars.
+- Visual feedback appears during drag.
+- Cross-zone drops update NgRx workspace state.
+- Same-zone reorders update NgRx workspace state.
+- Successful move/reorder outcomes persist and restore through the workspace session.
+- Cancelled and incompatible drags do not alter runtime or persisted tab order.

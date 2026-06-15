@@ -106,23 +106,6 @@ import { Component } from '@angular/core';
       color: var(--color-text-primary);
       border-color: var(--color-text-primary);
     }
-
-    ::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: var(--color-border-default);
-      border-radius: 3px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-      background: var(--color-accent);
-    }
   `],
 })
 export class MockBottomWarningsComponent {

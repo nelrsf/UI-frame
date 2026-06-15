@@ -18,7 +18,7 @@ import { MockSecondaryWeatherComponent } from './components/mock-secondary-panel
 import { MockSecondaryMarketComponent } from './components/mock-secondary-panel/mock-secondary-market.component';
 import { ShellTab } from '../contracts/ShellTab';
 import { WithDraggable } from '../models/tab-item.model';
-import { DockZone } from '../../core/models/dock-zone-assignment.model';
+import { BOTTOM_DOCK_ZONES, DockZone, PRIMARY_DOCK_ZONES } from '../../core/models/dock-zone-assignment.model';
 
 export const MOCK_DASHBOARD_TAB: ShellTab & WithDraggable = {
   id: 'mock-dashboard',
@@ -27,20 +27,30 @@ export const MOCK_DASHBOARD_TAB: ShellTab & WithDraggable = {
   icon: '📄',
   draggable: {
     allowableDropTargets: [
-      DockZone.BottomPanel,
+      ...PRIMARY_DOCK_ZONES,
       DockZone.SecondaryPanel,
-      DockZone.PrimaryWorkspace
+      ...BOTTOM_DOCK_ZONES,
     ],
-    sourceZone: DockZone.PrimaryWorkspace,
-    targetZone: DockZone.PrimaryWorkspace
+    sourceZone: DockZone.PrimaryTopLeftWorkspace,
+    targetZone: DockZone.PrimaryTopLeftWorkspace,
+    reorderTargetIndex: null
   }
 };
 
-export const MOCK_REPORTS_TAB: ShellTab = {
+export const MOCK_REPORTS_TAB: ShellTab & WithDraggable = {
   id: 'mock-reports',
   label: 'Reports',
   component: MockReportsComponent,
-  icon: '📊'
+  icon: '📊',
+  draggable: {
+    reorderTargetIndex: null,
+    sourceZone: DockZone.PrimaryTopLeftWorkspace,
+    targetZone: DockZone.PrimaryBottomLeftWorkspace,
+    allowableDropTargets: [
+      DockZone.BottomRightPanel,
+      ...PRIMARY_DOCK_ZONES
+    ]
+  }
 };
 
 export const MOCK_ALERT_INFO: IToolbarAction = {
@@ -112,11 +122,14 @@ export const MOCK_WARNINGS_PANEL: ShellTab & WithDraggable = {
   component: MockBottomWarningsComponent,
   draggable: {
     allowableDropTargets: [
-      DockZone.BottomPanel,
+      DockZone.BottomCenterPanel,
+      DockZone.BottomRightPanel,
+      DockZone.BottomLeftPanel,
       DockZone.SecondaryPanel,
     ],
-    sourceZone: DockZone.BottomPanel,
-    targetZone: DockZone.BottomPanel
+    sourceZone: DockZone.BottomCenterPanel,
+    targetZone: DockZone.BottomCenterPanel,
+    reorderTargetIndex: null
   }
 };
 

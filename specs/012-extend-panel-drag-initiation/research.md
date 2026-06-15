@@ -1,49 +1,70 @@
 # Research: Extend Panel Drag Initiation
 
 **Date**: 2026-05-21  
+**Updated**: 2026-06-14
 **Feature**: 012-extend-panel-drag-initiation
 
 ## Technical Context Resolution
 
-All technical context items were resolved from the existing codebase and spec 011-tab-drag-drop implementation. No NEEDS CLARIFICATION items remain.
+The original plan assumed separate bottom and secondary panel components plus zone-specific reorder actions. The current codebase has since consolidated tab rendering into a generic dock-zone panel and split the workspace/bottom panel into multiple dock zones. This research record is updated to align future work with the implementation that exists now.
+
+### Dock-Zone Tab Surface
+
+- **Decision**: Use `DockZonePanelComponent` as the drag initiation surface for every tabbed dock zone.
+- **Rationale**: The current shell renders primary workspace, bottom panel, and secondary panel tabs through the same component. Adding separate bottom/secondary handlers would duplicate behavior and reintroduce obsolete components.
+- **Alternatives considered**:
+  - Recreate `BottomPanelComponent` and `SecondaryPanelComponent` handlers - rejected because those are no longer the active tab-bar surfaces.
+  - Add separate wrapper handlers per zone - rejected because `DockZonePanelComponent` already has the zone context and tab model.
 
 ### DragDropService Architecture
 
-- **Decision**: Reuse existing `DragDropService` without modifications
-- **Rationale**: The service already implements pointer event-based drag with 4px threshold, drop zone detection, interface validation, drag ghost rendering, and cross-region drop emission. Adding drag initiation to bottom/secondary panels only requires constructing `DraggableTab` objects with correct `sourceZone` values.
-- **Alternatives considered**: 
-  - Create separate service for panel drag — rejected due to code duplication and inconsistent behavior
-  - Modify existing service to accept panel types directly — rejected as it would complicate the service API unnecessarily
-
-### Same-Region Reorder Implementation
-
-- **Decision**: Create new NgRx actions for bottom panel and secondary panel reorder (Option A from spec)
-- **Rationale**: Cleaner separation of concerns. Each panel type has its own data model (`PanelTab` vs `SecondaryPanelEntry`), so mapping to the central region's `TabItem` model would add complexity. Zone-specific actions keep the reducer logic simple and type-safe.
+- **Decision**: Reuse `DragDropService` for pointer tracking, threshold detection, drop-zone detection, visual feedback, cross-zone moves, and same-zone reorders.
+- **Rationale**: The service already centralizes drag lifecycle behavior and dispatches NgRx workspace actions. This preserves consistent behavior across dock zones.
 - **Alternatives considered**:
-  - Reuse existing `reorderTab` action with virtual tab group mapping — rejected due to type conversion complexity and potential for state corruption
-  - Use component-local state for reorder — rejected as it would violate Principle III (Single Reactive Paradigm) by bypassing NgRx
+  - Create a panel-specific drag service - rejected due to duplicated state and inconsistent UX.
+  - Use HTML5 Drag and Drop - rejected because existing shell drag behavior uses pointer events.
 
-### Interface Registration for Multi-Interface Components
+### Compatibility Model
 
-- **Decision**: Verify existing `ShellManager` behavior; no new registration mechanism needed for this feature
-- **Rationale**: The spec notes that `ShellManager` already registers interfaces when entries are added. If a component implements multiple interfaces, the registration should happen at entry creation time. This is outside the scope of drag initiation but should be verified during implementation.
-- **Alternatives considered**: N/A — existing mechanism is sufficient
+- **Decision**: Use `ShellTab.draggable.allowableDropTargets` as the compatibility source.
+- **Rationale**: The current implementation stores allowed dock-zone targets on each draggable tab. A separate `RegionInterface` registry is not present in the active code path.
+- **Alternatives considered**:
+  - Restore a `RegionInterface` registry - rejected because it would create a parallel compatibility model.
 
-### Circular Dependency Prevention
+### Same-Zone Reorder Implementation
 
-- **Decision**: Continue using `Injector.get(DragDropService)` pattern in `ShellManager`
-- **Rationale**: Direct constructor injection causes NG0200 circular dependency error. Lazy resolution via `Injector` is the established pattern and works correctly.
-- **Alternatives considered**: N/A — this is a constraint, not a choice
+- **Decision**: Use the generic `reorderTab` NgRx action with `zone`, `toIndex`, and `reorderedTab`.
+- **Rationale**: The current state model stores ordered tabs by `DockZone`, so one action can reorder tabs in primary, bottom, and secondary zones.
+- **Alternatives considered**:
+  - Create `reorderBottomPanelTabs` and `reorderSecondaryPanelEntries` - rejected because zone-specific arrays/actions no longer match the state model.
+  - Use component-local state - rejected because persistent tab order must flow through NgRx.
+
+### Persistence Boundary
+
+- **Decision**: Persist successful move/reorder outcomes through the existing workspace-session mechanism.
+- **Rationale**: Runtime tab membership and order live in NgRx workspace state, while `WorkspaceSessionService` already provides versioned, workspace-scoped persistence. Connecting these avoids a second storage path and satisfies the shell persistence contract.
+- **Alternatives considered**:
+  - Persist directly from `DragDropService` - rejected because drag lifecycle code should not own session serialization.
+  - Persist only layout dimensions - rejected because users expect tab organization changes to survive reload.
+
+### Restore Strategy
+
+- **Decision**: Restore layout and workspace tab membership during shell initialization from a valid `WorkspaceSession`.
+- **Rationale**: Shell startup already restores layout dimensions. Restoring tab membership/order alongside layout keeps the workspace coherent.
+- **Open implementation choice**: The restore action payload shape can be a descriptor list or prebuilt `tabsByZone`; choose the shape that best fits existing tab reconstruction/factory mechanisms during implementation.
 
 ## Performance Considerations
 
-- Pointer event handlers are lightweight and only activate on `pointerdown` with left button check
-- `DragDropService.isDragging()` uses a simple boolean flag, suitable for template binding with `OnPush` change detection
-- Drag ghost rendering is already optimized with `AsyncPipe` and `ChangeDetectionStrategy.OnPush`
+- Pointer event handlers are lightweight and only activate on primary-button pointerdown.
+- Drag threshold remains 4px to avoid accidental drags during selection/close interactions.
+- Drag ghost and drop-zone highlighting must remain visible within 50ms after threshold crossing.
+- Session save should occur after successful move/reorder outcomes and should not run on every pointermove.
+- Restore should ignore invalid persisted data quickly and fall back to safe defaults.
 
 ## Testing Strategy
 
-- Unit tests for new component handlers (`onTabPointerDown`, `onEntryPointerDown`)
-- Component tests for pointer event binding in templates
-- Integration tests for cross-region drag from bottom/secondary panels
-- Edge case tests for escape cancellation, outside-drop-zone release, and single-tab drag
+- Unit tests for `DockZonePanelComponent.onTabPointerDown` and template pointerdown binding.
+- Unit tests for `DragDropService` compatibility detection, cancellation, cross-zone move dispatch, and same-zone reorder dispatch.
+- Reducer tests for `moveTabToZone`, `reorderTab`, and workspace tab restore.
+- Workspace-session tests for moved/reordered tab snapshots, corrupt data, schema mismatch, duplicate descriptors, and unavailable tab descriptors.
+- Shell integration tests for save/restore after a cross-zone move plus same-zone reorder.

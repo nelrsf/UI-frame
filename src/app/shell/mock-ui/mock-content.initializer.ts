@@ -1,3 +1,4 @@
+import { DockZone } from '../../core/models/dock-zone-assignment.model';
 import { ShellManager } from '../shell-manager.service';
 import {
   MOCK_ALERT_ERROR,
@@ -17,8 +18,8 @@ import {
 
 export function registerMockContent(shell: ShellManager): void {
 
-  shell.addTab(MOCK_DASHBOARD_TAB);
-  shell.addTab(MOCK_REPORTS_TAB);
+  shell.addTab(MOCK_DASHBOARD_TAB, DockZone.PrimaryTopLeftWorkspace);
+  shell.addTab(MOCK_REPORTS_TAB, DockZone.PrimaryTopLeftWorkspace);
 
   shell.addSidebarEntry(MOCK_NAV_SIDEBAR_ENTRY);
   shell.addSidebarEntry(MOCK_TOOLS_SIDEBAR_ENTRY);
@@ -28,12 +29,12 @@ export function registerMockContent(shell: ShellManager): void {
   shell.addToolbarAction(MOCK_ALERT_ERROR);
   shell.addToolbarAction(MOCK_ALERT_SUCCESS);
 
-  shell.addBottomPanelEntry(MOCK_RESULTS_PANEL);
-  shell.addBottomPanelEntry(MOCK_LOGS_PANEL);
-  shell.addBottomPanelEntry(MOCK_WARNINGS_PANEL);
+  shell.addTab(MOCK_RESULTS_PANEL, DockZone.BottomLeftPanel);
+  shell.addTab(MOCK_LOGS_PANEL, DockZone.BottomLeftPanel);
+  shell.addTab(MOCK_WARNINGS_PANEL, DockZone.BottomLeftPanel);
 
-  shell.addSecondaryPanelEntry(MOCK_SECONDARY_WEATHER_ENTRY);
-  shell.addSecondaryPanelEntry(MOCK_SECONDARY_MARKET_ENTRY);
+  shell.addTab(MOCK_SECONDARY_WEATHER_ENTRY, DockZone.SecondaryPanel);
+  shell.addTab(MOCK_SECONDARY_MARKET_ENTRY, DockZone.SecondaryPanel);
 
   shell.setBottomPanelVisible(true);
   shell.setSecondaryPanelVisible(true);

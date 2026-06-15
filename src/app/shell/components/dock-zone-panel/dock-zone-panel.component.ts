@@ -11,11 +11,12 @@ import {
   inject,
 } from '@angular/core';
 import { NgClass, NgComponentOutlet } from '@angular/common';
-import { DockZone } from '../../../core/models/dock-zone-assignment.model';
+import { BOTTOM_DOCK_ZONES, DockZone, PRIMARY_DOCK_ZONES } from '../../../core/models/dock-zone-assignment.model';
 import { ShellTab } from '../../contracts/ShellTab';
 import { isTabCloseable, isTabPinnable } from '../../common/ShellTabGuardTypes';
 import { TabCloseGuard } from '../../models/tab-item.model';
-import { DragDropService } from '../../services/drag-drop.service';
+import { DragDropService, ReorderTabsPayload } from '../../services/drag-drop.service';
+import { filter } from 'rxjs';
 
 /** Duration (ms) after which an unresolved async `beforeClose()` guard times out. */
 const CLOSE_GUARD_TIMEOUT_MS = 10_000;
@@ -28,46 +29,33 @@ const CLOSE_GUARD_TIMEOUT_MS = 10_000;
   styleUrl: './dock-zone-panel.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DockZonePanelComponent implements AfterViewChecked {
+export class DockZonePanelComponent {
   private readonly zoneRef = inject(NgZone);
   readonly dragDropService = inject(DragDropService);
+  readonly el = inject(ElementRef<HTMLElement>);
 
   readonly DockZone = DockZone;
 
-  @Input({ required: true }) zone: DockZone = DockZone.PrimaryWorkspace;
+  @Input({ required: true }) zone: DockZone = DockZone.PrimaryTopLeftWorkspace;
   @Input() tabs: readonly ShellTab[] = [];
   @Input() activeTabId: string = '';
   @Input() visible: boolean = true;
   @Input() size: number | null = null;
   @Input() closeGuards: Record<string, TabCloseGuard> = {};
+  @Input() showActions: boolean = false;
 
   @Output() activeTabChange = new EventEmitter<string>();
   @Output() visibilityChange = new EventEmitter<boolean>();
   @Output() sizeChange = new EventEmitter<number>();
   @Output() tabClosed = new EventEmitter<string>();
-  @Output() tabReordered = new EventEmitter<{ fromIndex: number; toIndex: number }>();
   @Output() newTabRequested = new EventEmitter<void>();
   @Output() closeGuardTimeout = new EventEmitter<string>();
 
-  @ViewChild('tabList') private tabListRef?: ElementRef<HTMLElement>;
-
-  private registeredTabList: HTMLElement | null = null;
   private readonly closingTabIds = new Set<string>();
 
-  ngAfterViewChecked(): void {
-    const tabList = this.tabListRef?.nativeElement ?? null;
-    if (!tabList || tabList === this.registeredTabList) {
-      return;
-    }
-
-    this.registeredTabList = tabList;
-    this.dragDropService.registerReorderSource(tabList, (fromIndex, toIndex) => {
-      this.tabReordered.emit({ fromIndex, toIndex });
-    });
-  }
 
   get isPrimaryWorkspace(): boolean {
-    return this.zone === DockZone.PrimaryWorkspace;
+    return this.zone === DockZone.PrimaryTopLeftWorkspace;
   }
 
   get activeTab(): ShellTab | null {
@@ -89,15 +77,20 @@ export class DockZonePanelComponent implements AfterViewChecked {
     return `${this.zone}-content`;
   }
 
-  get ariaLabel(): string {
+  get ariaLabel(): string | null {
     switch (this.zone) {
-      case DockZone.PrimaryWorkspace:
-        return 'Primary workspace';
-      case DockZone.BottomPanel:
-        return 'Bottom panel';
+      case DockZone.PrimaryTopLeftWorkspace:
+        return 'Primary top left workspace';
+      case DockZone.BottomCenterPanel:
+        return 'Bottom center panel';
+      case DockZone.BottomLeftPanel:
+        return 'Bottom left panel';
+      case DockZone.BottomRightPanel:
+        return 'Bottom right panel';
       case DockZone.SecondaryPanel:
         return 'Secondary panel';
     }
+    return null;
   }
 
   get emptyMessage(): string {
@@ -109,8 +102,8 @@ export class DockZonePanelComponent implements AfterViewChecked {
   get panelClasses(): Record<string, boolean> {
     return {
       'dock-zone-panel': true,
-      'dock-zone-panel--primary': this.zone === DockZone.PrimaryWorkspace,
-      'dock-zone-panel--bottom': this.zone === DockZone.BottomPanel,
+      'dock-zone-panel--primary': PRIMARY_DOCK_ZONES.includes(this.zone),
+      'dock-zone-panel--bottom': BOTTOM_DOCK_ZONES.includes(this.zone),
       'dock-zone-panel--secondary': this.zone === DockZone.SecondaryPanel,
     };
   }
@@ -120,7 +113,7 @@ export class DockZonePanelComponent implements AfterViewChecked {
   }
 
   get heightPx(): number | null {
-    return this.zone === DockZone.BottomPanel ? this.size : null;
+    return this.zone === DockZone.BottomCenterPanel ? this.size : null;
   }
 
   get widthPx(): number | null {
@@ -131,15 +124,16 @@ export class DockZonePanelComponent implements AfterViewChecked {
     return `${this.zone}-tab-btn-${tab.id}`;
   }
 
-  getTabTestId(tab: ShellTab): string {
+  getTabTestId(tab: ShellTab): string | null {
     switch (this.zone) {
-      case DockZone.PrimaryWorkspace:
+      case DockZone.PrimaryTopLeftWorkspace:
         return `tab-${tab.id}`;
-      case DockZone.BottomPanel:
+      case DockZone.BottomCenterPanel:
         return `panel-tab-${tab.id}`;
       case DockZone.SecondaryPanel:
         return `secondary-panel-tab-${tab.id}`;
     }
+    return null;
   }
 
   onTabSelect(tabId: string): void {
@@ -228,7 +222,7 @@ export class DockZonePanelComponent implements AfterViewChecked {
   }
 
   onClosePanel(): void {
-    this.visibilityChange.emit(false);
+    this.visibilityChange.emit(true);
   }
 
   onTabPointerDown(event: PointerEvent, tab: ShellTab): void {

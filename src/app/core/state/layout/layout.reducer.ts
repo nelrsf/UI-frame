@@ -1,5 +1,6 @@
 import { createReducer, on } from '@ngrx/store';
 import * as LayoutActions from './layout.actions';
+import { LayoutSplittableRegionModel } from '../../../shell/models/layout-splittable-region.model';
 
 /** Minimum allowed sidebar content-panel width in pixels. */
 export const SIDEBAR_WIDTH_MIN = 160;
@@ -37,6 +38,8 @@ export interface LayoutState {
   readonly secondaryPanelVisible: boolean;
   /** Current secondary panel width in pixels (clamped to [SECONDARY_PANEL_WIDTH_MIN, SECONDARY_PANEL_WIDTH_MAX]). */
   readonly secondaryPanelWidth: number;
+  /** The current split layout state for the main content area, or null if not in a split layout. */
+  readonly splitPanelLayout: LayoutSplittableRegionModel | null;
 }
 
 export const initialLayoutState: LayoutState = {
@@ -47,6 +50,7 @@ export const initialLayoutState: LayoutState = {
   activeSidebarItem: null,
   secondaryPanelVisible: false,
   secondaryPanelWidth: SECONDARY_PANEL_WIDTH_DEFAULT,
+  splitPanelLayout: null,
 };
 
 export const layoutReducer = createReducer(
@@ -93,7 +97,7 @@ export const layoutReducer = createReducer(
   })),
   on(
     LayoutActions.restoreLayout,
-    (state, { sidebarVisible, sidebarWidth, bottomPanelVisible, bottomPanelHeight, secondaryPanelVisible, secondaryPanelWidth }) => ({
+    (state, { sidebarVisible, sidebarWidth, bottomPanelVisible, bottomPanelHeight, secondaryPanelVisible, secondaryPanelWidth, splitPanelLayout }) => ({
       ...state,
       sidebarVisible,
       sidebarWidth: Math.min(SIDEBAR_WIDTH_MAX, Math.max(SIDEBAR_WIDTH_MIN, sidebarWidth)),
@@ -101,6 +105,16 @@ export const layoutReducer = createReducer(
       bottomPanelHeight: Math.min(BOTTOM_PANEL_HEIGHT_MAX, Math.max(BOTTOM_PANEL_HEIGHT_MIN, bottomPanelHeight)),
       secondaryPanelVisible,
       secondaryPanelWidth: Math.min(SECONDARY_PANEL_WIDTH_MAX, Math.max(SECONDARY_PANEL_WIDTH_MIN, secondaryPanelWidth)),
+      splitPanelLayout,
     })
-  )
+  ),
+  on(LayoutActions.setSplitLayout, (state, { splitLayout }) => ({
+    ...state,
+    splitPanelLayout: splitLayout,
+    // When setting a split layout, we want to hide the sidebar and bottom panel to maximize available space for the splits. The split layout itself will determine the visibility of the secondary panel as needed.
+  })),
+  on(LayoutActions.setSplitPaneSize, (state, { paneId, size }) => ({
+    ...state,
+    // Implementation for setting split pane size would go here
+  }))
 );

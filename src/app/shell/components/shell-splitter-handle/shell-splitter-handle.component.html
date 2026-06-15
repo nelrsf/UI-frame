@@ -1,0 +1,13 @@
+<div
+  class="splitter-handle"
+  [class.horizontal-splitter-handle]="variant === 'horizontal'"
+  [class.vertical-splitter-handle]="variant === 'vertical'"
+  [attr.data-testid]="testId"
+  role="separator"
+  [attr.aria-orientation]="ariaOrientation"
+  [attr.aria-label]="ariaLabel"
+  (pointerdown)="pointerDown.emit($event)"
+  (pointermove)="pointerMove.emit($event)"
+  (pointerup)="pointerUp.emit($event)"
+  (pointercancel)="pointerCancel.emit($event)"
+></div>

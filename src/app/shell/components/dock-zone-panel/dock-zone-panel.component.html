@@ -5,16 +5,14 @@
     [attr.role]="isPrimaryWorkspace ? 'main' : 'complementary'"
     [attr.aria-label]="ariaLabel"
     [style.height.px]="heightPx"
-    [style.width.px]="widthPx"
-  >
+    [style.width.px]="widthPx">
     <div class="drop-zone-highlight"></div>
     <header class="dock-zone-panel__header" [attr.data-testid]="isPrimaryWorkspace ? 'tab-bar' : zone + '-header'">
       <div
         class="dock-zone-panel__tabs"
         role="tablist"
         [attr.aria-label]="ariaLabel + ' tabs'"
-        #tabList
-      >
+        #tabList>
         @for (tab of tabs; track tab.id) {
           <button
             class="dock-zone-panel__tab"
@@ -29,8 +27,7 @@
             [attr.aria-controls]="contentId"
             [attr.data-testid]="getTabTestId(tab)"
             (click)="onTabSelect(tab.id)"
-            (pointerdown)="onTabPointerDown($event, tab)"
-          >
+            (pointerdown)="onTabPointerDown($event, tab)">
             @if (tab.icon) {
               <span class="dock-zone-panel__tab-icon" aria-hidden="true">{{ tab.icon }}</span>
             }
@@ -59,7 +56,7 @@
           data-testid="tab-bar-new-tab"
           (click)="onNewTab()"
         >+</button>
-      } @else {
+      } @else if (showActions) {
         <div class="dock-zone-panel__actions" [attr.data-testid]="zone + '-actions'">
           <button
             class="dock-zone-panel__action-btn"
