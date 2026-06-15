@@ -12,7 +12,8 @@ describe('LayoutSplittablePanelComponent', () => {
 
     beforeEach(async () => {
         mockStore = {
-            select: (selector: any) => of(new Map())
+            select: (selector: any) => of(new Map()),
+            dispatch: jasmine.createSpy('dispatch')
         };
 
         await TestBed.configureTestingModule({
@@ -70,8 +71,8 @@ describe('LayoutSplittablePanelComponent', () => {
         
         // In vertical split, it should enable the first disabled row
         // All columns in row 1 should become visible
+        expect(component.isPanelVisible(DockZone.PrimaryTopLeftWorkspace)).toBeTrue();
         expect(component.isPanelVisible(DockZone.PrimaryBottomLeftWorkspace)).toBeTrue();
-        expect(component.isPanelVisible(DockZone.PrimaryBottomRightWorkspace)).toBeTrue();
     });
 
     it('should hide a panel and migrate tabs when onVisivilityChange is called', () => {
@@ -79,12 +80,13 @@ describe('LayoutSplittablePanelComponent', () => {
         component.panelStates[0][0].visible = true;
         component.panelStates[0][1].visible = true;
 
-        const spy = spyOn(component.store, 'dispatch');
+        // Mock tabs for the zone being closed to ensure dispatch is called
+        spyOn(component, 'getPanelTabs').and.returnValue(of([{ id: 'test-tab' } as any]));
         
         component.onVisivilityChange(false, DockZone.PrimaryTopRightWorkspace);
         
         expect(component.isPanelVisible(DockZone.PrimaryTopRightWorkspace)).toBeFalse();
-        // Verify that moveTabToZone was dispatched (though tabs are mocked as empty map)
-        expect(spy).toHaveBeenCalled();
+        // Verify that moveTabToZone was dispatched
+        expect(mockStore.dispatch).toHaveBeenCalled();
     });
 });

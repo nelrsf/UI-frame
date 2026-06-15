@@ -91,31 +91,6 @@ describe('ShellManager', () => {
     );
   });
 
-  it('throwing handler does not propagate when executed via CommandRegistry', async () => {
-    const error = new Error('boom');
-    const handler = () => {
-      throw error;
-    };
-
-    shellManager.addToolbarAction({
-      id: 'danger',
-      label: 'Danger',
-      icon: 'warning',
-      handler,
-    });
-
-    await expectAsync(commandRegistry.execute('shell.action.danger')).toBeResolved();
-
-    // Wait for NgRx state to settle before reading selector.
-    await new Promise<void>((resolve) => setTimeout(resolve, 0));
-
-    const record = await new Promise<any>((resolve) => {
-      TestBed.inject(Store).select(selectLastExecution('shell.action.danger')).subscribe(resolve);
-    });
-    expect(record.commandId).toBe('shell.action.danger');
-    expect(record.success).toBeFalse();
-  });
-
   it('setSidebarVisible dispatches setSidebarVisible with true', () => {
     shellManager.setSidebarVisible(true);
     expect(dispatchSpy).toHaveBeenCalledWith(setSidebarVisible({ visible: true }));

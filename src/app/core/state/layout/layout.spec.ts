@@ -264,6 +264,7 @@ describe('layout reducer', () => {
       bottomPanelHeight: 280,
       secondaryPanelVisible: true,
       secondaryPanelWidth: 400,
+      splitPanelLayout: null,
     };
     const restoredAction = restoreLayout(restorePayload);
 
