@@ -48,3 +48,6 @@ Thumbs.db
 *.swp
 .vscode/launch.json
 .vscode/tasks.json
+
+# Graphify
+/graphify-out
