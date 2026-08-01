@@ -61,6 +61,7 @@ import {
 } from '../core/state/status-bar';
 import { DragDropService } from './services/drag-drop.service';
 import { ShellManager } from './shell-manager.service';
+import { ShellSplitterDragService } from './services/splitter-drag.service';
 import { DockZone } from '../core/models/dock-zone-assignment.model';
 import { LayoutSplittablePanelComponent } from './components/layout-splittable-panel/layout-splittable-panel.component';
 import { ShellTab } from './contracts/ShellTab';
@@ -95,6 +96,7 @@ export class ShellComponent implements OnInit, AfterViewInit {
   private readonly renderer = inject(Renderer2);
   private readonly dragDropService = inject(DragDropService);
   private readonly shellManager = inject(ShellManager);
+  private readonly splitterDragService = inject(ShellSplitterDragService);
   readonly DockZone = DockZone;
 
   /** Reference to the shell-root div for direct CSS-var updates during drag. */
@@ -111,19 +113,6 @@ export class ShellComponent implements OnInit, AfterViewInit {
   // ── Splitter drag state (local, not committed to NgRx during drag) ──────────
   _committedBottomHeight = 200;
   _committedSecondaryWidth = 300;
-
-  private _bottomDragActive = false;
-  private _bottomDragStartY = 0;
-  private _bottomDragStartHeight = 0;
-
-  private _secondaryDragActive = false;
-  private _secondaryDragStartX = 0;
-  private _secondaryDragStartWidth = 0;
-
-  /** Draft height during bottom splitter drag (null = use committed NgRx value). */
-  private readonly _draftBottomHeight$ = new BehaviorSubject<number | null>(null);
-  /** Draft width during secondary splitter drag (null = use committed NgRx value). */
-  private readonly _draftSecondaryWidth$ = new BehaviorSubject<number | null>(null);
 
   /** Controls visibility of the tab-add modal dialog. */
   showTabAddModal = false;
@@ -186,7 +175,7 @@ export class ShellComponent implements OnInit, AfterViewInit {
   readonly shellBottomPanelHeightPx$ = combineLatest([
     this.bottomPanelVisible$,
     this.bottomPanelHeight$,
-    this._draftBottomHeight$,
+    this.splitterDragService.draftBottomHeight$,
   ]).pipe(
     map(([visible, committed, draft]) =>
       visible ? `${draft ?? committed}px` : '0px'
@@ -200,7 +189,7 @@ export class ShellComponent implements OnInit, AfterViewInit {
   readonly shellSecondaryPanelWidthPx$ = combineLatest([
     this.secondaryPanelVisible$,
     this.secondaryPanelWidth$,
-    this._draftSecondaryWidth$,
+    this.splitterDragService.draftSecondaryWidth$,
   ]).pipe(
     map(([visible, committed, draft]) =>
       visible ? `${draft ?? committed}px` : '0px'
@@ -358,6 +347,18 @@ export class ShellComponent implements OnInit, AfterViewInit {
     this._registerDropZones();
     this._setupEscapeKeyHandler();
 
+    // Subscribe to splitter drag service end events to commit dimensions to NgRx
+    this.splitterDragService.onBottomDragEnd$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((height) => {
+        this.store.dispatch(setBottomPanelHeight({ height }));
+      });
+
+    this.splitterDragService.onSecondaryDragEnd$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((width) => {
+        this.store.dispatch(setSecondaryPanelWidth({ width }));
+      });
   }
 
   // ---------------------------------------------------------------------------
@@ -473,68 +474,38 @@ export class ShellComponent implements OnInit, AfterViewInit {
     }
   }
 
-  // ── Bottom splitter pointer events ────────────────────────────────────────
+  // ── Splitter pointer event handlers — delegate to ShellSplitterDragService ────────────
 
   onBottomSplitterPointerDown(event: PointerEvent): void {
-    (event.target as HTMLElement).setPointerCapture?.(event.pointerId);
-    event.preventDefault?.();
-    this._bottomDragActive = true;
-    this._bottomDragStartY = event.clientY;
-    this._bottomDragStartHeight = this._committedBottomHeight;
+    this.splitterDragService.onBottomSplitterPointerDown(event, this._committedBottomHeight);
   }
 
   onBottomSplitterPointerMove(event: PointerEvent): void {
-    if (!this._bottomDragActive) return;
-    const delta = this._bottomDragStartY - event.clientY;
-    const draft = Math.min(BOTTOM_PANEL_HEIGHT_MAX, Math.max(BOTTOM_PANEL_HEIGHT_MIN, Math.round(this._bottomDragStartHeight + delta)));
-    this._draftBottomHeight$.next(draft);
+    this.splitterDragService.onBottomSplitterPointerMove(event);
   }
 
   onBottomSplitterPointerUp(event: PointerEvent): void {
-    if (!this._bottomDragActive) return;
-    this._bottomDragActive = false;
-    const delta = this._bottomDragStartY - event.clientY;
-    const committed = Math.min(BOTTOM_PANEL_HEIGHT_MAX, Math.max(BOTTOM_PANEL_HEIGHT_MIN, Math.round(this._bottomDragStartHeight + delta)));
-    this._draftBottomHeight$.next(null);
-    this.store.dispatch(setBottomPanelHeight({ height: committed }));
+    this.splitterDragService.onBottomSplitterPointerUp(event);
   }
 
-  onBottomSplitterPointerCancel(_event: PointerEvent): void {
-    if (!this._bottomDragActive) return;
-    this._bottomDragActive = false;
-    this._draftBottomHeight$.next(null);
+  onBottomSplitterPointerCancel(event: PointerEvent): void {
+    this.splitterDragService.onBottomSplitterPointerCancel(event);
   }
-
-  // ── Secondary splitter pointer events ─────────────────────────────────────
 
   onSecondarySplitterPointerDown(event: PointerEvent): void {
-    (event.target as HTMLElement).setPointerCapture?.(event.pointerId);
-    event.preventDefault?.();
-    this._secondaryDragActive = true;
-    this._secondaryDragStartX = event.clientX;
-    this._secondaryDragStartWidth = this._committedSecondaryWidth;
+    this.splitterDragService.onSecondarySplitterPointerDown(event, this._committedSecondaryWidth);
   }
 
   onSecondarySplitterPointerMove(event: PointerEvent): void {
-    if (!this._secondaryDragActive) return;
-    const delta = this._secondaryDragStartX - event.clientX;
-    const draft = Math.min(SECONDARY_PANEL_WIDTH_MAX, Math.max(SECONDARY_PANEL_WIDTH_MIN, Math.round(this._secondaryDragStartWidth + delta)));
-    this._draftSecondaryWidth$.next(draft);
+    this.splitterDragService.onSecondarySplitterPointerMove(event);
   }
 
   onSecondarySplitterPointerUp(event: PointerEvent): void {
-    if (!this._secondaryDragActive) return;
-    this._secondaryDragActive = false;
-    const delta = this._secondaryDragStartX - event.clientX;
-    const committed = Math.min(SECONDARY_PANEL_WIDTH_MAX, Math.max(SECONDARY_PANEL_WIDTH_MIN, Math.round(this._secondaryDragStartWidth + delta)));
-    this._draftSecondaryWidth$.next(null);
-    this.store.dispatch(setSecondaryPanelWidth({ width: committed }));
+    this.splitterDragService.onSecondarySplitterPointerUp(event);
   }
 
-  onSecondarySplitterPointerCancel(_event: PointerEvent): void {
-    if (!this._secondaryDragActive) return;
-    this._secondaryDragActive = false;
-    this._draftSecondaryWidth$.next(null);
+  onSecondarySplitterPointerCancel(event: PointerEvent): void {
+    this.splitterDragService.onSecondarySplitterPointerCancel(event);
   }
 
   /**
