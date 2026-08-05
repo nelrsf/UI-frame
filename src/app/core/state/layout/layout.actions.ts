@@ -1,5 +1,6 @@
 import { createAction, props } from '@ngrx/store';
 import { LayoutSplittableRegionModel } from '../../../shell/models/layout-splittable-region.model';
+import { DockZone } from '../../models/dock-zone-assignment.model';
 
 /**
  * Toggles the sidebar content-panel visibility (show ↔ hide).
@@ -113,3 +114,21 @@ export const setSplitPaneSize = createAction(
   '[Layout] Set Split Pane Size',
   props<{ paneId: string; size: number }>()
 );
+
+// Zone Resize Actions
+export const startZoneResize = createAction(
+  '[Layout] Start Zone Resize',
+  props<{ zone: DockZone; direction: 'horizontal' | 'vertical'; initialDimension: number }>()
+);
+
+export const draftZoneDimension = createAction(
+  '[Layout] Draft Zone Dimension',
+  props<{ zone: DockZone; draftDimension: number }>()
+);
+
+export const commitZoneDimension = createAction(
+  '[Layout] Commit Zone Dimension',
+  props<{ zone: DockZone; committedDimension: number }>()
+);
+
+export const cancelZoneResize = createAction('[Layout] Cancel Zone Resize');

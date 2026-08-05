@@ -20,17 +20,17 @@ import { createAction, props } from '@ngrx/store';
 // Zone Resize Actions
 export const startZoneResize = createAction(
   '[Layout] Start Zone Resize',
-  props<{ zoneId: string; direction: 'horizontal' | 'vertical'; initialDimension: number }>()
+  props<{ zone: DockZone; direction: 'horizontal' | 'vertical'; initialDimension: number }>()
 );
 
 export const draftZoneDimension = createAction(
   '[Layout] Draft Zone Dimension',
-  props<{ zoneId: string; draftDimension: number }>()
+  props<{ zone: DockZone; draftDimension: number }>()
 );
 
 export const commitZoneDimension = createAction(
   '[Layout] Commit Zone Dimension',
-  props<{ zoneId: string; committedDimension: number }>()
+  props<{ zone: DockZone; committedDimension: number }>()
 );
 
 export const cancelZoneResize = createAction('[Layout] Cancel Zone Resize');
@@ -53,11 +53,11 @@ export interface LayoutState {
   readonly splitPanelLayout: LayoutSplittableRegionModel | null;
   
   // New state for internal zones
-  readonly internalZoneDimensions: Map<string, ZoneDimensionState>;
+  readonly internalZoneDimensions: Map<DockZone, ZoneDimensionState>;
 }
 
 export interface ZoneDimensionState {
-  zoneId: string;
+  zone: DockZone;
   width: number;
   height: number;
   minWidth: number;
@@ -77,7 +77,7 @@ export const initialLayoutState: LayoutState = {
   secondaryPanelWidth: SECONDARY_PANEL_WIDTH_DEFAULT,
   splitPanelLayout: null,
   // New internal zone dimensions state
-  internalZoneDimensions: new Map<string, ZoneDimensionState>(),
+  internalZoneDimensions: new Map<DockZone, ZoneDimensionState>(),
 };
 ```
 
@@ -91,9 +91,9 @@ export const layoutReducer = createReducer(
   // Existing reducers...
   
   // Zone Resize Reducers
-  on(LayoutActions.startZoneResize, (state, { zoneId, direction, initialDimension }) => {
-    const currentDimension = state.internalZoneDimensions.get(zoneId) || {
-      zoneId,
+  on(LayoutActions.startZoneResize, (state, { zone, direction, initialDimension }) => {
+    const currentDimension = state.internalZoneDimensions.get(zone) || {
+      zone,
       width: 200,
       height: 200,
       minWidth: 100,
@@ -102,15 +102,15 @@ export const layoutReducer = createReducer(
     
     return {
       ...state,
-      internalZoneDimensions: new Map(state.internalZoneDimensions).set(zoneId, {
+      internalZoneDimensions: new Map(state.internalZoneDimensions).set(zone, {
         ...currentDimension,
         [direction === 'horizontal' ? 'width' : 'height']: initialDimension,
       }),
     };
   }),
   
-  on(LayoutActions.draftZoneDimension, (state, { zoneId, draftDimension }) => {
-    const currentDimension = state.internalZoneDimensions.get(zoneId);
+  on(LayoutActions.draftZoneDimension, (state, { zone, draftDimension }) => {
+    const currentDimension = state.internalZoneDimensions.get(zone);
     if (!currentDimension) return state;
     
     const isHorizontal = currentDimension.width !== undefined;
@@ -120,20 +120,20 @@ export const layoutReducer = createReducer(
     
     return {
       ...state,
-      internalZoneDimensions: new Map(state.internalZoneDimensions).set(zoneId, {
+      internalZoneDimensions: new Map(state.internalZoneDimensions).set(zone, {
         ...currentDimension,
         [isHorizontal ? 'width' : 'height']: newDimension,
       }),
     };
   }),
   
-  on(LayoutActions.commitZoneDimension, (state, { zoneId, committedDimension }) => {
-    const currentDimension = state.internalZoneDimensions.get(zoneId);
+  on(LayoutActions.commitZoneDimension, (state, { zone, committedDimension }) => {
+    const currentDimension = state.internalZoneDimensions.get(zone);
     if (!currentDimension) return state;
     
     return {
       ...state,
-      internalZoneDimensions: new Map(state.internalZoneDimensions).set(zoneId, {
+      internalZoneDimensions: new Map(state.internalZoneDimensions).set(zone, {
         ...currentDimension,
         width: currentDimension.width !== undefined ? committedDimension : currentDimension.width,
         height: currentDimension.height !== undefined ? committedDimension : currentDimension.height,
@@ -176,7 +176,7 @@ export class ShellSplitterDragService implements OnDestroy {
   private _internalZoneDragActive = false;
   private _internalZoneDragStartPos = 0;
   private _internalZoneDragStartDimension = 0;
-  private _internalZoneDragZoneId = '';
+  private _internalZoneDragZone: DockZone | null = null;
   private _internalZoneDragDirection: 'horizontal' | 'vertical' | null = null;
 
   private readonly _draftInternalZoneDimension$ = new BehaviorSubject<ZoneDraftDimension | null>(null);
@@ -188,13 +188,13 @@ export class ShellSplitterDragService implements OnDestroy {
     this._onInternalZoneDragEnd$.asObservable();
 
   interface ZoneDraftDimension {
-    zoneId: string;
+    zone: DockZone;
     direction: 'horizontal' | 'vertical';
     draftDimension: number;
   }
 
   interface ZoneDimensionCommit {
-    zoneId: string;
+    zone: DockZone;
     direction: 'horizontal' | 'vertical';
     committedDimension: number;
   }
@@ -203,13 +203,13 @@ export class ShellSplitterDragService implements OnDestroy {
 
   // ── Internal zone pointer events ────────────────────────────────────
 
-  onInternalZonePointerDown(event: PointerEvent, zoneId: string, direction: 'horizontal' | 'vertical', initialDimension: number): void {
+  onInternalZonePointerDown(event: PointerEvent, zone: DockZone, direction: 'horizontal' | 'vertical', initialDimension: number): void {
     (event.target as HTMLElement).setPointerCapture?.(event.pointerId);
     event.preventDefault?.();
     this._internalZoneDragActive = true;
     this._internalZoneDragStartPos = direction === 'horizontal' ? event.clientX : event.clientY;
     this._internalZoneDragStartDimension = initialDimension;
-    this._internalZoneDragZoneId = zoneId;
+    this._internalZoneDragZone = zone;
     this._internalZoneDragDirection = direction;
   }
 
@@ -221,7 +221,7 @@ export class ShellSplitterDragService implements OnDestroy {
     const draft = Math.min(1000, Math.max(100, Math.round(this._internalZoneDragStartDimension + delta)));
     
     this._draftInternalZoneDimension$.next({
-      zoneId: this._internalZoneDragZoneId,
+      zone: this._internalZoneDragZone!,
       direction: this._internalZoneDragDirection,
       draftDimension: draft,
     });
@@ -237,7 +237,7 @@ export class ShellSplitterDragService implements OnDestroy {
     
     this._draftInternalZoneDimension$.next(null);
     this._onInternalZoneDragEnd$.next({
-      zoneId: this._internalZoneDragZoneId,
+      zone: this._internalZoneDragZone!,
       direction: this._internalZoneDragDirection!,
       committedDimension: committed,
     });
@@ -346,7 +346,7 @@ export class LayoutSplittablePanelComponent implements OnInit, AfterViewInit {
     rows: number = 0;
 
     // Draft dimension state for CSS grid
-    _draftZoneDimension: { zoneId: string; dimension: number } | null = null;
+    _draftZoneDimension: { zone: DockZone; dimension: number } | null = null;
 
     get rowsArray() {
         return Array.from({ length: this.rows }, (_, i) => i);
@@ -367,7 +367,7 @@ export class LayoutSplittablePanelComponent implements OnInit, AfterViewInit {
             .subscribe((draft) => {
                 if (draft) {
                     this._draftZoneDimension = {
-                        zoneId: draft.zoneId,
+                        zone: draft.zone,
                         dimension: draft.draftDimension,
                     };
                 } else {
@@ -378,7 +378,7 @@ export class LayoutSplittablePanelComponent implements OnInit, AfterViewInit {
         this.splitterDragService.onInternalZoneDragEnd$
             .subscribe((commit) => {
                 this.store.dispatch(commitZoneDimension({
-                    zoneId: commit.zoneId,
+                    zone: commit.zone,
                     committedDimension: commit.committedDimension,
                 }));
             });
@@ -386,9 +386,9 @@ export class LayoutSplittablePanelComponent implements OnInit, AfterViewInit {
 
     // ... existing methods ...
 
-    onSplitterPointerDown(event: PointerEvent, zoneId: string, direction: 'horizontal' | 'vertical', initialDimension: number): void {
-        this.store.dispatch(startZoneResize({ zoneId, direction, initialDimension }));
-        this.splitterDragService.onInternalZonePointerDown(event, zoneId, direction, initialDimension);
+    onSplitterPointerDown(event: PointerEvent, zone: DockZone, direction: 'horizontal' | 'vertical', initialDimension: number): void {
+        this.store.dispatch(startZoneResize({ zone, direction, initialDimension }));
+        this.splitterDragService.onInternalZonePointerDown(event, zone, direction, initialDimension);
     }
 
     onSplitterPointerMove(event: PointerEvent): void {
