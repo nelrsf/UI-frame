@@ -2,6 +2,7 @@ import {
   layoutReducer,
   initialLayoutState,
   LayoutState,
+  ZoneDimensionState,
   SIDEBAR_WIDTH_MIN,
   SIDEBAR_WIDTH_MAX,
   SIDEBAR_WIDTH_DEFAULT,
@@ -12,6 +13,7 @@ import {
   SECONDARY_PANEL_WIDTH_MAX,
   SECONDARY_PANEL_WIDTH_DEFAULT,
 } from './layout.reducer';
+import { DockZone } from '../../../core/models/dock-zone-assignment.model';
 import {
   toggleSidebar,
   setSidebarWidth,
@@ -21,6 +23,10 @@ import {
   toggleSecondaryPanel,
   setSecondaryPanelWidth,
   restoreLayout,
+  startZoneResize,
+  draftZoneDimension,
+  commitZoneDimension,
+  cancelZoneResize,
 } from './layout.actions';
 import {
   selectSidebarVisible,
@@ -347,6 +353,7 @@ describe('layout selectors', () => {
       secondaryPanelVisible: true,
       secondaryPanelWidth: 350,
       splitPanelLayout: null,
+      internalZoneDimensions: new Map<DockZone, ZoneDimensionState>(),
     },
   };
 

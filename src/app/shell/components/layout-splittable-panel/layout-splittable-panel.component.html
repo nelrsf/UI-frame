@@ -27,18 +27,36 @@
         @for (row of rowsArray; track $index; let rowIndex = $index) {
         <div class="layout-splittable-row-wrapper" [class.hidden]="!isRowVisible($index)">
             @if($index > 0){
-            <app-shell-splitter-handle class="horizontal-splitter" [variant]="'vertical'" testId="splitter-{{$index}}"
-                ariaLabel="Resize panel {{$index}}" [ariaOrientation]="direction">
+            <app-shell-splitter-handle 
+                class="horizontal-splitter" 
+                [variant]="'vertical'" 
+                testId="splitter-{{$index}}"
+                ariaLabel="Resize panel {{$index}}" 
+                [ariaOrientation]="direction"
+                (pointerDown)="onSplitterPointerDown($event, getZoneForRow(rowIndex), 'vertical', getRowHeight(rowIndex))"
+                (pointerMove)="onSplitterPointerMove($event)"
+                (pointerUp)="onSplitterPointerUp($event)"
+                (pointerCancel)="onSplitterPointerCancel($event)">
             </app-shell-splitter-handle>
             }
             <div class="layout-splittable-row">
                 @for (panel of panelStates[rowIndex]; track panel) {
 
-                <div class="splittable-panel-region" [class.hidden]="!isPanelVisible(panel.zone)">
+                <div class="splittable-panel-region" [class.hidden]="!isPanelVisible(panel.zone)"
+                    [style.width]="_draftInternalZoneDimension?.zone === panel.zone && _draftInternalZoneDimension?.direction === 'horizontal' ? (_draftInternalZoneDimension?.draftDimension || 0) + 'px' : ''"
+                    [style.flex]="_draftInternalZoneDimension?.zone === panel.zone && _draftInternalZoneDimension?.direction === 'horizontal' ? '0 0 ' + (_draftInternalZoneDimension?.draftDimension || 0) + 'px' : '1'">
 
                     @if (hasPreviousColumnEnabled(panel)) {
-                    <app-shell-splitter-handle class="vertical-splitter" [variant]="'horizontal'"
-                        testId="splitter-{{$index}}" ariaLabel="Resize panel {{$index}}" [ariaOrientation]="direction">
+                    <app-shell-splitter-handle 
+                        class="vertical-splitter" 
+                        [variant]="'horizontal'"
+                        testId="splitter-{{$index}}" 
+                        ariaLabel="Resize panel {{$index}}" 
+                        [ariaOrientation]="direction"
+                        (pointerDown)="onSplitterPointerDown($event, panel.zone, 'horizontal', getColumnWidth(panel.column))"
+                        (pointerMove)="onSplitterPointerMove($event)"
+                        (pointerUp)="onSplitterPointerUp($event)"
+                        (pointerCancel)="onSplitterPointerCancel($event)">
                     </app-shell-splitter-handle>
                     }
 

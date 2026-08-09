@@ -165,101 +165,142 @@ export const layoutReducer = createReducer(
 ```typescript
 import { Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Subject, Observable } from 'rxjs';
+import {
+  BOTTOM_PANEL_HEIGHT_MIN,
+  BOTTOM_PANEL_HEIGHT_MAX,
+  SECONDARY_PANEL_WIDTH_MIN,
+  SECONDARY_PANEL_WIDTH_MAX,
+} from '../../core/state/layout/layout.reducer';
+import {
+  DragOperation,
+  SimpleDragDraft,
+  SimpleDragEnd,
+  InternalZoneDragDraft,
+  InternalZoneDragEnd,
+  DragDirection,
+} from './splitter-drag-operation';
+import { DockZone } from '../../core/models/dock-zone-assignment.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ShellSplitterDragService implements OnDestroy {
-  // Existing bottom and secondary splitter drag state...
+  /** Draft height during bottom splitter drag (null = use committed NgRx value). */
+  private readonly _draftBottomHeight$ = new BehaviorSubject<number | null>(null);
+  /** Draft width during secondary splitter drag (null = use committed NgRx value). */
+  private readonly _draftSecondaryWidth$ = new BehaviorSubject<number | null>(null);
   
-  // ── Internal zone drag state ────────────────────────────────────────
-  private _internalZoneDragActive = false;
-  private _internalZoneDragStartPos = 0;
-  private _internalZoneDragStartDimension = 0;
-  private _internalZoneDragZone: DockZone | null = null;
-  private _internalZoneDragDirection: 'horizontal' | 'vertical' | null = null;
+  /** Draft dimension during internal zone drag */
+  private readonly _draftInternalZoneDimension$ = new BehaviorSubject<InternalZoneDragDraft | null>(null);
 
-  private readonly _draftInternalZoneDimension$ = new BehaviorSubject<ZoneDraftDimension | null>(null);
-  readonly draftInternalZoneDimension$: Observable<ZoneDraftDimension | null> = 
-    this._draftInternalZoneDimension$.asObservable();
+  readonly draftBottomHeight$: Observable<number | null> = this._draftBottomHeight$.asObservable();
+  readonly draftSecondaryWidth$: Observable<number | null> = this._draftSecondaryWidth$.asObservable();
+  readonly draftInternalZoneDimension$: Observable<InternalZoneDragDraft | null> = this._draftInternalZoneDimension$.asObservable();
 
-  private readonly _onInternalZoneDragEnd$ = new Subject<ZoneDimensionCommit>();
-  readonly onInternalZoneDragEnd$: Observable<ZoneDimensionCommit> = 
-    this._onInternalZoneDragEnd$.asObservable();
+  private readonly _onBottomDragEnd$ = new Subject<number>();
+  readonly onBottomDragEnd$: Observable<number> = this._onBottomDragEnd$.asObservable();
 
-  interface ZoneDraftDimension {
-    zone: DockZone;
-    direction: 'horizontal' | 'vertical';
-    draftDimension: number;
+  private readonly _onSecondaryDragEnd$ = new Subject<number>();
+  readonly onSecondaryDragEnd$: Observable<number> = this._onSecondaryDragEnd$.asObservable();
+  
+  private readonly _onInternalZoneDragEnd$ = new Subject<InternalZoneDragEnd>();
+  readonly onInternalZoneDragEnd$: Observable<InternalZoneDragEnd> = this._onInternalZoneDragEnd$.asObservable();
+
+  // Simple drag operations (bottom & secondary panels)
+  private readonly _bottomDragOp = new DragOperation<number, number>(
+    BOTTOM_PANEL_HEIGHT_MIN,
+    BOTTOM_PANEL_HEIGHT_MAX,
+    this._draftBottomHeight$,
+    this._onBottomDragEnd$,
+    'vertical' // vertical for bottom panel
+  );
+
+  private readonly _secondaryDragOp = new DragOperation<number, number>(
+    SECONDARY_PANEL_WIDTH_MIN,
+    SECONDARY_PANEL_WIDTH_MAX,
+    this._draftSecondaryWidth$,
+    this._onSecondaryDragEnd$,
+    'horizontal' // horizontal for secondary panel
+  );
+
+  // Internal zone drag operation (dynamic direction)
+  private readonly _internalZoneDragOp = new DragOperation<
+    InternalZoneDragDraft,
+    InternalZoneDragEnd
+  >(
+    100, // minDimension
+    1000, // maxDimension
+    this._draftInternalZoneDimension$,
+    this._onInternalZoneDragEnd$,
+    undefined, // dynamic direction for internal zones
+    true // isInternalZoneDrag
+  );
+
+  ngOnDestroy(): void {
+    this._bottomDragOp.complete();
+    this._secondaryDragOp.complete();
+    this._internalZoneDragOp.complete();
   }
 
-  interface ZoneDimensionCommit {
-    zone: DockZone;
-    direction: 'horizontal' | 'vertical';
-    committedDimension: number;
+  // ── Bottom splitter pointer events ────────────────────────────────────────
+
+  onBottomSplitterPointerDown(event: PointerEvent, committedHeight: number): void {
+    this._bottomDragOp.onPointerDown(event, committedHeight);
   }
 
-  // ... existing methods ...
+  onBottomSplitterPointerMove(event: PointerEvent): void {
+    this._bottomDragOp.onPointerMove(event);
+  }
 
-  // ── Internal zone pointer events ────────────────────────────────────
+  onBottomSplitterPointerUp(event: PointerEvent): void {
+    this._bottomDragOp.onPointerUp(event);
+  }
 
-  onInternalZonePointerDown(event: PointerEvent, zone: DockZone, direction: 'horizontal' | 'vertical', initialDimension: number): void {
-    (event.target as HTMLElement).setPointerCapture?.(event.pointerId);
-    event.preventDefault?.();
-    this._internalZoneDragActive = true;
-    this._internalZoneDragStartPos = direction === 'horizontal' ? event.clientX : event.clientY;
-    this._internalZoneDragStartDimension = initialDimension;
-    this._internalZoneDragZone = zone;
-    this._internalZoneDragDirection = direction;
+  onBottomSplitterPointerCancel(_event: PointerEvent): void {
+    this._bottomDragOp.onPointerCancel(_event);
+  }
+
+  // ── Secondary splitter pointer events ─────────────────────────────────────
+
+  onSecondarySplitterPointerDown(event: PointerEvent, committedWidth: number): void {
+    this._secondaryDragOp.onPointerDown(event, committedWidth);
+  }
+
+  onSecondarySplitterPointerMove(event: PointerEvent): void {
+    this._secondaryDragOp.onPointerMove(event);
+  }
+
+  onSecondarySplitterPointerUp(event: PointerEvent): void {
+    this._secondaryDragOp.onPointerUp(event);
+  }
+
+  onSecondarySplitterPointerCancel(_event: PointerEvent): void {
+    this._secondaryDragOp.onPointerCancel(_event);
+  }
+
+  // ── Internal zone splitter pointer events ─────────────────────────────────
+
+  onInternalZonePointerDown(event: PointerEvent, zone: DockZone, direction: DragDirection, initialDimension: number): void {
+    this._internalZoneDragOp.onPointerDown(event, initialDimension, zone, direction);
   }
 
   onInternalZonePointerMove(event: PointerEvent): void {
-    if (!this._internalZoneDragActive || !this._internalZoneDragDirection) return;
-    
-    const pos = this._internalZoneDragDirection === 'horizontal' ? event.clientX : event.clientY;
-    const delta = this._internalZoneDragStartPos - pos;
-    const draft = Math.min(1000, Math.max(100, Math.round(this._internalZoneDragStartDimension + delta)));
-    
-    this._draftInternalZoneDimension$.next({
-      zone: this._internalZoneDragZone!,
-      direction: this._internalZoneDragDirection,
-      draftDimension: draft,
-    });
+    this._internalZoneDragOp.onPointerMove(event);
   }
 
   onInternalZonePointerUp(event: PointerEvent): void {
-    if (!this._internalZoneDragActive) return;
-    this._internalZoneDragActive = false;
-    
-    const pos = this._internalZoneDragDirection === 'horizontal' ? event.clientX : event.clientY;
-    const delta = this._internalZoneDragStartPos - pos;
-    const committed = Math.min(1000, Math.max(100, Math.round(this._internalZoneDragStartDimension + delta)));
-    
-    this._draftInternalZoneDimension$.next(null);
-    this._onInternalZoneDragEnd$.next({
-      zone: this._internalZoneDragZone!,
-      direction: this._internalZoneDragDirection!,
-      committedDimension: committed,
-    });
+    this._internalZoneDragOp.onPointerUp(event);
   }
 
   onInternalZonePointerCancel(_event: PointerEvent): void {
-    if (!this._internalZoneDragActive) return;
-    this._internalZoneDragActive = false;
-    this._draftInternalZoneDimension$.next(null);
-  }
-
-  ngOnDestroy(): void {
-    // ... existing completions ...
-    this._draftInternalZoneDimension$.complete();
-    this._onInternalZoneDragEnd$.complete();
+    this._internalZoneDragOp.onPointerCancel(_event);
   }
 }
 ```
 
 ---
 
-## Step 3: Update LayoutSplittablePanelComponent for CSS Grid
+## Step 3: Update LayoutSplittablePanelComponent for Internal Zone Resize
 
 ### 3.1 Update Component State
 
@@ -288,6 +329,8 @@ import {
     commitZoneDimension,
     cancelZoneResize
 } from '../../../core/state/layout/layout.actions';
+import { ShellSplitterDragService } from '../../services/splitter-drag.service';
+import { InternalZoneDragDraft, InternalZoneDragEnd, DragDirection } from '../../services/splitter-drag-operation';
 
 interface PanelState {
     visible: boolean;
@@ -345,8 +388,8 @@ export class LayoutSplittablePanelComponent implements OnInit, AfterViewInit {
     columns: number = 0;
     rows: number = 0;
 
-    // Draft dimension state for CSS grid
-    _draftZoneDimension: { zone: DockZone; dimension: number } | null = null;
+    // Draft dimension state for internal zone resize
+    _draftInternalZoneDimension: InternalZoneDragDraft | null = null;
 
     get rowsArray() {
         return Array.from({ length: this.rows }, (_, i) => i);
@@ -365,14 +408,7 @@ export class LayoutSplittablePanelComponent implements OnInit, AfterViewInit {
     private subscribeToDraftDimensions(): void {
         this.splitterDragService.draftInternalZoneDimension$
             .subscribe((draft) => {
-                if (draft) {
-                    this._draftZoneDimension = {
-                        zone: draft.zone,
-                        dimension: draft.draftDimension,
-                    };
-                } else {
-                    this._draftZoneDimension = null;
-                }
+                this._draftInternalZoneDimension = draft;
             });
 
         this.splitterDragService.onInternalZoneDragEnd$
@@ -386,7 +422,7 @@ export class LayoutSplittablePanelComponent implements OnInit, AfterViewInit {
 
     // ... existing methods ...
 
-    onSplitterPointerDown(event: PointerEvent, zone: DockZone, direction: 'horizontal' | 'vertical', initialDimension: number): void {
+    onSplitterPointerDown(event: PointerEvent, zone: DockZone, direction: DragDirection, initialDimension: number): void {
         this.store.dispatch(startZoneResize({ zone, direction, initialDimension }));
         this.splitterDragService.onInternalZonePointerDown(event, zone, direction, initialDimension);
     }
@@ -408,98 +444,7 @@ export class LayoutSplittablePanelComponent implements OnInit, AfterViewInit {
 
 ---
 
-## Step 4: Update CSS Grid Layout Styles
-
-**File**: `src/app/shell/components/layout-splittable-panel/layout-splittable-panel.component.css`
-
-```css
-:host {
-    overflow: hidden!important;
-}
-
-.splitter-container {
-    height: 100%;
-    width: 100%;
-    display: inline-flex;
-    flex-direction: column;
-}
-
-.layout-splittable-panel {
-    width: 100%;
-    flex: 1;
-    display: inline-flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-/* CSS Grid Container for Internal Zones */
-.layout-splittable-grid-container {
-    display: grid;
-    gap: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-}
-
-/* Horizontal direction (columns) */
-.layout-splittable-grid-horizontal {
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-    grid-auto-columns: 1fr;
-}
-
-/* Vertical direction (rows) */
-.layout-splittable-grid-vertical {
-    grid-template-rows: repeat(auto-fit, minmax(100px, 1fr));
-    grid-auto-rows: 1fr;
-}
-
-/* Active resize state with draft dimensions */
-.layout-splittable-grid-resizing {
-    grid-template-columns: var(--zone-1-width, 1fr) var(--zone-2-width, 1fr);
-    grid-template-rows: var(--zone-1-height, 1fr) var(--zone-2-height, 1fr);
-}
-
-.layout-splittable-row {
-    display: inline-flex;
-    flex-direction: row;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-}
-
-.layout-splittable-row-wrapper {
-    display: inline-flex;
-    flex-direction: column;
-    flex: 1;
-    overflow: hidden;
-}
-
-.splittable-panel-region {
-    display: inline-flex; 
-    flex: 1;  
-    overflow: auto;
-}
-
-.hidden {
-    display: none!important;
-}
-
-.vertical-splitter {
-    height: 100%;
-    width: 5px;
-    cursor: ew-resize;
-}
-
-.horizontal-splitter {
-    height: 5px;
-    width: 100%;
-    cursor: ns-resize;
-}
-```
-
----
-
-## Step 5: Update Template with CSS Grid Bindings
+## Step 4: Update Template with Internal Zone Pointer Events
 
 **File**: `src/app/shell/components/layout-splittable-panel/layout-splittable-panel.component.html`
 
@@ -528,16 +473,7 @@ export class LayoutSplittablePanelComponent implements OnInit, AfterViewInit {
         }
     </div>
 
-    <!-- CSS Grid Container -->
-    <div 
-        class="layout-splittable-grid-container"
-        [ngClass]="[
-            'layout-splittable-grid-' + direction,
-            _draftZoneDimension ? 'layout-splittable-grid-resizing' : ''
-        ]"
-        [style.--zone-1-width]="_draftZoneDimension?.dimension ? _draftZoneDimension.dimension + 'px' : '1fr'"
-        [style.--zone-2-width]="_draftZoneDimension?.dimension ? '1fr' : '1fr'"
-    >
+    <div class="layout-splittable-panel">
         @for (row of rowsArray; track $index; let rowIndex = $index) {
         <div class="layout-splittable-row-wrapper" [class.hidden]="!isRowVisible($index)">
             @if($index > 0){
@@ -556,7 +492,9 @@ export class LayoutSplittablePanelComponent implements OnInit, AfterViewInit {
             <div class="layout-splittable-row">
                 @for (panel of panelStates[rowIndex]; track panel) {
 
-                <div class="splittable-panel-region" [class.hidden]="!isPanelVisible(panel.zone)">
+                <div class="splittable-panel-region" [class.hidden]="!isPanelVisible(panel.zone)"
+                    [style.width]="_draftInternalZoneDimension?.zone === panel.zone && _draftInternalZoneDimension?.direction === 'horizontal' ? _draftInternalZoneDimension.draftDimension + 'px' : ''"
+                    [style.flex]="_draftInternalZoneDimension?.zone === panel.zone && _draftInternalZoneDimension?.direction === 'horizontal' ? '0 0 ' + _draftInternalZoneDimension.draftDimension + 'px' : '1'">
 
                     @if (hasPreviousColumnEnabled(panel)) {
                     <app-shell-splitter-handle 
@@ -606,4 +544,5 @@ export class LayoutSplittablePanelComponent implements OnInit, AfterViewInit {
 ### Performance Tests
 - Verify >30 FPS during rapid drag operations
 - Verify no visual stuttering or performance issues
-- Verify debouncing/throttling prevents excessive state updates
+- Verify resize operations respect minimum and maximum size constraints (100px minimum, 1000px maximum)
+- Verify dynamic layout with flexbox correctly applies draft dimensions to the specific zone being resized

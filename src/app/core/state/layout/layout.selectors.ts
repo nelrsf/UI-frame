@@ -63,3 +63,11 @@ export const selectSplitLayout = createSelector(
     return state.splitPanelLayout;
   }
 );
+
+/**
+ * Selects the internal zone dimensions for CSS grid-based resize.
+ */
+export const selectInternalZoneDimensions = createSelector(
+  selectLayoutState,
+  (state) => state.internalZoneDimensions
+);

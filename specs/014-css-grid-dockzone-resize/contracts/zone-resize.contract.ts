@@ -1,66 +1,90 @@
 /**
- * Contract: Zone Resize Operations
+ * Contract: Zone Resize Operations via DragOperation
  * 
- * This contract defines the interface for zone resize operations within the layout system.
+ * This contract defines the interface for zone resize operations within the layout system
+ * using the unified DragOperation class.
  */
 
-import { Observable } from 'rxjs';
+import { Observable, Subject, BehaviorSubject } from 'rxjs';
 
 /**
- * Interface for resize interaction events
+ * Drag direction enumeration for internal zones
  */
-export interface ResizeInteraction {
+export type DragDirection = 'horizontal' | 'vertical';
+
+/**
+ * Type for simple drag draft (bottom & secondary panels)
+ */
+export type SimpleDragDraft = number | null;
+
+/**
+ * Type for simple drag end (bottom & secondary panels)
+ */
+export type SimpleDragEnd = number;
+
+/**
+ * Interface for internal zone drag draft state
+ */
+export interface InternalZoneDragDraft {
   /** Zone identifier being resized */
-  zoneId: string;
+  zone: string;
   /** Direction of resize: 'horizontal' or 'vertical' */
-  direction: 'horizontal' | 'vertical';
+  direction: DragDirection;
   /** Current dimension value during drag */
   draftDimension: number;
+}
+
+/**
+ * Interface for internal zone drag end state
+ */
+export interface InternalZoneDragEnd {
+  /** Zone identifier being resized */
+  zone: string;
+  /** Direction of resize: 'horizontal' or 'vertical' */
+  direction: DragDirection;
   /** Final committed dimension value */
-  committedDimension?: number;
+  committedDimension: number;
 }
 
 /**
- * Interface for zone dimension state
+ * Interface for zone resize drag service
  */
-export interface ZoneDimensionState {
-  /** Zone identifier */
-  zoneId: string;
-  /** Current width in pixels */
-  width: number;
-  /** Current height in pixels */
-  height: number;
-  /** Minimum width constraint (100px) */
-  minWidth: number;
-  /** Minimum height constraint (100px) */
-  minHeight: number;
-  /** Maximum width constraint */
-  maxWidth?: number;
-  /** Maximum height constraint */
-  maxHeight?: number;
-}
-
-/**
- * Interface for zone resize service
- */
-export interface IZoneResizeService {
-  /** Observable of draft dimensions during drag */
-  readonly draftDimensions$: Observable<ZoneDimensionState | null>;
+export interface IShellSplitterDragService {
+  /** Draft height during bottom splitter drag (null = use committed NgRx value) */
+  readonly draftBottomHeight$: Observable<number | null>;
   
-  /** Observable of committed dimensions after drag ends */
-  readonly onDimensionCommit$: Observable<ZoneDimensionState>;
+  /** Draft width during secondary splitter drag (null = use committed NgRx value) */
+  readonly draftSecondaryWidth$: Observable<number | null>;
   
-  /** Start drag operation for a zone */
-  startDrag(zoneId: string, direction: 'horizontal' | 'vertical', initialDimension: number): void;
+  /** Draft dimension during internal zone drag */
+  readonly draftInternalZoneDimension$: Observable<InternalZoneDragDraft | null>;
   
-  /** Handle pointer move event during drag */
-  onPointerMove(event: PointerEvent): void;
+  /** Observable of drag end events for bottom splitter */
+  readonly onBottomDragEnd$: Observable<number>;
   
-  /** Handle pointer up event (end drag) */
-  onPointerUp(event: PointerEvent): void;
+  /** Observable of drag end events for secondary splitter */
+  readonly onSecondaryDragEnd$: Observable<number>;
   
-  /** Handle pointer cancel event */
-  onPointerCancel(event: PointerEvent): void;
+  /** Observable of drag end events for internal zone drag */
+  readonly onInternalZoneDragEnd$: Observable<InternalZoneDragEnd>;
+  
+  // ── Bottom splitter pointer events ────────────────────────────────────────
+  onBottomSplitterPointerDown(event: PointerEvent, committedHeight: number): void;
+  onBottomSplitterPointerMove(event: PointerEvent): void;
+  onBottomSplitterPointerUp(event: PointerEvent): void;
+  onBottomSplitterPointerCancel(event: PointerEvent): void;
+  
+  // ── Secondary splitter pointer events ─────────────────────────────────────
+  onSecondarySplitterPointerDown(event: PointerEvent, committedWidth: number): void;
+  onSecondarySplitterPointerMove(event: PointerEvent): void;
+  onSecondarySplitterPointerUp(event: PointerEvent): void;
+  onSecondarySplitterPointerCancel(event: PointerEvent): void;
+  
+  // ── Internal zone splitter pointer events ─────────────────────────────────
+  onInternalZonePointerDown(event: PointerEvent, zone: string, direction: DragDirection, initialDimension: number): void;
+  onInternalZonePointerMove(event: PointerEvent): void;
+  onInternalZonePointerUp(event: PointerEvent): void;
+  onInternalZonePointerCancel(event: PointerEvent): void;
 }
 
 /**
@@ -79,8 +103,8 @@ export enum ZoneResizeAction {
 export interface StartZoneResizeAction {
   type: ZoneResizeAction.START_ZONE_RESIZE;
   payload: {
-    zoneId: string;
-    direction: 'horizontal' | 'vertical';
+    zone: string;
+    direction: DragDirection;
     initialDimension: number;
   };
 }
@@ -91,7 +115,7 @@ export interface StartZoneResizeAction {
 export interface DraftZoneDimensionAction {
   type: ZoneResizeAction.DRAFT_ZONE_DIMENSION;
   payload: {
-    zoneId: string;
+    zone: string;
     draftDimension: number;
   };
 }
@@ -102,7 +126,7 @@ export interface DraftZoneDimensionAction {
 export interface CommitZoneDimensionAction {
   type: ZoneResizeAction.COMMIT_ZONE_DIMENSION;
   payload: {
-    zoneId: string;
+    zone: string;
     committedDimension: number;
   };
 }

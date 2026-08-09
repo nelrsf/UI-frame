@@ -133,20 +133,22 @@ export const layoutReducer = createReducer(
   })),
   // Zone Resize Reducers
   on(LayoutActions.startZoneResize, (state, { zone, direction, initialDimension }) => {
-    const currentDimension = state.internalZoneDimensions.get(zone) || {
+    const currentDimension = state.internalZoneDimensions.get(zone);
+    
+    const isHorizontal = direction === 'horizontal';
+    const initialState: ZoneDimensionState = {
       zone,
-      width: 200,
-      height: 200,
-      minWidth: 100,
-      minHeight: 100,
+      width: isHorizontal ? initialDimension : (currentDimension?.width ?? 0),
+      height: isHorizontal ? (currentDimension?.height ?? 0) : initialDimension,
+      minWidth: currentDimension?.minWidth ?? 100,
+      minHeight: currentDimension?.minHeight ?? 100,
+      maxWidth: currentDimension?.maxWidth,
+      maxHeight: currentDimension?.maxHeight,
     };
     
     return {
       ...state,
-      internalZoneDimensions: new Map(state.internalZoneDimensions).set(zone, {
-        ...currentDimension,
-        [direction === 'horizontal' ? 'width' : 'height']: initialDimension,
-      }),
+      internalZoneDimensions: new Map(state.internalZoneDimensions).set(zone, initialState),
     };
   }),
   

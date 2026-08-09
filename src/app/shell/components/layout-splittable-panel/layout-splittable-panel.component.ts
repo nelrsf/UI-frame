@@ -27,6 +27,13 @@ import {
     selectShellTabs,
     selectTab
 } from '../../../core/state/workspace';
+import {
+    startZoneResize,
+    commitZoneDimension,
+    cancelZoneResize
+} from '../../../core/state/layout/layout.actions';
+import { ShellSplitterDragService } from '../../services/splitter-drag.service';
+import { InternalZoneDragDraft, InternalZoneDragEnd, DragDirection } from '../../services/splitter-drag-operation';
 
 interface PanelState {
     visible: boolean;
@@ -62,6 +69,7 @@ export class LayoutSplittablePanelComponent
 
     private readonly store = inject(Store);
     private readonly dragDropService = inject(DragDropService);
+    readonly splitterDragService = inject(ShellSplitterDragService);
 
     readonly selectShellTabs$ = this.store.select(selectShellTabs);
     readonly selectActiveIds$ = this.store.select(selectActiveIds);
@@ -84,6 +92,9 @@ export class LayoutSplittablePanelComponent
     columns: number = 0;
     rows: number = 0;
 
+    // Draft dimension state for internal zone resize
+    _draftInternalZoneDimension: InternalZoneDragDraft | null = null;
+
     get rowsArray() {
         return Array.from({ length: this.rows }, (_, i) => i);
     }
@@ -91,6 +102,7 @@ export class LayoutSplittablePanelComponent
 
     ngOnInit(): void {
         this.initializePanelsStates();
+        this.subscribeToDraftDimensions();
     }
 
 
@@ -283,5 +295,75 @@ export class LayoutSplittablePanelComponent
 
     handleClosePanel(event: MouseEvent) {
         this.closePanel.emit(!this.visible);
+    }
+
+    getZoneForRow(rowIndex: number): DockZone {
+        const row = this.panelStates[rowIndex];
+        if (!row) return null as any;
+        const visiblePanel = row.find(p => p.visible);
+        return visiblePanel?.zone || null as any;
+    }
+
+    getRowHeight(rowIndex: number): number {
+        // Try to get the actual height from the dockZonePanels
+        const rowPanels = this.panelStates[rowIndex] || [];
+        const visiblePanel = rowPanels.find(ps => ps.visible);
+        if (visiblePanel) {
+            const panel = this.dockZonePanels.find(p => p.zone === visiblePanel.zone);
+            if (panel && panel.el.nativeElement) {
+                const rect = panel.el.nativeElement.getBoundingClientRect();
+                return Math.max(100, Math.round(rect.height));
+            }
+        }
+        // Default height for a row
+        return 200;
+    }
+
+    getColumnWidth(columnIndex: number): number {
+        // Try to get the actual width from the dockZonePanels
+        const flatStates = this.panelStates.flat();
+        const visiblePanel = flatStates.find(ps => ps.column === columnIndex && ps.visible);
+        if (visiblePanel) {
+            const panel = this.dockZonePanels.find(p => p.zone === visiblePanel.zone);
+            if (panel && panel.el.nativeElement) {
+                const rect = panel.el.nativeElement.getBoundingClientRect();
+                return Math.max(100, Math.round(rect.width));
+            }
+        }
+        // Default width for a column
+        return 200;
+    }
+
+    private subscribeToDraftDimensions(): void {
+        this.splitterDragService.draftInternalZoneDimension$
+            .subscribe((draft) => {
+                this._draftInternalZoneDimension = draft;
+            });
+
+        this.splitterDragService.onInternalZoneDragEnd$
+            .subscribe((commit: InternalZoneDragEnd) => {
+                this.store.dispatch(commitZoneDimension({
+                    zone: commit.zone,
+                    committedDimension: commit.committedDimension,
+                }));
+            });
+    }
+
+    onSplitterPointerDown(event: PointerEvent, zone: DockZone, direction: DragDirection, initialDimension: number): void {
+        this.store.dispatch(startZoneResize({ zone, direction, initialDimension }));
+        this.splitterDragService.onInternalZonePointerDown(event, zone, direction, initialDimension);
+    }
+
+    onSplitterPointerMove(event: PointerEvent): void {
+        this.splitterDragService.onInternalZonePointerMove(event);
+    }
+
+    onSplitterPointerUp(event: PointerEvent): void {
+        this.splitterDragService.onInternalZonePointerUp(event);
+    }
+
+    onSplitterPointerCancel(event: PointerEvent): void {
+        this.splitterDragService.onInternalZonePointerCancel(event);
+        this.store.dispatch(cancelZoneResize());
     }
 }

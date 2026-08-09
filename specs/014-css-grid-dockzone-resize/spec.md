@@ -26,9 +26,6 @@ Spec must be clear and must have the testing objectives for the next phase. If y
 - **Q**: What should be the minimum size constraints for internal zones during resize operations?  
   **A**: Fixed pixel minimums (e.g., 100px width/height).
 
-- **Q**: How should the system handle rapid dragging movements during resize operations?  
-  **A**: Use debouncing/throttling to limit update frequency.
-
 - **Q**: What should happen when there are only two internal zones in a panel during a resize operation?  
   **A**: Allow resizing between the two zones with proper distribution of space.
 
@@ -68,7 +65,6 @@ The existing splitter functionality for the bottom panel and secondary panel sho
 ## Edge Cases
 
 - When a user tries to resize a zone below the minimum allowed size, the resize operation stops at the minimum size constraint (e.g., 100px width/height).
-- The system handles rapid dragging movements by using debouncing/throttling to limit update frequency, ensuring smooth performance and preventing excessive state updates.
 - When there are only two internal zones in a panel, the system allows resizing between the two zones with proper distribution of space.
 
 ---

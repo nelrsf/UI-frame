@@ -38,6 +38,27 @@
     overflow: auto;
 }
 
+/* Active resize state */
+.layout-splittable-grid-resizing {
+    display: grid;
+    gap: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* Horizontal direction (columns) */
+.layout-splittable-grid-horizontal {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    grid-auto-columns: 1fr;
+}
+
+/* Vertical direction (rows) */
+.layout-splittable-grid-vertical {
+    grid-template-rows: repeat(auto-fit, minmax(100px, 1fr));
+    grid-auto-rows: 1fr;
+}
+
 .hidden {
     display: none!important;
 }

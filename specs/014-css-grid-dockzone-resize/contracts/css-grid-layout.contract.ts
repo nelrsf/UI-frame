@@ -1,7 +1,7 @@
 /**
- * Contract: CSS Grid Layout for Internal Dockzones
+ * Contract: Internal Zone Resize via Flex Layout
  * 
- * This contract defines the CSS grid layout implementation for internal dockzones.
+ * This contract defines the flex-based resize implementation for internal dockzones.
  */
 
 /**
@@ -13,85 +13,58 @@ export enum LayoutSplitDirection {
 }
 
 /**
- * Interface for CSS grid layout model
+ * Drag direction enumeration for internal zones
  */
-export interface CSSGridLayoutModel {
-  /** Layout direction */
-  direction: LayoutSplitDirection;
-  /** Grid template columns (for horizontal direction) */
-  gridTemplateColumns?: string;
-  /** Grid template rows (for vertical direction) */
-  gridTemplateRows?: string;
-  /** Zone sizes as fractions or pixel values */
-  zoneSizes?: Array<{
-    zoneId: string;
-    size: string | number;
-  }>;
+export type DragDirection = 'horizontal' | 'vertical';
+
+/**
+ * Interface for internal zone drag draft state
+ */
+export interface InternalZoneDragDraft {
+  /** Zone identifier being resized */
+  zone: string;
+  /** Direction of resize: 'horizontal' or 'vertical' */
+  direction: DragDirection;
+  /** Current dimension value during drag */
+  draftDimension: number;
 }
 
 /**
- * Interface for CSS grid container component
+ * Interface for internal zone drag end state
  */
-export interface ICSSGridLayoutContainer {
-  /** Current layout model */
-  layoutModel: CSSGridLayoutModel;
-  /** Whether the container is currently being resized */
-  isResizing: boolean;
-  /** Draft grid properties during resize */
-  draftGridProperties?: {
-    gridTemplateColumns?: string;
-    gridTemplateRows?: string;
-  };
+export interface InternalZoneDragEnd {
+  /** Zone identifier being resized */
+  zone: string;
+  /** Direction of resize: 'horizontal' or 'vertical' */
+  direction: DragDirection;
+  /** Final committed dimension value */
+  committedDimension: number;
 }
 
 /**
- * CSS Grid property bindings for horizontal layout
+ * CSS class names for flex layouts
  */
-export const HORIZONTAL_GRID_PROPERTIES = {
-  /** Default grid template for horizontal layout */
-  DEFAULT_TEMPLATE: 'repeat(auto-fit, minmax(100px, 1fr))',
-  /** Resize state grid template */
-  RESIZE_TEMPLATE: 'var(--zone-1-width, 1fr) var(--zone-2-width, 1fr)',
-  /** Minimum size constraint */
-  MIN_SIZE: '100px'
+export const FLEX_LAYOUT_CLASSES = {
+  /** Base flex container class */
+  CONTAINER: 'splitter-container',
+  /** Layout panel class */
+  PANEL: 'layout-splittable-panel',
+  /** Row wrapper class */
+  ROW_WRAPPER: 'layout-splittable-row-wrapper',
+  /** Row class */
+  ROW: 'layout-splittable-row',
+  /** Panel region class */
+  PANEL_REGION: 'splittable-panel-region',
+  /** Hidden class */
+  HIDDEN: 'hidden'
 } as const;
 
 /**
- * CSS Grid property bindings for vertical layout
+ * Flex style properties for draft dimensions
  */
-export const VERTICAL_GRID_PROPERTIES = {
-  /** Default grid template for vertical layout */
-  DEFAULT_TEMPLATE: 'repeat(auto-fit, minmax(100px, 1fr))',
-  /** Resize state grid template */
-  RESIZE_TEMPLATE: 'var(--zone-1-height, 1fr) var(--zone-2-height, 1fr)',
-  /** Minimum size constraint */
-  MIN_SIZE: '100px'
-} as const;
-
-/**
- * CSS class names for grid layouts
- */
-export const GRID_LAYOUT_CLASSES = {
-  /** Base grid container class */
-  CONTAINER: 'layout-splittable-grid-container',
-  /** Horizontal layout class */
-  HORIZONTAL: 'layout-splittable-grid-horizontal',
-  /** Vertical layout class */
-  VERTICAL: 'layout-splittable-grid-vertical',
-  /** Resizing state class */
-  RESIZING: 'layout-splittable-grid-resizing'
-} as const;
-
-/**
- * CSS custom properties for grid layouts
- */
-export const GRID_CSS_VARS = {
-  /** Zone 1 width property */
-  ZONE_1_WIDTH: '--zone-1-width',
-  /** Zone 2 width property */
-  ZONE_2_WIDTH: '--zone-2-width',
-  /** Zone 1 height property */
-  ZONE_1_HEIGHT: '--zone-1-height',
-  /** Zone 2 height property */
-  ZONE_2_HEIGHT: '--zone-2-height'
+export const FLEX_STYLE_PROPS = {
+  /** Width style property */
+  WIDTH: 'style.width',
+  /** Flex style property */
+  FLEX: 'style.flex'
 } as const;
