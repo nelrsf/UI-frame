@@ -25,7 +25,7 @@
 
     <div class="layout-splittable-panel">
         @for (row of rowsArray; track $index; let rowIndex = $index) {
-        <div class="layout-splittable-row-wrapper" [class.hidden]="!isRowVisible($index)">
+        <div #layoutSplittableRowWrapper class="layout-splittable-row-wrapper" [class.hidden]="!isRowVisible($index)" [style.flex]="getRowStyleProps($index, layoutSplittableRowWrapper).flex">
             @if($index > 0){
             <app-shell-splitter-handle 
                 class="horizontal-splitter" 
@@ -42,9 +42,9 @@
             <div class="layout-splittable-row">
                 @for (panel of panelStates[rowIndex]; track panel) {
 
-                <div class="splittable-panel-region" [class.hidden]="!isPanelVisible(panel.zone)"
-                    [style.width]="_draftInternalZoneDimension?.zone === panel.zone && _draftInternalZoneDimension?.direction === 'horizontal' ? (_draftInternalZoneDimension?.draftDimension || 0) + 'px' : ''"
-                    [style.flex]="_draftInternalZoneDimension?.zone === panel.zone && _draftInternalZoneDimension?.direction === 'horizontal' ? '0 0 ' + (_draftInternalZoneDimension?.draftDimension || 0) + 'px' : '1'">
+                <div #splittablePanelRegion class="splittable-panel-region" [class.hidden]="!isPanelVisible(panel.zone)"
+                    [style.width]="getPanelStyleProps(panel, splittablePanelRegion).width"
+                    [style.flex]="getPanelStyleProps(panel, splittablePanelRegion).flex">
 
                     @if (hasPreviousColumnEnabled(panel)) {
                     <app-shell-splitter-handle 

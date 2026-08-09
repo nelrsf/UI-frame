@@ -334,6 +334,55 @@ export class LayoutSplittablePanelComponent
         return 200;
     }
 
+    /**
+     * Returns the style properties (width and flex) for a panel based on the current draft dimension state.
+     */
+    getPanelStyleProps(panel: PanelState, htmlElement: HTMLElement): { width: string; flex: string } {
+        
+        if (!this._draftInternalZoneDimension || this._draftInternalZoneDimension.zone !== panel.zone) {
+            return {
+                width: htmlElement.style.width,
+                flex: htmlElement.style.flex,
+            };
+        }
+
+        if (this._draftInternalZoneDimension.direction === 'horizontal') {
+            const draftDim = this._draftInternalZoneDimension.draftDimension || 0;
+            return {
+                width: draftDim + 'px',
+                flex: `0 0 ${draftDim}px`,
+            };
+        }
+
+        return {
+            width: '',
+            flex: '1',
+        };
+    }
+
+    /**
+     * Returns the flex style property for a row wrapper based on the current draft dimension state for vertical resizing.
+     */
+    getRowStyleProps(rowIndex: number, htmlElement: HTMLElement): { flex: string } {
+        if (!this._draftInternalZoneDimension || this._draftInternalZoneDimension.direction !== 'vertical') {
+            return {
+                flex: htmlElement.style.flex,
+            };
+        }
+
+        const rowZone = this.getZoneForRow(rowIndex);
+        if (this._draftInternalZoneDimension.zone !== rowZone) {
+            return {
+                flex: '1',
+            };
+        }
+
+        const draftDim = this._draftInternalZoneDimension.draftDimension || 0;
+        return {
+            flex: `0 0 ${draftDim}px`,
+        };
+    }
+
     private subscribeToDraftDimensions(): void {
         this.splitterDragService.draftInternalZoneDimension$
             .subscribe((draft) => {
