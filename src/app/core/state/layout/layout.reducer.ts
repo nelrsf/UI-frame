@@ -1,6 +1,7 @@
 import { createReducer, on } from '@ngrx/store';
 import * as LayoutActions from './layout.actions';
 import { LayoutSplittableRegionModel } from '../../../shell/models/layout-splittable-region.model';
+import { DockZone } from '../../models/dock-zone-assignment.model';
 
 /** Minimum allowed sidebar content-panel width in pixels. */
 export const SIDEBAR_WIDTH_MIN = 160;
@@ -23,6 +24,16 @@ export const SECONDARY_PANEL_WIDTH_MAX = 500;
 /** Default secondary panel width in pixels. */
 export const SECONDARY_PANEL_WIDTH_DEFAULT = 300;
 
+export interface ZoneDimensionState {
+  zone: DockZone;
+  width: number;
+  height: number;
+  minWidth: number;
+  minHeight: number;
+  maxWidth?: number;
+  maxHeight?: number;
+}
+
 export interface LayoutState {
   /** Whether the sidebar content-panel is currently visible. */
   readonly sidebarVisible: boolean;
@@ -40,6 +51,8 @@ export interface LayoutState {
   readonly secondaryPanelWidth: number;
   /** The current split layout state for the main content area, or null if not in a split layout. */
   readonly splitPanelLayout: LayoutSplittableRegionModel | null;
+  /** Current internal zone dimensions for CSS grid-based resize. */
+  readonly internalZoneDimensions: Map<DockZone, ZoneDimensionState>;
 }
 
 export const initialLayoutState: LayoutState = {
@@ -51,6 +64,7 @@ export const initialLayoutState: LayoutState = {
   secondaryPanelVisible: false,
   secondaryPanelWidth: SECONDARY_PANEL_WIDTH_DEFAULT,
   splitPanelLayout: null,
+  internalZoneDimensions: new Map<DockZone, ZoneDimensionState>(),
 };
 
 export const layoutReducer = createReducer(
@@ -116,5 +130,71 @@ export const layoutReducer = createReducer(
   on(LayoutActions.setSplitPaneSize, (state, { paneId, size }) => ({
     ...state,
     // Implementation for setting split pane size would go here
-  }))
+  })),
+  // Zone Resize Reducers
+  on(LayoutActions.startZoneResize, (state, { zone, direction, initialDimension }) => {
+    const currentDimension = state.internalZoneDimensions.get(zone);
+    
+    const isHorizontal = direction === 'horizontal';
+    const initialState: ZoneDimensionState = {
+      zone,
+      width: isHorizontal ? initialDimension : (currentDimension?.width ?? 0),
+      height: isHorizontal ? (currentDimension?.height ?? 0) : initialDimension,
+      minWidth: currentDimension?.minWidth ?? 100,
+      minHeight: currentDimension?.minHeight ?? 100,
+      maxWidth: currentDimension?.maxWidth,
+      maxHeight: currentDimension?.maxHeight,
+    };
+    
+    return {
+      ...state,
+      internalZoneDimensions: new Map(state.internalZoneDimensions).set(zone, initialState),
+    };
+  }),
+  
+  on(LayoutActions.draftZoneDimension, (state, { zone, draftDimension }) => {
+    const currentDimension = state.internalZoneDimensions.get(zone);
+    if (!currentDimension) return state;
+    
+    const isHorizontal = currentDimension.width !== undefined;
+    const newDimension = isHorizontal 
+      ? Math.min(1000, Math.max(100, draftDimension)) // 100px min, 1000px max
+      : Math.min(1000, Math.max(100, draftDimension));
+    
+    return {
+      ...state,
+      internalZoneDimensions: new Map(state.internalZoneDimensions).set(zone, {
+        ...currentDimension,
+        [isHorizontal ? 'width' : 'height']: newDimension,
+      }),
+    };
+  }),
+  
+  on(LayoutActions.commitZoneDimension, (state, { zone, committedDimension }) => {
+    const currentDimension = state.internalZoneDimensions.get(zone);
+    if (!currentDimension) return state;
+    
+    return {
+      ...state,
+      internalZoneDimensions: new Map(state.internalZoneDimensions).set(zone, {
+        ...currentDimension,
+        width: currentDimension.width !== undefined ? committedDimension : currentDimension.width,
+        height: currentDimension.height !== undefined ? committedDimension : currentDimension.height,
+      }),
+    };
+  }),
+  
+  on(LayoutActions.cancelZoneResize, (state) => {
+    // Clear draft dimensions but keep committed dimensions
+    return {
+      ...state,
+      internalZoneDimensions: new Map(
+        Array.from(state.internalZoneDimensions.entries()).map(([key, val]) => [key, {
+          ...val,
+          width: val.width,
+          height: val.height,
+        }])
+      ),
+    };
+  }),
 );
