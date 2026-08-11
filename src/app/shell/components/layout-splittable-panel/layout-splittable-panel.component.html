@@ -4,7 +4,7 @@
 
         @if(showHorizontalSplitButton){
         <button class="splitter-toolbar-button splitter-toolbar-button__split-h"
-            (click)="onSplitPanels($event, 'horizontal')" [ngClass]="[areAllPanelsVisible() ? 'hidden' : '']">
+            (click)="onSplitPanels($event, 'horizontal')" [ngClass]="[areAllColumnsVisible() ? 'hidden' : '']">
             ↔
         </button>
         }
@@ -65,7 +65,7 @@
                         [activeTabId]="(getActiveTabIdByZone(panel.zone) | async) ?? ''"
                         (activeTabChange)="onActiveTabChanged($event)"
                         [showActions]="!(panel.column==0 && panel.row==0)"
-                        (visibilityChange)="onVisivilityChange($event, panel.zone)">
+                        (visibilityChange)="onVisivilityChange($event, panel.zone, splittablePanelRegion)">
                     </app-dock-zone-panel>
 
                 </div>
